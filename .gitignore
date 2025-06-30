@@ -1,0 +1,31 @@
+﻿# Dependency directories
+node_modules/
+venv/
+__pycache__/
+
+# VS Code settings
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Python
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
+
+# Build output
+dist/
+build/
+
+# Others
+*.sqlite
