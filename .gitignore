@@ -1,31 +1,33 @@
-﻿# Dependency directories
-node_modules/
-venv/
-__pycache__/
+﻿# MedEasy Development - Basic .gitignore
+# Weitere Eintraege werden in spaeteren Phasen ergaenzt
 
-# VS Code settings
+# IDE
+.vs/
 .vscode/
+.idea/
+*.suo
+*.user
 
-# OS generated files
+# OS
 .DS_Store
 Thumbs.db
 
-# Python
-*.pyc
-*.pyo
-*.pyd
-.Python
+# Umgebungsvariablen
+.env
+.env.*
+!.env.example
+
+# Build-Ausgaben (wird spaeter erweitert)
+bin/
+obj/
+node_modules/
+dist/
+target/
 
 # Logs
 *.log
+logs/
 
-# Environment files
-.env
-.env.*
-
-# Build output
-dist/
-build/
-
-# Others
-*.sqlite
+# Temporaere Dateien
+*.tmp
+temp/
