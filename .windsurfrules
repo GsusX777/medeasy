@@ -51,7 +51,9 @@ Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
   Neue Entity → Update docs/database/SCHEMA.md JETZT
   Neuer API Endpoint → Update docs/api/API_REFERENCE.md JETZT  
   Neue Dependency → Update docs/architecture/DEPENDENCIES.md JETZT
+                  → Update docs/architecture/Dependency_Graph.svg JETZT  
   Architektur-Änderung → Update docs/architecture/README.md JETZT
+  Feature-Änderung → Update docs/FEATURE_STATUS.md JETZT  
   Security-Feature → Update docs/compliance/SECURITY.md JETZT
   ```
 
@@ -204,6 +206,31 @@ Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
 | Security Feature | docs/compliance/SECURITY.md | Gleiche Datei |
 | Architektur | docs/architecture/README.md | Gleiche Datei |
 
+## 📊 FEATURE-DOKUMENTATION
+
+* **Feature-Status automatisch tracken (FST):**
+  WENN: Neues Feature implementiert
+  DANN: Update docs/FEATURE_STATUS.md
+  
+  Format:
+  | Feature | Status | Komponenten | Tests | Notizen |
+  |---------|--------|-------------|-------|---------|
+  | Anonymisierung | Implementiert | Backend, AI | 100% | Regex + spaCy |
+  | Transkription | In Arbeit | AI, Frontend | 60% | Whisper integration |
+  | FHIR Export | Geplant | Backend | 0% | Für Vitabyte |
+  
+  Statuse:
+  Implementiert
+  In Arbeit  
+  Geplant
+  Probleme
+
+* **Automatisch generieren bei Feature-Abschluss:**
+  - Komponenten-Liste (welche Module betroffen)
+  - Test-Coverage 
+  - Abhängigkeiten
+  - Bekannte Einschränkungen
+
 ## 🎯 PRIORISIERUNG
 
 Bei Konflikten gilt diese Reihenfolge:
@@ -220,6 +247,8 @@ Bei Konflikten gilt diese Reihenfolge:
 * Regel-Tags in Kommentaren: `// [AIU] Anonymisierung unveränderlich`
 * Bei Unsicherheit: Sicherere Variante wählen
 * Explizit auf angewandte Regeln hinweisen
+
+## **Folge der Checkliste in docs/project/phase_1.md**
 
 ---
 **DIESE REGELN SIND VERBINDLICH FÜR ALLE MEDEASY-ENTWICKLUNGEN**
