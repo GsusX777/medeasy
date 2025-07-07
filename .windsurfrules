@@ -1,0 +1,225 @@
+# MedEasy Project-Specific Windsurf Rules
+
+Version: 1.0  
+Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
+
+## 🚨 KRITISCHE SICHERHEITSREGELN - IMMER BEFOLGEN
+
+* **Anonymisierung ist UNVERÄNDERLICH (AIU):** Die Anonymisierungsfunktion kann NIEMALS deaktiviert, optional gemacht oder umgangen werden. Jeder Code muss dies respektieren.
+* **SQLCipher Pflicht (SP):** Alle Patientendaten werden mit SQLCipher (AES-256) verschlüsselt. Keine Ausnahmen.
+* **Audit-Trail Vollständig (ATV):** Jede Datenbankoperation, jeder Zugriff, jede Änderung wird im Audit-Log erfasst.
+* **Diagnose-Killswitch (DK):** KI-Diagnosevorschläge haben einen Remote-Killswitch und lokalen Toggle. Arztbestätigung immer erforderlich.
+
+## 🏗️ ARCHITEKTUR-SPEZIFISCH FÜR MEDEASY
+
+* **Clean Architecture Struktur (CAS):**
+  - `MedEasy.Domain` - Keine Dependencies, reine Medizinlogik
+  - `MedEasy.Application` - CQRS mit MediatR
+  - `MedEasy.Infrastructure` - SQLCipher, gRPC, externe Services  
+  - `MedEasy.API` - REST mit JWT Auth
+  - `MedEasy.AI` - Python Services via gRPC
+
+* **Multi-Language Bridge (MLB):** 
+  - .NET ↔ Python: Nur via gRPC
+  - Frontend ↔ Backend: REST API + JWT
+  - Tauri ↔ Svelte: Tauri Commands
+
+* **Technologie-Stack Fest (TSF):**
+  - Backend: .NET 8, kein Framework-Wechsel
+  - AI: Python 3.11 + FastAPI + gRPC
+  - Frontend: Tauri 1.5 + Svelte 4
+  - DB: SQLCipher, keine Alternative
+
+## 📚 DOKUMENTATIONS-PFLICHT (SOFORT)
+
+* **Dokumentation = Code (D=C):** Dokumentation wird im GLEICHEN Schritt wie Code geändert.
+
+* **VOR Code-Änderungen - Dokumentation LESEN (DL):**
+  ```
+  BEVOR: Neue Entity erstellen
+  PRÜFE: docs/database/SCHEMA.md für existierende Struktur
+  
+  BEVOR: Neuer API Endpoint
+  PRÜFE: docs/api/API_REFERENCE.md für bestehendes Pattern
+  
+  BEVOR: Neue Dependency
+  PRÜFE: docs/architecture/DEPENDENCIES.md für Duplikate
+  ```
+
+* **SOFORT nach Code-Änderungen - Dokumentation UPDATEN (DSU):**
+  ```
+  Neue Entity → Update docs/database/SCHEMA.md JETZT
+  Neuer API Endpoint → Update docs/api/API_REFERENCE.md JETZT  
+  Neue Dependency → Update docs/architecture/DEPENDENCIES.md JETZT
+  Architektur-Änderung → Update docs/architecture/README.md JETZT
+  Security-Feature → Update docs/compliance/SECURITY.md JETZT
+  ```
+
+* **Windsurf-Verhalten Beispiel:**
+  ```
+  User: "Erstelle eine Prescription Entity"
+  Windsurf:
+  1. LIEST docs/database/SCHEMA.md
+  2. ERSTELLT Prescription.cs nach Pattern
+  3. UPDATED docs/database/SCHEMA.md
+  4. ANTWORTET: "Entity erstellt und Doku aktualisiert [DL][DSU]"
+  ```
+
+## 🇨🇭 SCHWEIZ-SPEZIFISCHE ANFORDERUNGEN
+
+* **Schweizerdeutsch-Handling (SDH):**
+  - Erkennung von Schweizerdeutsch
+  - Warnung anzeigen: "Schweizerdeutsch erkannt - eingeschränkte Genauigkeit"
+  - Flag setzen: betaAvailable = true
+  - Whisper arbeitet weiter, aber mit reduzierter Genauigkeit
+
+* **Datenschutz Schweiz (DSC):**
+  - nDSG-Konformität erforderlich
+  - Verschlüsselung aller Patientendaten
+  - Explizite Einwilligung für Cloud-Verarbeitung
+
+* **Schweizer Formate (SF):**
+  - Datum: DD.MM.YYYY
+  - Versicherungsnummer: XXX.XXXX.XXXX.XX
+
+* **Medizinische Fachbegriffe DE-CH (MFD):**
+  - Spital statt Krankenhaus
+  - Doktor statt Arzt in Anrede
+  - Medikament statt Arzneimittel
+
+## 🤖 KI-INTEGRATION MEDEASY
+
+* **Provider-Kette (PK):**
+  1. OpenAI GPT-4 (primär)
+  2. Claude 3 (fallback)
+  3. Gemini (fallback)
+  4. Lokales Modell (offline)
+  - Bei Fehler: Nächster Provider automatisch
+  - Immer anzeigen welcher Provider verwendet wurde
+
+* **Whisper Multi-Model (WMM):**
+  - Automatische Modellwahl basierend auf Hardware
+  - Manuelle Auswahl über Einstellungen möglich
+  - Tiny/Base: Schnell
+  - Small/Medium: Genauer
+  - KEIN Parallel-Vergleich
+
+* **Cloud-Transparenz (CT):**
+  - UI zeigt IMMER: 🔒 Lokal oder ☁️ Cloud
+  - Cloud nur mit expliziter Session-Einwilligung
+  - Opt-in per Feature, nicht global
+
+## 📊 DATENMODELL SPEZIFISCH
+
+* **Entitäten Immer Verschlüsselt (EIV):**
+  ```csharp
+  public class Patient {
+    public byte[] EncryptedName { get; set; }  // NIE string
+    public string InsuranceNumberHash { get; set; }  // NIE Klartext
+    public DateOnly DateOfBirth { get; set; }  // OK, für Altersberechnung
+  }
+  ```
+
+* **Session-Konzept (SK):**
+  - Eine Session = Eine Konsultation
+  - Session enthält: Audio, Transkript, Analysen
+  - Sessions sind unveränderlich nach Abschluss
+
+* **Anonymisierungs-Review-Queue (ARQ):**
+  - Unsichere Erkennungen (confidence < 80%)
+  - Batch-Review durch Arzt
+  - Whitelist für medizinische Begriffe
+
+## 🧪 TEST-ANFORDERUNGEN MEDEASY
+
+* **Kritische Pfade 100% (KP100):**
+  - Anonymisierung: 100% Coverage PFLICHT
+  - Verschlüsselung: 100% Coverage PFLICHT
+  - Audit: 100% Coverage PFLICHT
+  - Rest: >80% angestrebt
+
+* **Test-Daten (TD):**
+  - Nutze IMMER Mock-Daten
+  - 10 DE + 5 CH-DE Beispiel-Audios
+  - Synthetische Patientennamen
+  - Keine echten medizinischen Daten
+
+* **Performance-Baseline (PB):**
+  - Transkription: <3 Sek Latenz
+  - Anonymisierung: <100ms
+  - UI Response: <50ms
+  - 30min Session ohne Crash
+
+## 🚫 SPEZIFISCHE VERBOTE FÜR MEDEASY
+
+* **NIE Patientendaten Loggen (NPL):** Kein Console.WriteLine mit Patienteninfo
+* **NIE Anonymisierung Umgehen (NAU):** Kein Flag, keine Config, kein Debug-Modus
+* **NIE Unverschlüsselt Speichern (NUS):** Auch nicht "temporär" oder "im Cache"
+* **NIE Diagnose ohne Warnung (NDW):** Immer Disclaimer bei KI-Vorschlägen
+* **NIE Echte API-Keys (NEA):** Nutze .env, Secrets Manager, aber nie im Code
+
+## 💡 ENTWICKLUNGS-WORKFLOW
+
+* **Feature-Branch Naming (FBN):**
+  - `feature/med-<nummer>-<beschreibung>`
+  - `bugfix/med-<nummer>-<beschreibung>`
+  - `security/med-<nummer>-<beschreibung>`
+
+* **Commit-Messages (CM):**
+  ```
+  feat(anonymization): Add Swiss name detection [AR]
+  fix(audio): Handle Swiss German dialect warning [SDH]
+  security(db): Enforce SQLCipher for all connections [SP]
+  ```
+
+* **PR-Checkliste (PRC):**
+  - [ ] Sicherheit geprüft
+  - [ ] Tests geschrieben
+  - [ ] Dokumentation aktualisiert
+  - [ ] Windsurf Rules befolgt
+
+## 🔄 WORKFLOWS VS. DIREKTE AKTIONEN
+
+* **Direkt machen (KEIN Workflow):**
+  - Entity erstellen + Doku
+  - API Endpoint + Doku
+  - Bugfix
+  - Refactoring
+  - Einzelne Tests
+
+* **Workflow nutzen für komplexe, mehrstufige Aufgaben:**
+  Beispiele:
+  - `/workflow test-security feature=[FeatureName]`
+  - `/workflow prepare-release version=[X.Y.Z]`
+  - `/workflow new-feature-complete featureName=[FeatureName]`
+  - Weitere Workflows nach Bedarf erstellen
+
+## 🔍 DOKUMENTATIONS-QUICK-REFERENCE
+
+| Aktion | Erst lesen | Dann updaten |
+|--------|------------|--------------|
+| Neue Entity | docs/database/SCHEMA.md | Gleiche Datei |
+| Neue API | docs/api/API_REFERENCE.md | Gleiche Datei |
+| Neue Dependency | docs/architecture/DEPENDENCIES.md | Gleiche Datei |
+| Security Feature | docs/compliance/SECURITY.md | Gleiche Datei |
+| Architektur | docs/architecture/README.md | Gleiche Datei |
+
+## 🎯 PRIORISIERUNG
+
+Bei Konflikten gilt diese Reihenfolge:
+1. Patientensicherheit [PSF]
+2. Datenschutz [PbD]
+3. Rechtliche Compliance [RA]
+4. Medizinische Korrektheit [MA]
+5. Performance [PA]
+6. Features
+
+## 📝 WINDSURF-INTEGRATION
+
+* Bei jeder Code-Generierung diese Regeln anwenden
+* Regel-Tags in Kommentaren: `// [AIU] Anonymisierung unveränderlich`
+* Bei Unsicherheit: Sicherere Variante wählen
+* Explizit auf angewandte Regeln hinweisen
+
+---
+**DIESE REGELN SIND VERBINDLICH FÜR ALLE MEDEASY-ENTWICKLUNGEN**
