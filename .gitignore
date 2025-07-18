@@ -13,9 +13,9 @@
 Thumbs.db
 
 # Umgebungsvariablen
-.env
-.env.*
-!.env.example
+#.env
+#.env.*
+#!.env.example
 
 # Build-Ausgaben (wird spaeter erweitert)
 bin/

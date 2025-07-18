@@ -1,0 +1,8 @@
+# „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17
+
+@MedEasy.API_HostAddress = http://localhost:5155
+
+GET {{MedEasy.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,4 +1,6 @@
-﻿# check-tools.ps1
+# „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17
+
+# check-tools.ps1
 # Ueberprueft ob alle Entwicklungstools installiert sind
 
 Write-Host "`n[CHECK] MedEasy Entwicklungstools Check" -ForegroundColor Cyan

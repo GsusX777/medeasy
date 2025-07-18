@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="800" viewBox="0 0 1200 800">
+  <style>
+    .layer { font-family: Arial, sans-serif; }
+    .layer-title { font-size: 18px; font-weight: bold; }
+    .component { font-size: 14px; }
+    .arrow { stroke: #555; stroke-width: 2; marker-end: url(#arrowhead); }
+    .arrow-dependency { stroke: #0066cc; stroke-width: 2; stroke-dasharray: 5,5; marker-end: url(#arrowhead); }
+    .arrow-data { stroke: #009900; stroke-width: 2; marker-end: url(#arrowhead); }
+    .layer-domain { fill: #ffe6cc; stroke: #d79b00; }
+    .layer-application { fill: #dae8fc; stroke: #6c8ebf; }
+    .layer-infrastructure { fill: #d5e8d4; stroke: #82b366; }
+    .layer-api { fill: #fff2cc; stroke: #d6b656; }
+    .layer-presentation { fill: #f8cecc; stroke: #b85450; }
+    .layer-ai { fill: #e1d5e7; stroke: #9673a6; }
+    .tag { font-size: 10px; fill: #666; }
+  </style>
+  
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555" />
+    </marker>
+  </defs>
+  
+  <rect width="100%" height="100%" fill="white" />
+  
+  <text x="600" y="40" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold">MedEasy Architektur - Dependency Graph</text>
+  <text x="600" y="70" text-anchor="middle" font-family="Arial" font-size="14">Clean Architecture mit Dependency Direction nach innen [CAM][DD]</text>
+  
+  <!-- Domain Layer (Core) -->
+  <g transform="translate(400, 150)">
+    <circle cx="200" cy="200" r="150" class="layer-domain" opacity="0.8" />
+    <text x="200" y="120" text-anchor="middle" class="layer-title">Domain Layer</text>
+    <text x="200" y="140" text-anchor="middle" class="component">MedEasy.Domain</text>
+    <text x="200" y="170" text-anchor="middle" class="component">Patient</text>
+    <text x="200" y="190" text-anchor="middle" class="component">Session</text>
+    <text x="200" y="210" text-anchor="middle" class="component">Transcript</text>
+    <text x="200" y="230" text-anchor="middle" class="component">IHasAuditInfo</text>
+    <text x="200" y="250" text-anchor="middle" class="component">ReviewStatus</text>
+    <text x="200" y="270" text-anchor="middle" class="component">SessionStatus</text>
+    <text x="200" y="300" text-anchor="middle" class="tag">[Keine externen Abhängigkeiten]</text>
+  </g>
+  
+  <!-- Application Layer -->
+  <g transform="translate(100, 150)">
+    <rect x="0" y="0" width="250" height="200" rx="10" ry="10" class="layer-application" opacity="0.8" />
+    <text x="125" y="30" text-anchor="middle" class="layer-title">Application Layer</text>
+    <text x="125" y="50" text-anchor="middle" class="component">MedEasy.Application</text>
+    <text x="125" y="80" text-anchor="middle" class="component">CQRS mit MediatR [CQA]</text>
+    <text x="125" y="100" text-anchor="middle" class="component">DTOs</text>
+    <text x="125" y="120" text-anchor="middle" class="component">Validierung</text>
+    <text x="125" y="140" text-anchor="middle" class="component">Mapper</text>
+    <text x="125" y="160" text-anchor="middle" class="component">Anwendungsfälle</text>
+  </g>
+  
+  <!-- Infrastructure Layer -->
+  <g transform="translate(650, 150)">
+    <rect x="0" y="0" width="250" height="200" rx="10" ry="10" class="layer-infrastructure" opacity="0.8" />
+    <text x="125" y="30" text-anchor="middle" class="layer-title">Infrastructure Layer</text>
+    <text x="125" y="50" text-anchor="middle" class="component">MedEasy.Infrastructure</text>
+    <text x="125" y="80" text-anchor="middle" class="component">SQLCipherContext [SP]</text>
+    <text x="125" y="100" text-anchor="middle" class="component">SQLCipherConfiguration [ES]</text>
+    <text x="125" y="120" text-anchor="middle" class="component">AuditLog [ATV]</text>
+    <text x="125" y="140" text-anchor="middle" class="component">Anonymisierung [AIU]</text>
+    <text x="125" y="160" text-anchor="middle" class="component">AnonymizationReviewItem [ARQ]</text>
+  </g>
+  
+  <!-- API Layer -->
+  <g transform="translate(100, 400)">
+    <rect x="0" y="0" width="250" height="200" rx="10" ry="10" class="layer-api" opacity="0.8" />
+    <text x="125" y="30" text-anchor="middle" class="layer-title">API Layer</text>
+    <text x="125" y="50" text-anchor="middle" class="component">MedEasy.API</text>
+    <text x="125" y="80" text-anchor="middle" class="component">Minimal API [SC]</text>
+    <text x="125" y="100" text-anchor="middle" class="component">JWT Auth [ZTS]</text>
+    <text x="125" y="120" text-anchor="middle" class="component">Swagger/OpenAPI</text>
+    <text x="125" y="140" text-anchor="middle" class="component">Health Checks [MPR]</text>
+    <text x="125" y="160" text-anchor="middle" class="component">ExceptionHandling [ECP]</text>
+  </g>
+  
+  <!-- Presentation Layer -->
+  <g transform="translate(100, 650)">
+    <rect x="0" y="0" width="250" height="100" rx="10" ry="10" class="layer-presentation" opacity="0.8" />
+    <text x="125" y="30" text-anchor="middle" class="layer-title">Presentation Layer</text>
+    <text x="125" y="50" text-anchor="middle" class="component">Tauri 1.5 + Svelte 4</text>
+    <text x="125" y="70" text-anchor="middle" class="component">Frontend</text>
+  </g>
+  
+  <!-- AI Layer -->
+  <g transform="translate(650, 400)">
+    <rect x="0" y="0" width="250" height="200" rx="10" ry="10" class="layer-ai" opacity="0.8" />
+    <text x="125" y="30" text-anchor="middle" class="layer-title">AI Layer</text>
+    <text x="125" y="50" text-anchor="middle" class="component">MedEasy.AI</text>
+    <text x="125" y="80" text-anchor="middle" class="component">Python 3.11 + FastAPI</text>
+    <text x="125" y="100" text-anchor="middle" class="component">Whisper Multi-Model [WMM]</text>
+    <text x="125" y="120" text-anchor="middle" class="component">NER für Anonymisierung [AIU]</text>
+    <text x="125" y="140" text-anchor="middle" class="component">Provider-Kette [PK]</text>
+    <text x="125" y="160" text-anchor="middle" class="component">gRPC Bridge [MLB]</text>
+  </g>
+  
+  <!-- Dependency Arrows -->
+  <!-- Application → Domain -->
+  <line x1="225" y1="250" x2="400" y2="250" class="arrow-dependency" />
+  <text x="300" y="240" text-anchor="middle" class="tag">verwendet</text>
+  
+  <!-- Infrastructure → Domain -->
+  <line x1="775" y1="250" x2="600" y2="250" class="arrow-dependency" />
+  <text x="700" y="240" text-anchor="middle" class="tag">implementiert</text>
+  
+  <!-- API → Application -->
+  <line x1="225" y1="400" x2="225" y2="350" class="arrow-dependency" />
+  <text x="240" y="375" text-anchor="middle" class="tag">verwendet</text>
+  
+  <!-- API → Infrastructure -->
+  <line x1="350" y1="500" x2="650" y2="250" class="arrow-dependency" />
+  <text x="450" y="350" text-anchor="middle" class="tag">konfiguriert</text>
+  
+  <!-- Presentation → API -->
+  <line x1="225" y1="650" x2="225" y2="600" class="arrow-dependency" />
+  <text x="240" y="625" text-anchor="middle" class="tag">HTTP/REST</text>
+  
+  <!-- API → AI -->
+  <line x1="350" y1="500" x2="650" y2="500" class="arrow-dependency" />
+  <text x="500" y="480" text-anchor="middle" class="tag">gRPC</text>
+  
+  <!-- Data Flow Arrows -->
+  <path d="M 225,700 C 900,700 900,500 775,500" class="arrow-data" fill="none" />
+  <text x="500" y="720" text-anchor="middle" class="tag">Audio → Transkript → Anonymisierung → Speicherung</text>
+  
+  <!-- Legend -->
+  <g transform="translate(950, 150)">
+    <rect x="0" y="0" width="200" height="200" rx="5" ry="5" fill="white" stroke="#ccc" />
+    <text x="100" y="30" text-anchor="middle" font-weight="bold">Legende</text>
+    
+    <line x1="20" y1="60" x2="70" y2="60" class="arrow-dependency" />
+    <text x="140" y="65" text-anchor="middle" font-size="12">Abhängigkeit</text>
+    
+    <line x1="20" y1="90" x2="70" y2="90" class="arrow-data" />
+    <text x="140" y="95" text-anchor="middle" font-size="12">Datenfluss</text>
+    
+    <rect x="20" y="110" width="20" height="20" class="layer-domain" opacity="0.8" />
+    <text x="140" y="125" text-anchor="middle" font-size="12">Domain Layer</text>
+    
+    <rect x="20" y="140" width="20" height="20" class="layer-application" opacity="0.8" />
+    <text x="140" y="155" text-anchor="middle" font-size="12">Application Layer</text>
+    
+    <rect x="20" y="170" width="20" height="20" class="layer-infrastructure" opacity="0.8" />
+    <text x="140" y="185" text-anchor="middle" font-size="12">Infrastructure Layer</text>
+  </g>
+  
+  <g transform="translate(950, 400)">
+    <rect x="0" y="0" width="200" height="170" rx="5" ry="5" fill="white" stroke="#ccc" />
+    <text x="100" y="30" text-anchor="middle" font-weight="bold">Tags</text>
+    
+    <text x="20" y="60" text-anchor="start" font-size="12">[CAM] Clean Architecture Mandatory</text>
+    <text x="20" y="80" text-anchor="start" font-size="12">[DD] Dependency Direction</text>
+    <text x="20" y="100" text-anchor="start" font-size="12">[SP] SQLCipher Pflicht</text>
+    <text x="20" y="120" text-anchor="start" font-size="12">[ATV] Audit-Trail Vollständig</text>
+    <text x="20" y="140" text-anchor="start" font-size="12">[AIU] Anonymisierung Unveränderlich</text>
+    <text x="20" y="160" text-anchor="start" font-size="12">[ARQ] Anonymisierungs-Review-Queue</text>
+  </g>
+  
+  <text x="600" y="780" text-anchor="middle" font-size="10">Erstellt am 08.07.2025 - MedEasy Architektur Dokumentation [DSU]</text>
+</svg>

@@ -1,0 +1,76 @@
+%% �Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein � ja, lass gelingen, was wir tun!" Psalm 90,17
+
+---
+title: MedEasy Datenbankbeziehungen [EIV][AIU][ATV]
+---
+erDiagram
+    Patient ||--o{ Session : "hat"
+    Session ||--o{ Transcript : "enthält"
+    Transcript ||--o{ AnonymizationReviewItem : "kann haben"
+    Patient ||--o{ AuditLog : "wird protokolliert in"
+    Session ||--o{ AuditLog : "wird protokolliert in"
+    Transcript ||--o{ AuditLog : "wird protokolliert in"
+    AnonymizationReviewItem ||--o{ AuditLog : "wird protokolliert in"
+
+    Patient {
+        string id PK "UUID"
+        bytes encrypted_name "AES-256-GCM [EIV]"
+        string insurance_number_hash "Hashed [EIV]"
+        string date_of_birth "DD.MM.YYYY [SC]"
+        string created "Timestamp"
+        string created_by "User ID"
+        string last_modified "Timestamp"
+        string last_modified_by "User ID"
+    }
+
+    Session {
+        string id PK "UUID"
+        string patient_id FK "Referenz zu Patient"
+        string session_date "DD.MM.YYYY [SC]"
+        string status "InProgress/Completed/Archived"
+        bytes encrypted_notes "Optional, AES-256-GCM [EIV]"
+        bytes encrypted_audio_file_reference "Optional, AES-256-GCM [EIV]"
+        string created "Timestamp"
+        string created_by "User ID"
+        string last_modified "Timestamp"
+        string last_modified_by "User ID"
+    }
+
+    Transcript {
+        string id PK "UUID"
+        string session_id FK "Referenz zu Session"
+        bytes encrypted_original_text "AES-256-GCM [EIV]"
+        bytes encrypted_anonymized_text "AES-256-GCM [AIU][EIV]"
+        boolean is_anonymized "Immer true in Produktion [AIU]"
+        float anonymization_confidence "0-100%, Optional"
+        boolean needs_review "True wenn < 80% Konfidenz [ARQ]"
+        string created "Timestamp"
+        string created_by "User ID"
+        string last_modified "Timestamp"
+        string last_modified_by "User ID"
+    }
+
+    AnonymizationReviewItem {
+        string id PK "UUID"
+        string transcript_id FK "Referenz zu Transcript"
+        string status "Pending/Approved/Rejected"
+        string detected_pii "Erkannte personenbezogene Daten"
+        float anonymization_confidence "0-100%"
+        string review_reason "Optional"
+        string reviewer_notes "Optional"
+        string created "Timestamp"
+        string created_by "User ID"
+        string last_modified "Timestamp"
+        string last_modified_by "User ID"
+    }
+
+    AuditLog {
+        string id PK "UUID"
+        string entity_name "Tabellenname"
+        string entity_id "Referenz zur Entität"
+        string action "INSERT/UPDATE/DELETE/SELECT"
+        string changes "Optional, JSON der Änderungen"
+        boolean contains_sensitive_data "Flag für sensible Daten"
+        string timestamp "Zeitstempel der Aktion"
+        string user_id "Benutzer, der die Aktion ausgeführt hat"
+    }

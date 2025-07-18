@@ -1,0 +1,156 @@
+# „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17
+
+# MedEasy Test-Dockerfile [KP100][SP][AIU][ATV]
+FROM rust:1.88-slim
+
+# Installiere SQLCipher-Abhängigkeiten
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libsqlcipher-dev \
+    libssl-dev \
+    pkg-config \
+    tcl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setze Arbeitsverzeichnis
+WORKDIR /app
+
+# Kopiere die gesamte src-tauri-Struktur
+COPY src/frontend/src-tauri /app/src-tauri
+
+# Erstelle .env-Datei mit korrekten Testumgebungsvariablen [SP][ZTS]
+RUN echo "MEDEASY_FIELD_ENCRYPTION_KEY=AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=" > .env \
+    && echo "ENFORCE_AUDIT=true" >> .env \
+    && echo "DATABASE_URL=medeasy_test.db" >> .env \
+    && echo "MEDEASY_DB_KEY=AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=" >> .env \
+    && echo "USE_ENCRYPTION=true" >> .env
+
+# Erstelle Arbeitsverzeichnis
+WORKDIR /app
+
+# Kopiere die Quelldateien
+COPY src/frontend/src-tauri/src /app/src-tauri/src
+
+# Erstelle vollständige Cargo.toml-Datei mit expliziten Abhängigkeitsversionen
+COPY <<EOF /app/Cargo.toml
+[package]
+name = "medeasy-security-tests"
+version = "0.1.0"
+edition = "2021"
+resolver = "2"
+
+[dependencies]
+rusqlite = { version = "0.29.0", features = ["bundled-sqlcipher", "chrono", "uuid"] }
+r2d2 = "0.8.10"
+r2d2_sqlite = { version = "0.22.0", features = ["bundled-sqlcipher"] }
+dotenv = "0.15.0"
+thiserror = "1.0.40"
+log = "0.4.17"
+env_logger = "0.10.0"
+aes-gcm = { version = "0.10.2", features = ["std"] }
+base64 = "0.21.4"
+rand = "0.8.5"
+base64ct = { version = "1.5.0", features = ["alloc"] }
+crypto-common = "0.1.6"
+cipher = "0.4.4"
+hex = "0.4.3"
+chrono = "0.4.26"
+uuid = { version = "1.4.1", features = ["v4", "serde"] }
+serde = { version = "1.0.188", features = ["derive"] }
+serde_json = "1.0.107"
+regex = "1.9.5"
+generic-array = "0.14.7"
+getrandom = "0.2.10"
+tempfile = "3.8.0"
+argon2 = "0.5.2"
+password-hash = "0.5.0"
+sha2 = "0.10.7"
+EOF
+
+# Erstelle src-Verzeichnis und Grundstruktur
+RUN mkdir -p src/tests \
+    && mkdir -p src/database \
+    && mkdir -p src/repositories \
+    && mkdir -p src/security \
+    && mkdir -p src/config
+
+# Erstelle minimale src/main.rs
+RUN echo '// „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17' > src/main.rs \
+    && echo '' >> src/main.rs \
+    && echo 'mod database;' >> src/main.rs \
+    && echo 'mod tests;' >> src/main.rs \
+    && echo 'mod repositories;' >> src/main.rs \
+    && echo 'mod security;' >> src/main.rs \
+    && echo 'mod config;' >> src/main.rs \
+    && echo '' >> src/main.rs \
+    && echo 'fn main() {' >> src/main.rs \
+    && echo '    println!("MedEasy KP100 Sicherheitstests");' >> src/main.rs \
+    && echo '}' >> src/main.rs
+
+# Kopiere Datenbankmodule und erstelle mod.rs
+RUN cp -r /app/src-tauri/src/database/* /app/src/database/ \
+    && echo 'pub mod connection;' > src/database/mod.rs \
+    && echo 'pub mod encryption;' >> src/database/mod.rs \
+    && echo 'pub mod models;' >> src/database/mod.rs \
+    && echo 'pub mod schema;' >> src/database/mod.rs \
+    && echo 'pub mod migrations;' >> src/database/mod.rs
+
+# Die Methoden wurden direkt in connection.rs implementiert
+# Keine Erweiterungsdatei mehr notwendig [SP][ZTS]
+
+# Kopiere Verschlüsselungs-, Datenbank-, Repository-, Audit-Tests, Schlüsselrotationstests und Testhilfen [SP][ZTS][AIU][TR][ATV]
+RUN mkdir -p src/tests \
+    && cp /app/src-tauri/src/tests/encryption_tests.rs /app/src/tests/ \
+    && cp /app/src-tauri/src/tests/isolated_database_tests.rs /app/src/tests/ \
+    && cp /app/src-tauri/src/tests/repository_tests.rs /app/src/tests/ \
+    && cp /app/src-tauri/src/tests/audit_tests.rs /app/src/tests/ \
+    && cp /app/src-tauri/src/tests/key_rotation_tests.rs /app/src/tests/ \
+    && cp /app/src-tauri/src/tests/test_helpers.rs /app/src/tests/ \
+    && echo '// Die alten Tests werden nicht importiert, um Konflikte zu vermeiden' > src/tests/mod.rs \
+    && echo 'pub mod encryption_tests;' >> src/tests/mod.rs \
+    && echo 'pub mod isolated_database_tests;' >> src/tests/mod.rs \
+    && echo 'pub mod repository_tests;' >> src/tests/mod.rs \
+    && echo 'pub mod audit_tests;' >> src/tests/mod.rs \
+    && echo 'pub mod key_rotation_tests;' >> src/tests/mod.rs \
+    && echo 'pub mod test_helpers;' >> src/tests/mod.rs
+
+# Kopiere Security-Module und erstelle mod.rs [SP][ATV][ZTS]
+RUN cp -r /app/src-tauri/src/security/* /app/src/security/ \
+    && echo 'pub mod key_manager;' > src/security/mod.rs
+
+# Erstelle minimale Config für Tests [SP][ZTS]
+RUN echo '// „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17' > src/config/mod.rs \
+    && echo 'pub struct Config {' >> src/config/mod.rs \
+    && echo '    pub key_rotation_days: u32,' >> src/config/mod.rs \
+    && echo '}' >> src/config/mod.rs \
+    && echo '' >> src/config/mod.rs \
+    && echo 'impl Default for Config {' >> src/config/mod.rs \
+    && echo '    fn default() -> Self {' >> src/config/mod.rs \
+    && echo '        Self {' >> src/config/mod.rs \
+    && echo '            key_rotation_days: 90,' >> src/config/mod.rs \
+    && echo '        }' >> src/config/mod.rs \
+    && echo '    }' >> src/config/mod.rs \
+    && echo '}' >> src/config/mod.rs
+
+# Kopiere Repositories und erstelle mod.rs
+RUN cp -r /app/src-tauri/src/repositories/* /app/src/repositories/ \
+    && echo 'pub mod audit_repository;' > src/repositories/mod.rs \
+    && echo 'pub mod patient_repository;' >> src/repositories/mod.rs \
+    && echo 'pub mod session_repository;' >> src/repositories/mod.rs \
+    && echo 'pub mod transcript_repository;' >> src/repositories/mod.rs
+
+# Erweiterungen wurden direkt in connection.rs integriert
+
+# Umgebungsvariablen für stabilere Tests [SP][ZTS][TR]
+ENV RUST_BACKTRACE=1
+ENV RUST_LOG=error
+
+# Wichtig: Tests sequentiell ausführen, um Race Conditions zu vermeiden [ZTS]
+ENV RUST_TEST_THREADS=1
+
+# Temporäres Verzeichnis für Testdaten [ZTS]
+RUN mkdir -p /tmp/medeasy_tests && chmod 777 /tmp/medeasy_tests
+ENV MEDEASY_TEST_DIR=/tmp/medeasy_tests
+
+# Führe alle Tests aus mit Umgebungsvariablen aus .env-Datei und erweitertem Timeout [SP][ZTS][TR]
+CMD ["sh", "-c", "export $(cat .env | xargs) && cargo test --release -- --nocapture --test-threads=1"]

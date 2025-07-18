@@ -1,0 +1,74 @@
+{
+  "patients": [
+    {
+      "id": "P001",
+      "versicherungsnummer": "756.1234.5678.90",
+      "geburtsdatum": "15.06.1975",
+      "geschlecht": "männlich",
+      "krankenkasse": "Sanitas",
+      "konsultationen": [
+        {
+          "datum": "03.05.2025",
+          "grund": "Jährliche Kontrolle",
+          "notizen": "Patient berichtet über gelegentliche Kopfschmerzen"
+        }
+      ]
+    },
+    {
+      "id": "P002",
+      "versicherungsnummer": "756.9876.5432.10",
+      "geburtsdatum": "23.11.1982",
+      "geschlecht": "weiblich",
+      "krankenkasse": "CSS",
+      "konsultationen": [
+        {
+          "datum": "28.06.2025",
+          "grund": "Nachkontrolle Hypertonie",
+          "notizen": "Blutdruck: 135/85 mmHg, Medikation angepasst"
+        }
+      ]
+    },
+    {
+      "id": "P003",
+      "versicherungsnummer": "756.2468.1357.90",
+      "geburtsdatum": "07.03.1968",
+      "geschlecht": "männlich",
+      "krankenkasse": "Helsana",
+      "konsultationen": [
+        {
+          "datum": "15.07.2025",
+          "grund": "Rückenschmerzen",
+          "notizen": "Verdacht auf Bandscheibenvorfall L4/L5"
+        }
+      ]
+    },
+    {
+      "id": "P004",
+      "versicherungsnummer": "756.1357.2468.90",
+      "geburtsdatum": "12.09.1990",
+      "geschlecht": "weiblich",
+      "krankenkasse": "KPT",
+      "konsultationen": [
+        {
+          "datum": "22.07.2025",
+          "grund": "Allergische Reaktion",
+          "notizen": "Hautausschlag nach Einnahme von Antibiotikum"
+        }
+      ]
+    },
+    {
+      "id": "P005",
+      "versicherungsnummer": "756.8642.9753.10",
+      "geburtsdatum": "30.01.1955",
+      "geschlecht": "männlich",
+      "krankenkasse": "Swica",
+      "konsultationen": [
+        {
+          "datum": "05.08.2025",
+          "grund": "Diabetes-Kontrolle",
+          "notizen": "HbA1c: 7.2%, Blutzuckerwerte stabil"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+# „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17
+
+# MedEasy AI Context Rules [SC][PbD][RA]
+# These rules define how AI should interpret and handle medical data in MedEasy
+
+# Language and Format Rules [SC]
+language:
+  primary: "German"
+  medical_terms: "German"
+  code_comments: "English"
+  documentation: "German"
+  date_format: "DD.MM.YYYY"
+  currency: "CHF"
+  insurance_format: "XXX.XXXX.XXXX.XX"
+
+# Security and Privacy Rules [PbD][ZTS][AR]
+security:
+  encryption_standard: "AES-256"
+  patient_data:
+    storage: "encrypted_only"
+    transit: "TLS_1.3_minimum"
+    anonymization: "required"
+    audit: "all_operations"
+  authentication:
+    jwt_expiry: "8h"
+    refresh_token: "7d"
+    password_policy: "strong"
+  
+# Medical Data Handling [PSF][MDL][MV]
+medical_data:
+  validation:
+    heart_rate: [30, 250]
+    blood_pressure_systolic: [60, 250]
+    blood_pressure_diastolic: [40, 150]
+    temperature_celsius: [34.0, 43.0]
+    oxygen_saturation: [70, 100]
+  terminology:
+    use_snomed_ct: true
+    use_icd10: true
+    use_chop: true
+  
+# AI Processing Rules [AIU][DK]
+ai_processing:
+  anonymization:
+    required: true
+    confidence_threshold: 0.8
+    review_queue_threshold: 0.8
+  diagnosis:
+    disclaimer_required: true
+    confidence_display: true
+    killswitch_enabled: true
+    physician_confirmation: true
+  provider_chain:
+    - "OpenAI"
+    - "Claude"
+    - "Gemini"
+    - "Local"
+
+# Architecture Rules [CAS][CAM][DD]
+architecture:
+  pattern: "Clean Architecture"
+  layers:
+    - "Domain"
+    - "Application"
+    - "Infrastructure"
+    - "API"
+    - "AI"
+  dependency_direction: "inward"
+  bounded_contexts:
+    - "PatientManagement"
+    - "MedicalRecords"
+    - "Diagnostics"
+    - "Prescriptions"
+    - "Billing"
+
+# Documentation Rules [DM][D=C]
+documentation:
+  required_files:
+    - "CURRENT_STATE.md"
+    - "DB_SCHEMA.md"
+    - "API_REFERENCE.md"
+    - "DEPENDENCIES.md"
+  update_policy: "with_code_changes"
+  review_required: true

@@ -1,0 +1,6 @@
+<svg width="200" height="60" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="60" fill="#ffffff"></rect>
+  <path d="M10 30 L20 30 L25 20 L30 40 L35 25 L40 30 L60 30" stroke="#0077b6" stroke-width="2" fill="none"></path>
+  <text x="70" y="35" font-family="Arial, sans-serif" font-size="20" fill="#0077b6">Med</text>
+  <text x="115" y="35" font-family="Arial, sans-serif" font-size="20" fill="#38b000">Easy</text>
+</svg>

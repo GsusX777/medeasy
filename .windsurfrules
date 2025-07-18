@@ -1,6 +1,6 @@
 # MedEasy Project-Specific Windsurf Rules
 
-Version: 1.0  
+Version: 1.1  
 Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
 
 ## 🚨 KRITISCHE SICHERHEITSREGELN - IMMER BEFOLGEN
@@ -34,37 +34,68 @@ Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
 
 * **Dokumentation = Code (D=C):** Dokumentation wird im GLEICHEN Schritt wie Code geändert.
 
+* **DOCS-INDEX.md als zentrale Referenz (DIR):**
+  ```
+  Bei ALLEN Änderungen:
+  1. PRÜFE docs/DOCS-INDEX.md für relevante Dokumentationsdateien
+  2. AKTUALISIERE ALLE relevanten Dateien im entsprechenden Abschnitt
+  
+  Beispiel:
+  - Datenbank-Änderung → Siehe Abschnitt "## Datenbank" im DOCS-INDEX.md
+  - API-Änderung → Siehe Abschnitt "## API" im DOCS-INDEX.md
+  - Frontend-Änderung → Siehe Abschnitt "## Frontend" im DOCS-INDEX.md
+  ```
+
 * **VOR Code-Änderungen - Dokumentation LESEN (DL):**
   ```
+  BEVOR: Jede Änderung
+  PRÜFE: docs/DOCS-INDEX.md für relevante Dokumentationsdateien
+  
   BEVOR: Neue Entity erstellen
+  PRÜFE: docs/DOCS-INDEX.md Abschnitt "## Datenbank"
   PRÜFE: docs/database/SCHEMA.md für existierende Struktur
+  PRÜFE: docs/database/RELATIONSHIPS.mermaid für Entitätsbeziehungen
   
   BEVOR: Neuer API Endpoint
+  PRÜFE: docs/DOCS-INDEX.md Abschnitt "## API"
   PRÜFE: docs/api/API_REFERENCE.md für bestehendes Pattern
   
   BEVOR: Neue Dependency
+  PRÜFE: docs/DOCS-INDEX.md Abschnitt "## Architektur"
   PRÜFE: docs/architecture/DEPENDENCIES.md für Duplikate
+  PRÜFE: docs/architecture/Dependency_Graph.svg für Abhängigkeitsstruktur
+  
+  BEVOR: Security-Feature
+  PRÜFE: docs/DOCS-INDEX.md Abschnitt "## Compliance und Sicherheit"
+  PRÜFE: docs/compliance/SECURITY.md für bestehende Sicherheitsmaßnahmen
+  PRÜFE: docs/testing/SECURITY_TESTING.md für Testanforderungen
   ```
 
 * **SOFORT nach Code-Änderungen - Dokumentation UPDATEN (DSU):**
   ```
-  Neue Entity → Update docs/database/SCHEMA.md JETZT
-  Neuer API Endpoint → Update docs/api/API_REFERENCE.md JETZT  
-  Neue Dependency → Update docs/architecture/DEPENDENCIES.md JETZT
-                  → Update docs/architecture/Dependency_Graph.svg JETZT  
-  Architektur-Änderung → Update docs/architecture/README.md JETZT
-  Feature-Änderung → Update docs/FEATURE_STATUS.md JETZT  
-  Security-Feature → Update docs/compliance/SECURITY.md JETZT
+  Neue Entity → Update ALLE Dateien im Abschnitt "## Datenbank" des DOCS-INDEX.md
+  Neuer API Endpoint → Update ALLE Dateien im Abschnitt "## API" des DOCS-INDEX.md
+  Neue Dependency → Update ALLE Dateien im Abschnitt "## Architektur" des DOCS-INDEX.md
+  Architektur-Änderung → Update ALLE Dateien im Abschnitt "## Architektur" des DOCS-INDEX.md
+  Feature-Änderung → Update docs/FEATURE_STATUS.md und andere relevante Dateien
+  Security-Feature → Update ALLE Dateien im Abschnitt "## Compliance und Sicherheit" des DOCS-INDEX.md
+  ```
+* **BEI JEDER NEUEN DATEI IM PROJEKT EIN BIBELVERS ALS KOMMENTAR IN DER ERSTEN ZEILE HINZUFÜGEN (BVB):**
+  ```
+  „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17
   ```
 
 * **Windsurf-Verhalten Beispiel:**
   ```
   User: "Erstelle eine Prescription Entity"
   Windsurf:
-  1. LIEST docs/database/SCHEMA.md
-  2. ERSTELLT Prescription.cs nach Pattern
-  3. UPDATED docs/database/SCHEMA.md
-  4. ANTWORTET: "Entity erstellt und Doku aktualisiert [DL][DSU]"
+  1. PRÜFT docs/DOCS-INDEX.md für relevante Dokumentationsdateien im Abschnitt "## Datenbank"
+  2. LIEST docs/database/SCHEMA.md
+  3. ERSTELLT Prescription.cs nach Pattern
+  4. UPDATED docs/database/SCHEMA.md
+  5. UPDATED docs/database/RELATIONSHIPS.mermaid
+  6. UPDATED andere relevante Dateien aus dem Datenbank-Abschnitt
+  7. ANTWORTET: "Entity erstellt und alle relevanten Dokumente aktualisiert [DIR][DL][DSU]"
   ```
 
 ## 🇨🇭 SCHWEIZ-SPEZIFISCHE ANFORDERUNGEN
@@ -200,11 +231,12 @@ Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
 
 | Aktion | Erst lesen | Dann updaten |
 |--------|------------|--------------|
-| Neue Entity | docs/database/SCHEMA.md | Gleiche Datei |
-| Neue API | docs/api/API_REFERENCE.md | Gleiche Datei |
-| Neue Dependency | docs/architecture/DEPENDENCIES.md | Gleiche Datei |
-| Security Feature | docs/compliance/SECURITY.md | Gleiche Datei |
-| Architektur | docs/architecture/README.md | Gleiche Datei |
+| Jede Änderung | docs/DOCS-INDEX.md | Alle relevanten Dateien im entsprechenden Abschnitt |
+| Neue Entity | docs/database/SCHEMA.md | Alle Dateien im Abschnitt "## Datenbank" |
+| Neue API | docs/api/API_REFERENCE.md | Alle Dateien im Abschnitt "## API" |
+| Neue Dependency | docs/architecture/DEPENDENCIES.md | Alle Dateien im Abschnitt "## Architektur" |
+| Security Feature | docs/compliance/SECURITY.md | Alle Dateien im Abschnitt "## Compliance und Sicherheit" |
+| Architektur | docs/architecture/README.md | Alle Dateien im Abschnitt "## Architektur" |
 
 ## 📊 FEATURE-DOKUMENTATION
 

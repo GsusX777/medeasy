@@ -1,0 +1,608 @@
+// „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17
+
+syntax = "proto3";
+
+package medeasy;
+
+// MedEasy AI Service Protocol Buffer Definitions
+// [MLB] Multi-Language Bridge between .NET and Python
+// [AIU] Anonymization is mandatory and cannot be bypassed
+// [DSC] Swiss data protection compliance
+// [SP] Security measures for sensitive data
+// [SDH] Swiss German dialect handling
+// [NDW] Never diagnose without warning
+// [ATV] Audit logging for all operations
+// [CT] Cloud transparency for processing location
+
+// MedEasy AI Service definition
+// [MLB] Multi-Language Bridge between .NET and Python via gRPC
+// [CAM] Clean Architecture Mandatory - Domain logic separation
+service MedEasyService {
+  // Transcribe audio to text with anonymization
+  // [AIU] Anonymization is mandatory and cannot be bypassed
+  // [SDH] Swiss German dialect detection and handling
+  rpc Transcribe(TranscriptionRequest) returns (TranscriptionResponse) {}
+  
+  // Analyze medical text using AI providers
+  // [PK] Uses provider chain with fallbacks
+  // [NDW] Never diagnose without warning
+  rpc AnalyzeText(AnalysisRequest) returns (AnalysisResponse) {}
+  
+  // Review anonymization decisions
+  // [ARQ] Anonymization Review Queue
+  // [ATV] All decisions are audited
+  rpc ReviewAnonymization(ReviewRequest) returns (ReviewResponse) {}
+  
+  // Check service health and status
+  // [ATV] Service monitoring and audit
+  rpc HealthCheck(HealthRequest) returns (HealthResponse) {}
+  
+  // Get Swiss German dialect confidence
+  // [SDH] Swiss German dialect handling
+  // [MFD] Swiss medical terminology
+  rpc DetectSwissGerman(SwissGermanRequest) returns (SwissGermanResponse) {}
+  
+  // Get service metrics and statistics
+  // [ATV] Audit trail for monitoring
+  rpc GetServiceMetrics(MetricsRequest) returns (MetricsResponse) {}
+}
+
+// Transcription request message
+// [SP] Security measures for sensitive data
+// [SDH] Swiss German dialect handling
+// [AIU] Anonymization is mandatory
+// [CT] Cloud transparency
+message TranscriptionRequest {
+  // Unique request identifier
+  string request_id = 1;
+  
+  // Raw audio data bytes
+  // [SP] Will be encrypted in transit via TLS
+  bytes audio_data = 2;
+  
+  // Audio format (e.g., "wav", "mp3")
+  string audio_format = 3;
+  
+  // Audio length in seconds (if known)
+  float audio_length_seconds = 4;
+  
+  // Language code (e.g., "de" for German, "de-CH" for Swiss German)
+  // [SDH] Swiss German dialect handling
+  string language_code = 5;
+  
+  // Optional settings
+  map<string, string> options = 6;
+  
+  // Session identifier for consultation tracking
+  // [SK] Session concept for consultations
+  string session_id = 7;
+  
+  // Whether to detect Swiss German dialect
+  // [SDH] Swiss German dialect handling
+  bool detect_swiss_german = 8;
+  
+  // Whether to allow cloud processing
+  // [CT] Cloud transparency
+  // [DSC] Swiss data protection compliance
+  bool allow_cloud_processing = 9;
+  
+  // Consultation context (e.g., "initial", "followup")
+  // [MFD] Medical terminology context
+  string consultation_context = 10;
+  
+  // Audit information
+  // [ATV] Audit trail for all operations
+  message AuditInfo {
+    // User identifier (hashed)
+    string user_id_hash = 1;
+    
+    // User role (e.g., "doctor", "assistant")
+    string user_role = 2;
+    
+    // Client application identifier
+    string client_id = 3;
+    
+    // Client IP address hash
+    string ip_hash = 4;
+  }
+  AuditInfo audit_info = 11;
+}
+
+// Entity detected in text
+message Entity {
+  // Unique entity identifier
+  string entity_id = 1;
+  
+  // Entity type (e.g., "PERSON", "DATE_TIME", "SWISS_AHV")
+  string entity_type = 2;
+  
+  // Start position in text
+  int32 start = 3;
+  
+  // End position in text
+  int32 end = 4;
+  
+  // Confidence score (0.0-1.0)
+  float confidence_score = 5;
+  
+  // Whether this entity needs manual review
+  bool needs_review = 6;
+}
+
+// Transcription response message
+message TranscriptionResponse {
+  // Unique request identifier (same as request)
+  string request_id = 1;
+  
+  // Anonymized transcription text
+  // [AIU] Always anonymized, never raw text
+  string text = 2;
+  
+  // Original text before anonymization (only for authorized users)
+  string original_text = 3;
+  
+  // Detected language code
+  string language_code = 4;
+  
+  // Whether Swiss German was detected
+  // [SDH] Swiss German handling
+  bool is_swiss_german = 5;
+  
+  // Whether to show Swiss German warning
+  bool swiss_german_warning = 6;
+  
+  // Processing time in seconds
+  float processing_time_seconds = 7;
+  
+  // Detected PII entities
+  repeated Entity detected_entities = 8;
+  
+  // Whether processing was done in the cloud
+  // [CT] Cloud transparency
+  bool cloud_processed = 9;
+}
+
+// Text analysis request message
+// [NDW] Never diagnose without warning
+// [PK] Provider chain with fallbacks
+// [CT] Cloud transparency
+// [DSC] Swiss data protection compliance
+message AnalysisRequest {
+  // Unique request identifier
+  string request_id = 1;
+  
+  // Text to analyze (already anonymized)
+  // [AIU] Text must be pre-anonymized
+  string text = 2;
+  
+  // Analysis type
+  enum AnalysisType {
+    UNKNOWN = 0;
+    SUMMARIZE = 1;                // Summarize consultation
+    EXTRACT_SYMPTOMS = 2;         // Extract symptoms
+    SUGGEST_DIAGNOSIS = 3;        // Suggest possible diagnoses (requires disclaimer)
+    EXTRACT_MEDICATIONS = 4;      // Extract medications
+    SUGGEST_MEDICATIONS = 5;      // Suggest medications (requires disclaimer)
+    EXTRACT_PROCEDURES = 6;       // Extract procedures
+    SUGGEST_PROCEDURES = 7;       // Suggest procedures (requires disclaimer)
+    EXTRACT_ALLERGIES = 8;        // Extract allergies
+    EXTRACT_FAMILY_HISTORY = 9;   // Extract family history
+    EXTRACT_SOCIAL_HISTORY = 10;  // Extract social history
+    EXTRACT_VITALS = 11;          // Extract vital signs
+    SUGGEST_FOLLOWUP = 12;        // Suggest follow-up actions
+    SUGGEST_REFERRALS = 13;       // Suggest referrals
+    SUGGEST_LABS = 14;            // Suggest lab tests
+    EXTRACT_PATIENT_QUESTIONS = 15; // Extract patient questions
+    ANSWER_MEDICAL_QUESTION = 16; // Answer medical question (requires disclaimer)
+  }
+  AnalysisType analysis_type = 3;
+  
+  // Optional settings
+  map<string, string> options = 4;
+  
+  // Session identifier for consultation tracking
+  // [SK] Session concept for consultations
+  string session_id = 5;
+  
+  // Whether to allow cloud processing
+  // [CT] Cloud transparency
+  // [DSC] Swiss data protection compliance
+  bool allow_cloud_processing = 6;
+  
+  // Preferred AI provider (optional)
+  // [PK] Provider chain with fallbacks
+  string preferred_provider = 7;
+  
+  // Whether to use Swiss medical terminology
+  // [MFD] Swiss medical terminology
+  bool use_swiss_terminology = 8;
+  
+  // Medical specialty context
+  string medical_specialty = 9;
+  
+  // Patient context (anonymized)
+  message PatientContext {
+    // Age range (e.g., "30-40")
+    string age_range = 1;
+    
+    // Biological sex
+    enum BiologicalSex {
+      UNKNOWN = 0;
+      MALE = 1;
+      FEMALE = 2;
+      OTHER = 3;
+    }
+    BiologicalSex biological_sex = 2;
+    
+    // Known conditions (anonymized)
+    repeated string known_conditions = 3;
+    
+    // Known medications (anonymized)
+    repeated string known_medications = 4;
+    
+    // Known allergies (anonymized)
+    repeated string known_allergies = 5;
+  }
+  PatientContext patient_context = 10;
+  
+  // Audit information
+  // [ATV] Audit trail for all operations
+  message AuditInfo {
+    // User identifier (hashed)
+    string user_id_hash = 1;
+    
+    // User role (e.g., "doctor", "assistant")
+    string user_role = 2;
+    
+    // Client application identifier
+    string client_id = 3;
+    
+    // Request timestamp (Swiss format DD.MM.YYYY HH:MM:SS)
+    // [SF] Swiss date format
+    string timestamp = 4;
+  }
+  AuditInfo audit_info = 11;
+}
+
+// Text analysis response message
+// [NDW] Never diagnose without warning
+// [PK] Provider chain with fallbacks
+// [CT] Cloud transparency
+// [DSC] Swiss data protection compliance
+// [DK] Diagnosis killswitch functionality
+message AnalysisResponse {
+  // Unique request identifier (same as request)
+  string request_id = 1;
+  
+  // Analysis result
+  string result = 2;
+  
+  // Processing time in seconds
+  float processing_time_seconds = 3;
+  
+  // Provider used for analysis
+  // [PK] Provider chain with fallbacks
+  string provider_used = 4;
+  
+  // Whether processing was done in the cloud
+  // [CT] Cloud transparency
+  bool cloud_processed = 5;
+  
+  // Whether result includes a disclaimer
+  // [NDW] Never diagnose without warning
+  bool has_disclaimer = 6;
+  
+  // Disclaimer text
+  // [NDW] Never diagnose without warning
+  string disclaimer_text = 7;
+  
+  // Structured analysis results
+  message StructuredResult {
+    // Extracted symptoms
+    message Symptom {
+      string name = 1;
+      string description = 2;
+      float confidence = 3;
+      string body_location = 4;
+      string duration = 5;
+      string severity = 6;
+    }
+    repeated Symptom symptoms = 1;
+    
+    // Suggested diagnoses (with mandatory disclaimers)
+    // [NDW] Never diagnose without warning
+    // [DK] Subject to diagnosis killswitch
+    message Diagnosis {
+      string name = 1;
+      string description = 2;
+      float confidence = 3;
+      repeated string supporting_symptoms = 4;
+      repeated string contradicting_symptoms = 5;
+      string icd10_code = 6;
+      bool requires_urgent_attention = 7;
+    }
+    repeated Diagnosis diagnoses = 2;
+    
+    // Extracted medications
+    message Medication {
+      string name = 1;
+      string dosage = 2;
+      string frequency = 3;
+      string route = 4;
+      string duration = 5;
+    }
+    repeated Medication medications = 3;
+    
+    // Extracted procedures
+    message Procedure {
+      string name = 1;
+      string description = 2;
+      string body_location = 3;
+      string timing = 4;
+    }
+    repeated Procedure procedures = 4;
+    
+    // Extracted allergies
+    message Allergy {
+      string allergen = 1;
+      string reaction = 2;
+      string severity = 3;
+    }
+    repeated Allergy allergies = 5;
+    
+    // Extracted vital signs
+    message VitalSign {
+      string name = 1;
+      string value = 2;
+      string unit = 3;
+      bool is_abnormal = 4;
+      string reference_range = 5;
+    }
+    repeated VitalSign vital_signs = 6;
+    
+    // Suggested follow-up actions
+    message FollowUp {
+      string action = 1;
+      string timing = 2;
+      string rationale = 3;
+      float urgency = 4; // 0.0-1.0
+    }
+    repeated FollowUp follow_ups = 7;
+  }
+  StructuredResult structured_result = 8;
+  
+  // Killswitch status
+  // [DK] Diagnosis killswitch
+  enum KillswitchStatus {
+    UNKNOWN = 0;
+    ENABLED = 1;  // AI suggestions allowed
+    DISABLED = 2; // AI suggestions blocked
+  }
+  KillswitchStatus killswitch_status = 9;
+  
+  // Whether Swiss medical terminology was used
+  // [MFD] Swiss medical terminology
+  bool swiss_terminology_used = 10;
+  
+  // Provider fallback information
+  // [PK] Provider chain with fallbacks
+  message ProviderFallback {
+    string primary_provider = 1;
+    repeated string attempted_providers = 2;
+    repeated string failed_providers = 3;
+    int32 fallback_count = 4;
+  }
+  ProviderFallback provider_fallback = 11;
+  
+  // Response timestamp (Swiss format DD.MM.YYYY HH:MM:SS)
+  // [SF] Swiss date format
+  string timestamp = 12;
+  
+  // Session identifier (same as request)
+  // [SK] Session concept for consultations
+  string session_id = 13;
+}
+
+// Entity decision for review
+message EntityDecision {
+  // Entity identifier
+  string entity_id = 1;
+  
+  // Whether anonymization is approved
+  bool approved = 2;
+  
+  // Optional replacement text
+  string replacement_text = 3;
+}
+
+// Anonymization review request message
+message ReviewRequest {
+  // Unique request identifier
+  string request_id = 1;
+  
+  // Entity decisions
+  repeated EntityDecision entity_decisions = 2;
+}
+
+// Anonymization review response message
+message ReviewResponse {
+  // Unique request identifier (same as request)
+  string request_id = 1;
+  
+  // Whether the review was successful
+  bool success = 2;
+  
+  // Updated entities
+  repeated Entity updated_entities = 3;
+  
+  // Number of entities still in review queue
+  int32 remaining_review_count = 4;
+}
+
+// Health check request message
+// [ATV] Service monitoring
+message HealthRequest {
+  // Unique request identifier
+  string request_id = 1;
+  
+  // Whether to include detailed component status
+  bool include_details = 2;
+}
+
+// Health check response message
+// [ATV] Service monitoring
+message HealthResponse {
+  // Unique request identifier (same as request)
+  string request_id = 1;
+  
+  // Overall service status
+  enum Status {
+    UNKNOWN = 0;
+    HEALTHY = 1;
+    DEGRADED = 2;
+    UNHEALTHY = 3;
+  }
+  Status status = 2;
+  
+  // Component statuses
+  message ComponentStatus {
+    string name = 1;
+    Status status = 2;
+    string message = 3;
+    float response_time_ms = 4;
+  }
+  repeated ComponentStatus components = 3;
+  
+  // [SF] Swiss format for timestamp (DD.MM.YYYY HH:MM:SS)
+  string timestamp = 4;
+  
+  // Environment information
+  string environment = 5;
+  
+  // Version information
+  string version = 6;
+}
+
+// Swiss German detection request
+// [SDH] Swiss German dialect handling
+message SwissGermanRequest {
+  // Unique request identifier
+  string request_id = 1;
+  
+  // Text to analyze
+  string text = 2;
+  
+  // Whether to include detailed dialect markers
+  bool include_details = 3;
+}
+
+// Swiss German detection response
+// [SDH] Swiss German dialect handling
+// [MFD] Swiss medical terminology
+message SwissGermanResponse {
+  // Unique request identifier (same as request)
+  string request_id = 1;
+  
+  // Whether Swiss German was detected
+  bool is_swiss_german = 2;
+  
+  // Confidence score (0.0-1.0)
+  float confidence_score = 3;
+  
+  // Detected dialect markers
+  message DialectMarker {
+    string text = 1;
+    int32 start = 2;
+    int32 end = 3;
+    string standard_german = 4;
+    float confidence = 5;
+  }
+  repeated DialectMarker dialect_markers = 4;
+  
+  // [MFD] Swiss medical terminology detected
+  repeated string swiss_medical_terms = 5;
+  
+  // Processing time in seconds
+  float processing_time_seconds = 6;
+}
+
+// Service metrics request
+// [ATV] Audit trail for monitoring
+message MetricsRequest {
+  // Unique request identifier
+  string request_id = 1;
+  
+  // Time period to include
+  enum TimePeriod {
+    LAST_HOUR = 0;
+    LAST_DAY = 1;
+    LAST_WEEK = 2;
+    LAST_MONTH = 3;
+    CUSTOM = 4;
+  }
+  TimePeriod time_period = 2;
+  
+  // Custom time period start (if TimePeriod is CUSTOM)
+  // [SF] Swiss format for date (DD.MM.YYYY)
+  string custom_start = 3;
+  
+  // Custom time period end (if TimePeriod is CUSTOM)
+  // [SF] Swiss format for date (DD.MM.YYYY)
+  string custom_end = 4;
+  
+  // Metrics to include
+  repeated string metrics = 5;
+}
+
+// Service metrics response
+// [ATV] Audit trail for monitoring
+message MetricsResponse {
+  // Unique request identifier (same as request)
+  string request_id = 1;
+  
+  // Request metrics
+  message RequestMetrics {
+    int32 total_requests = 1;
+    int32 successful_requests = 2;
+    int32 failed_requests = 3;
+    float average_response_time_ms = 4;
+    float p95_response_time_ms = 5;
+    float p99_response_time_ms = 6;
+  }
+  RequestMetrics request_metrics = 2;
+  
+  // Transcription metrics
+  message TranscriptionMetrics {
+    int32 total_transcriptions = 1;
+    int32 swiss_german_detected = 2;
+    float average_audio_length_seconds = 3;
+    float average_processing_time_seconds = 4;
+    int32 cloud_processed = 5;
+    int32 locally_processed = 6;
+  }
+  TranscriptionMetrics transcription_metrics = 3;
+  
+  // Anonymization metrics
+  message AnonymizationMetrics {
+    int32 total_entities_detected = 1;
+    int32 entities_requiring_review = 2;
+    map<string, int32> entity_types = 3;
+    float average_confidence_score = 4;
+  }
+  AnonymizationMetrics anonymization_metrics = 4;
+  
+  // Provider metrics
+  message ProviderMetrics {
+    map<string, int32> provider_usage = 1;
+    map<string, int32> provider_failures = 2;
+    map<string, float> average_response_times = 3;
+  }
+  ProviderMetrics provider_metrics = 5;
+  
+  // [SF] Swiss format for time period
+  string time_period_start = 6;
+  string time_period_end = 7;
+  
+  // Generated timestamp
+  string generated_at = 8;
+}
