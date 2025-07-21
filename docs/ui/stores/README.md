@@ -46,9 +46,9 @@ Diese Dokumentation beschreibt die Svelte Stores für die Zustandsverwaltung in 
 ## Datenfluss
 
 ```
-UI Component → Store Action → Tauri Command → Rust Backend → Database
+UI Component → Store Action → HTTP Request → .NET Backend → Database
      ↑                                                           ↓
-UI Update ← Store Update ← Tauri Response ← Rust Response ← Database Response
+UI Update ← Store Update ← HTTP Response ← .NET Response ← Database Response
 ```
 
 ## Store-Richtlinien

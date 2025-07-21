@@ -1,17 +1,17 @@
-<!-- „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17 -->
-
-
+ï»¿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedEasy.Domain", "MedEasy.Domain\MedEasy.Domain.csproj", "{FC9F2F19-58E7-4B18-91A3-0AB03F177864}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedEasy.Domain", "MedEasy.Domain\MedEasy.Domain.csproj", "{A2B8DE23-27AA-42E0-85FC-03C1EC220186}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedEasy.Application", "MedEasy.Application\MedEasy.Application.csproj", "{C7ADC805-2D33-44AC-8C15-77FA78550CB3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedEasy.Application", "MedEasy.Application\MedEasy.Application.csproj", "{ACB02AFD-9876-4226-956A-00D78446E187}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedEasy.Infrastructure", "MedEasy.Infrastructure\MedEasy.Infrastructure.csproj", "{5D611852-E174-49F6-A2D9-EAA0E3B59CC6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedEasy.Infrastructure", "MedEasy.Infrastructure\MedEasy.Infrastructure.csproj", "{76191A1E-8517-4802-ACA4-B2A0EEF86686}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedEasy.API", "MedEasy.API\MedEasy.API.csproj", "{B5AB078F-3BA3-4E9D-BCA6-643BB235630B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedEasy.API", "MedEasy.API\MedEasy.API.csproj", "{8A4DC2B6-332A-4BF8-A221-D0A10E62E7B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedEasy.FinalSecurityTests", "MedEasy.FinalSecurityTests\MedEasy.FinalSecurityTests.csproj", "{CBCF5A01-EDE2-4A54-88E9-6B4C2DCC438C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,21 +22,25 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{FC9F2F19-58E7-4B18-91A3-0AB03F177864}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FC9F2F19-58E7-4B18-91A3-0AB03F177864}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FC9F2F19-58E7-4B18-91A3-0AB03F177864}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FC9F2F19-58E7-4B18-91A3-0AB03F177864}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C7ADC805-2D33-44AC-8C15-77FA78550CB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C7ADC805-2D33-44AC-8C15-77FA78550CB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C7ADC805-2D33-44AC-8C15-77FA78550CB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C7ADC805-2D33-44AC-8C15-77FA78550CB3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5D611852-E174-49F6-A2D9-EAA0E3B59CC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5D611852-E174-49F6-A2D9-EAA0E3B59CC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5D611852-E174-49F6-A2D9-EAA0E3B59CC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5D611852-E174-49F6-A2D9-EAA0E3B59CC6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B5AB078F-3BA3-4E9D-BCA6-643BB235630B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B5AB078F-3BA3-4E9D-BCA6-643BB235630B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B5AB078F-3BA3-4E9D-BCA6-643BB235630B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B5AB078F-3BA3-4E9D-BCA6-643BB235630B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2B8DE23-27AA-42E0-85FC-03C1EC220186}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2B8DE23-27AA-42E0-85FC-03C1EC220186}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2B8DE23-27AA-42E0-85FC-03C1EC220186}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2B8DE23-27AA-42E0-85FC-03C1EC220186}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACB02AFD-9876-4226-956A-00D78446E187}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACB02AFD-9876-4226-956A-00D78446E187}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACB02AFD-9876-4226-956A-00D78446E187}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACB02AFD-9876-4226-956A-00D78446E187}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76191A1E-8517-4802-ACA4-B2A0EEF86686}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76191A1E-8517-4802-ACA4-B2A0EEF86686}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76191A1E-8517-4802-ACA4-B2A0EEF86686}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76191A1E-8517-4802-ACA4-B2A0EEF86686}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A4DC2B6-332A-4BF8-A221-D0A10E62E7B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A4DC2B6-332A-4BF8-A221-D0A10E62E7B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A4DC2B6-332A-4BF8-A221-D0A10E62E7B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A4DC2B6-332A-4BF8-A221-D0A10E62E7B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBCF5A01-EDE2-4A54-88E9-6B4C2DCC438C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBCF5A01-EDE2-4A54-88E9-6B4C2DCC438C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBCF5A01-EDE2-4A54-88E9-6B4C2DCC438C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBCF5A01-EDE2-4A54-88E9-6B4C2DCC438C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

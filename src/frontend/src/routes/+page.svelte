@@ -1,306 +1,488 @@
-<!-- �Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein � ja, lass gelingen, was wir tun!" Psalm 90,17 -->
+<!-- „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17 -->
 
-<!-- 
-  [CT] Cloud-Transparenz - UI zeigt immer Datenverarbeitungsort
-  [AIU] Anonymisierung ist UNVERÄNDERLICH
-  [SF] Schweizer Formate - Datum: DD.MM.YYYY
-  [MFD] Medizinische Fachbegriffe DE-CH
--->
 <script lang="ts">
-  import type { AppState, Session } from '$lib/types/app-state';
-import { onMount } from 'svelte';
-  import { currentSession, appState, initializeApp, startNewSession } from '$lib/stores/session';
+  import { onMount } from 'svelte';
   import AppLayout from '$lib/components/AppLayout.svelte';
-  import ProcessingLocationIndicator from '$lib/components/ProcessingLocationIndicator.svelte';
-  import AnonymizationNotice from '$lib/components/AnonymizationNotice.svelte';
-  import SessionRecorder from '$lib/components/SessionRecorder.svelte';
-  import TranscriptViewer from '$lib/components/TranscriptViewer.svelte';
-  import SecuritySettings from '$lib/components/SecuritySettings.svelte';
+  import { loadPatients, loadPatientSessions, patients, sessions, initDb } from '$lib/stores/database';
+  import type { PatientDto, SessionDto } from '$lib/types/database';
   
+  // State
+  let todaySessions: SessionDto[] = [];
+  let recentSessions: SessionDto[] = [];
+  let openSessions: SessionDto[] = [];
+  let allPatients: PatientDto[] = [];
+  let allSessions: SessionDto[] = [];
   let loading = true;
-  let error: string | null = null;
-  let showAnonymizationDetails = false;
-  let demoTranscript = "";
+  let error = '';
   
-  // [SF] Schweizer Formate - Datum: DD.MM.YYYY
-  function formatSwissDate(date: Date): string {
-    return date.toLocaleDateString('de-CH');
-  }
-  
-  onMount(async () => {
-    try {
-      await initializeApp();
-      
-      // Demo-Transkript für Vorschau
-      demoTranscript = "Guten Tag Herr Müller, wie geht es Ihnen heute? Haben die Medikamente angeschlagen, die ich Ihnen beim letzten Besuch im Spital verschrieben habe?\n\nJa Doktor, die Schmerzen sind besser geworden. Aber ich habe immer noch Probleme beim Treppensteigen. Besonders in meiner Wohnung an der Hauptstrasse 42 ist das ein Problem.\n\nIch verstehe. Lassen Sie mich das in Ihrer Krankengeschichte notieren. Ihre Versicherungsnummer war 756.1234.5678.90, richtig?";
-      
-      loading = false;
-    } catch (err) {
-      error = `Fehler beim Laden: ${err}`;
-      loading = false;
-    }
+  // Aktuelles Datum [SF] - Schweizer Format DD.MM.YYYY
+  const today = new Date();
+  const todayString = today.toLocaleDateString('de-CH', {
+    day: '2-digit',
+    month: '2-digit', 
+    year: 'numeric'
   });
   
-  async function handleNewSession() {
+  // Wochentag auf Deutsch [SF]
+  const weekday = today.toLocaleDateString('de-CH', { weekday: 'long' });
+  
+  onMount(async () => {
+    await loadDashboardData();
+  });
+  
+  async function loadDashboardData() {
     try {
-      await startNewSession();
+      loading = true;
+      error = '';
+      
+      // Initialisiere Datenbank falls nötig
+      const dbInitialized = await initDb();
+      if (!dbInitialized) {
+        error = 'Fehler beim Initialisieren der Datenbank';
+        return;
+      }
+      
+      // Lade alle Patienten
+      allPatients = await loadPatients();
+      
+      // Lade Sessions für alle Patienten
+      const sessionPromises = allPatients.map(patient => loadPatientSessions(patient.id));
+      const sessionArrays = await Promise.all(sessionPromises);
+      allSessions = sessionArrays.flat();
+      
+      // Filtere Sessions für heute
+      todaySessions = allSessions.filter(session => {
+        // session.session_date ist bereits im DD.MM.YYYY Format [SF]
+        return session.session_date === todayString;
+      });
+      
+      // Letzte 5 abgeschlossene Konsultationen
+      recentSessions = allSessions
+        .filter(session => session.status === 'Completed')
+        .sort((a, b) => {
+          // Konvertiere DD.MM.YYYY zu Date für Sortierung
+          const dateA = new Date(a.session_date.split('.').reverse().join('-'));
+          const dateB = new Date(b.session_date.split('.').reverse().join('-'));
+          return dateB.getTime() - dateA.getTime();
+        })
+        .slice(0, 5);
+      
+      // Offene Konsultationen (geplant oder laufend)
+      openSessions = allSessions
+        .filter(session => session.status === 'Scheduled' || session.status === 'InProgress')
+        .sort((a, b) => {
+          // Konvertiere DD.MM.YYYY zu Date für Sortierung
+          const dateA = new Date(a.session_date.split('.').reverse().join('-'));
+          const dateB = new Date(b.session_date.split('.').reverse().join('-'));
+          return dateA.getTime() - dateB.getTime();
+        });
+      
     } catch (err) {
-      error = `Fehler beim Erstellen einer neuen Session: ${err}`;
+      error = `Fehler beim Laden des Dashboards: ${err}`;
+      console.error(error);
+    } finally {
+      loading = false;
+    }
+  }
+  
+  // Hilfsfunktion: Patient-Name finden
+  function getPatientName(patientId: string): string {
+    const patient = allPatients.find((p: PatientDto) => p.id === patientId);
+    return patient ? `${patient.first_name} ${patient.last_name}` : 'Unbekannter Patient';
+  }
+  
+  // Hilfsfunktion: Status-Icon
+  function getStatusIcon(status: string): string {
+    switch (status) {
+      case 'Scheduled': return '📅';
+      case 'InProgress': return '🔴';
+      case 'Completed': return '✅';
+      case 'Cancelled': return '❌';
+      default: return '❓';
+    }
+  }
+  
+  // Hilfsfunktion: Status-Text [SF]
+  function getStatusText(status: string): string {
+    switch (status) {
+      case 'Scheduled': return 'Geplant';
+      case 'InProgress': return 'Laufend';
+      case 'Completed': return 'Abgeschlossen';
+      case 'Cancelled': return 'Abgebrochen';
+      default: return 'Unbekannt';
     }
   }
 </script>
 
-<AppLayout>
-  {#if loading}
-    <div class="loading">
-      <div class="spinner"></div>
-      <p>MedEasy wird geladen...</p>
-    </div>
-  {:else if error}
-    <div class="error">
-      <h2>Fehler beim Laden</h2>
-      <p>{error}</p>
-      <button on:click={() => window.location.reload()}>Neu laden</button>
-    </div>
-  {:else}
-    <div class="dashboard">
-      <section class="welcome">
-        <h2>Willkommen bei MedEasy</h2>
-        <p>Ihre sichere Lösung für medizinische Dokumentation in der Schweiz</p>
-        
-        <!-- [AIU] Anonymisierung ist UNVERÄNDERLICH -->
-        <AnonymizationNotice bind:showDetails={showAnonymizationDetails} />
-      </section>
-      
-      <div class="dashboard-grid">
-        <div class="main-column">
-          <section class="session-section">
-            {#if $currentSession}
-              <div class="session-header">
-                <h3>Aktive Konsultation</h3>
-                <span class="session-date">Gestartet: {formatSwissDate($currentSession.startTime)}</span>
-              </div>
-              
-              <!-- Recorder Component -->
-              <SessionRecorder />
-              
-              <!-- Transcript Component -->
-              <div class="transcript-container">
-                <TranscriptViewer 
-                  sessionId={$currentSession.id} 
-                  transcript={demoTranscript}
-                  loading={false}
-                />
-              </div>
-            {:else}
-              <div class="no-session">
-                <h3>Keine aktive Konsultation</h3>
-                <p>Starten Sie eine neue Konsultation, um Aufnahmen zu machen und Transkripte zu erstellen.</p>
-                <button class="primary-button" on:click={handleNewSession}>
-                  Neue Konsultation starten
-                </button>
-              </div>
-            {/if}
-          </section>
-        </div>
-        
-        <div class="side-column">
-          <!-- Security Settings Component -->
-          <SecuritySettings />
-          
-          <section class="quick-stats">
-            <h3>Statistiken</h3>
-            <div class="stats-grid">
-              <div class="stat-item">
-                <span class="stat-value">24</span>
-                <span class="stat-label">Konsultationen</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value">12</span>
-                <span class="stat-label">Patienten</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value">8h</span>
-                <span class="stat-label">Aufnahmezeit</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value">100%</span>
-                <span class="stat-label">Sicher</span>
-              </div>
-            </div>
-          </section>
-        </div>
+<AppLayout title="Dashboard">
+  <div class="dashboard">
+    <div class="dashboard-header">
+      <h1>Übersicht</h1>
+      <div class="date-info">
+        <span class="weekday">{weekday}</span>
+        <span class="date">{todayString}</span>
       </div>
     </div>
-  {/if}
+    
+    {#if loading}
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Lade Dashboard-Daten...</p>
+      </div>
+    {:else if error}
+      <div class="error">
+        <p>⚠️ {error}</p>
+        <button on:click={loadDashboardData} class="retry-button">Erneut versuchen</button>
+      </div>
+    {:else}
+      <div class="dashboard-grid">
+        
+        <!-- Tagesübersicht -->
+        <div class="dashboard-card today-overview">
+          <h2>📅 Heute ({todayString})</h2>
+          {#if todaySessions.length === 0}
+            <div class="empty-state">
+              <p>Keine Konsultationen für heute geplant</p>
+            </div>
+          {:else}
+            <div class="session-list">
+              {#each todaySessions as session}
+                <div class="session-item today">
+                  <div class="session-info">
+                    <div class="session-patient">
+                      <span class="patient-icon">👤</span>
+                      <span class="patient-name">{getPatientName(session.patient_id)}</span>
+                    </div>
+                    <div class="session-time">
+                      {session.start_time} - {session.end_time || 'offen'}
+                    </div>
+                  </div>
+                  <div class="session-status">
+                    <span class="status-icon">{getStatusIcon(session.status)}</span>
+                    <span class="status-text">{getStatusText(session.status)}</span>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+        
+        <!-- Offene Konsultationen -->
+        <div class="dashboard-card open-sessions">
+          <h2>📋 Offene Konsultationen</h2>
+          {#if openSessions.length === 0}
+            <div class="empty-state">
+              <p>Keine offenen Konsultationen</p>
+            </div>
+          {:else}
+            <div class="session-list">
+              {#each openSessions as session}
+                <div class="session-item open">
+                  <div class="session-info">
+                    <div class="session-patient">
+                      <span class="patient-icon">👤</span>
+                      <span class="patient-name">{getPatientName(session.patient_id)}</span>
+                    </div>
+                    <div class="session-date-time">
+                      <span class="session-date">{session.session_date}</span>
+                      <span class="session-time">{session.start_time}</span>
+                    </div>
+                  </div>
+                  <div class="session-status">
+                    <span class="status-icon">{getStatusIcon(session.status)}</span>
+                    <span class="status-text">{getStatusText(session.status)}</span>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+        
+        <!-- Letzte Konsultationen -->
+        <div class="dashboard-card recent-sessions">
+          <h2>📝 Letzte Konsultationen</h2>
+          {#if recentSessions.length === 0}
+            <div class="empty-state">
+              <p>Noch keine abgeschlossenen Konsultationen</p>
+            </div>
+          {:else}
+            <div class="session-list">
+              {#each recentSessions as session}
+                <div class="session-item recent">
+                  <div class="session-info">
+                    <div class="session-patient">
+                      <span class="patient-icon">👤</span>
+                      <span class="patient-name">{getPatientName(session.patient_id)}</span>
+                    </div>
+                    <div class="session-date-time">
+                      <span class="session-date">{session.session_date}</span>
+                      <span class="session-time">{session.start_time} - {session.end_time}</span>
+                    </div>
+                  </div>
+                  <div class="session-status completed">
+                    <span class="status-icon">✅</span>
+                    <span class="status-text">Abgeschlossen</span>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+        
+      </div>
+    {/if}
+  </div>
 </AppLayout>
 
 <style>
-  .loading {
+  .dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+  
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  
+  .dashboard-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+  }
+  
+  .date-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+  
+  .weekday {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #3b82f6;
+    text-transform: capitalize;
+  }
+  
+  .date {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  .loading, .error {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 50vh;
-    gap: 1rem;
+    padding: 3rem;
+    text-align: center;
   }
   
   .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-left-color: #2563eb;
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid #e5e7eb;
+    border-top: 3px solid #3b82f6;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-  }
-  
-  .error {
-    text-align: center;
-    padding: 2rem;
-    background-color: #fef2f2;
-    border-radius: 8px;
-    border: 1px solid #fecaca;
-    margin: 2rem auto;
-    max-width: 500px;
-  }
-  
-  .error h2 {
-    color: #dc2626;
-    margin-top: 0;
-  }
-  
-  .error button {
-    background-color: #dc2626;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-top: 1rem;
-  }
-  
-  .dashboard {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
-  .welcome {
-    margin-bottom: 2rem;
-  }
-  
-  .welcome h2 {
-    margin-top: 0;
-    color: #1e293b;
-  }
-  
-  .dashboard-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 1.5rem;
-  }
-  
-  .session-section {
-    margin-bottom: 1.5rem;
-  }
-  
-  .session-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 1rem;
   }
   
-  .session-header h3 {
-    margin: 0;
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
   
-  .session-date {
-    font-size: 0.875rem;
-    color: #64748b;
+  .error {
+    color: #dc2626;
   }
   
-  .transcript-container {
-    margin-top: 1.5rem;
-  }
-  
-  .no-session {
-    background-color: white;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-  
-  .no-session h3 {
-    margin-top: 0;
-  }
-  
-  .primary-button {
-    background-color: #2563eb;
+  .retry-button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #3b82f6;
     color: white;
     border: none;
-    padding: 0.75rem 1.5rem;
     border-radius: 6px;
-    font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s;
   }
   
-  .primary-button:hover {
-    background-color: #1d4ed8;
+  .retry-button:hover {
+    background: #2563eb;
   }
   
-  .quick-stats {
-    background-color: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-top: 1.5rem;
-  }
-  
-  .quick-stats h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    font-size: 1.125rem;
-  }
-  
-  .stats-grid {
+  .dashboard-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    grid-template-rows: auto auto;
+    gap: 1.5rem;
   }
   
-  .stat-item {
+  .dashboard-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+  }
+  
+  .dashboard-card h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .today-overview {
+    grid-column: 1 / -1; /* Vollbreite */
+    border-left: 4px solid #3b82f6;
+  }
+  
+  .open-sessions {
+    border-left: 4px solid #f59e0b;
+  }
+  
+  .recent-sessions {
+    border-left: 4px solid #10b981;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #6b7280;
+    font-style: italic;
+  }
+  
+  .session-list {
     display: flex;
     flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .session-item {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    background-color: #f8fafc;
-    border-radius: 6px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s;
   }
   
-  .stat-value {
-    font-size: 1.5rem;
+  .session-item:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  .session-item.today {
+    background: linear-gradient(135deg, #dbeafe 0%, #f0f9ff 100%);
+    border-color: #3b82f6;
+  }
+  
+  .session-item.open {
+    background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
+    border-color: #f59e0b;
+  }
+  
+  .session-item.recent {
+    background: linear-gradient(135deg, #d1fae5 0%, #f0fdf4 100%);
+    border-color: #10b981;
+  }
+  
+  .session-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .session-patient {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .patient-icon {
+    font-size: 1rem;
+  }
+  
+  .patient-name {
     font-weight: 600;
-    color: #2563eb;
+    color: #1f2937;
   }
   
-  .stat-label {
+  .session-date-time {
+    display: flex;
+    gap: 0.75rem;
     font-size: 0.875rem;
-    color: #64748b;
-    margin-top: 0.25rem;
+    color: #6b7280;
   }
   
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
+  .session-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    color: #6b7280;
   }
   
+  .session-date {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  .session-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .status-icon {
+    font-size: 1rem;
+  }
+  
+  .status-text {
+    color: #374151;
+  }
+  
+  /* Responsive Design */
   @media (max-width: 768px) {
     .dashboard-grid {
       grid-template-columns: 1fr;
+    }
+    
+    .dashboard-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    
+    .date-info {
+      align-items: flex-start;
+    }
+    
+    .session-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    
+    .session-status {
+      align-self: flex-end;
     }
   }
 </style>

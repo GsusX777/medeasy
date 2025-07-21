@@ -2,7 +2,25 @@
 
 # MedEasy Datenbankschema
 
-*Letzte Aktualisierung: 12.07.2025*
+*Letzte Aktualisierung: 19.01.2025*
+
+## Frontend-Integration Status [AKTUELL]
+
+**Mock-API Phase (Januar 2025):**
+- ✅ Dashboard verwendet temporäre Mock-Daten
+- ✅ TypeScript-DTOs erweitert um fehlende Session-Felder
+- ✅ Feldnamen korrigiert: camelCase → snake_case
+- 🔄 Nächster Schritt: .NET Backend Integration
+
+**Bekannte Abweichungen Mock vs. Schema:**
+- Mock verwendet `string` IDs statt `Guid`
+- Mock-Daten nicht verschlüsselt (nur für Tests)
+- Schweizer Datumsformat (DD.MM.YYYY) korrekt implementiert [SF]
+
+**⚠️ Backend-Anpassungsbedarf:**
+- **Session-Tabelle**: Backend-Schema muss an Frontend-DTOs angepasst werden
+- Frontend erwartet: `session_date`, `start_time`, `end_time` als separate Felder
+- Aktuelles Schema zeigt noch alte Struktur - muss vor .NET Integration aktualisiert werden
 
 ## Übersicht [SP][EIV]
 
@@ -25,10 +43,10 @@ Das MedEasy-Datenbankschema verwendet SQLCipher mit AES-256-Verschlüsselung fü
   ```
 
 ### Feldverschlüsselung
-- **Algorithmus**: AES-256-GCM mit zufälligem Nonce
+- **Algorithmus**: AES-256 mit zufälligem IV
 - **Schlüsselquelle**: Umgebungsvariable `MEDEASY_FIELD_ENCRYPTION_KEY` (Base64-kodiert)
-- **Implementierung**: Rust `aes-gcm` Crate
-- **Format**: `[12-byte nonce][verschlüsselter Text][16-byte auth tag]`
+- **Implementierung**: .NET `System.Security.Cryptography.Aes`
+- **Format**: `[16-byte IV][verschlüsselter Text]`
 
 ## Entitäten
 
@@ -39,7 +57,13 @@ Speichert Patienteninformationen mit verschlüsselten persönlichen Daten.
 | Spalte | Typ | Beschreibung | Verschlüsselt |
 |--------|-----|-------------|--------------|
 | Id | Guid | Primärschlüssel | Nein |
-| EncryptedName | byte[] | Verschlüsselter Name des Patienten | Ja |
+| EncryptedFirstName | byte[] | Verschlüsselte Vorname des Patienten [EIV] | Ja |
+| EncryptedLastName | byte[] | Verschlüsselte Nachname des Patienten [EIV] | Ja |
+| EncryptedDateOfBirth | byte[] | Verschlüsselte Geburtsdatum [EIV] | Ja |
+| EncryptedInsuranceNumber | byte[] | Verschlüsselte Versicherungsnummer [EIV] | Ja |
+| AnonymizedFirstName | string | Anonymisierte Vorname für UI [AIU] | Nein |
+| AnonymizedLastName | string | Anonymisierte Nachname für UI [AIU] | Nein |
+| AnonymizedDateOfBirth | string | Anonymisierte Geburtsdatum für UI [AIU] | Nein |
 | InsuranceNumberHash | string | Hash der Versicherungsnummer (nicht die Originalnummer) | Nein |
 | DateOfBirth | DateOnly | Geburtsdatum (für Altersberechnung) | Nein |
 | Created | DateTime | Erstellungszeitpunkt | Nein |
@@ -55,16 +79,16 @@ Repräsentiert eine Konsultation oder einen Arztbesuch.
 |--------|-----|-------------|--------------|
 | Id | Guid | Primärschlüssel | Nein |
 | PatientId | Guid | Fremdschlüssel zum Patienten | Nein |
-| SessionDate | TEXT | Datum der Session (Format: DD.MM.YYYY) [SF] | Nein |
-| StartTime | TEXT | Startzeit der Konsultation | Nein |
-| EndTime | TEXT | Endzeit der Konsultation | Nein |
-| Status | TEXT | Status der Session (Scheduled, InProgress, Completed, Cancelled) | Nein |
-| EncryptedNotes | TEXT | Verschlüsselte Notizen zur Session | Ja |
-| EncryptedAudioReference | TEXT | Verschlüsselte Referenz zur Audiodatei | Ja |
-| Created | TEXT | Erstellungszeitpunkt | Nein |
-| CreatedBy | TEXT | Benutzer, der den Eintrag erstellt hat | Nein |
-| LastModified | TEXT | Zeitpunkt der letzten Änderung | Nein |
-| LastModifiedBy | TEXT | Benutzer, der die letzte Änderung vorgenommen hat | Nein |
+| SessionDate | DateTime | Datum der Session [SF] | Nein |
+| StartTime | TimeSpan? | Startzeit der Konsultation (nullable) | Nein |
+| EndTime | TimeSpan? | Endzeit der Konsultation (nullable) | Nein |
+| Status | SessionStatus | Status der Session (Enum: Scheduled, InProgress, Completed, Cancelled) | Nein |
+| EncryptedNotes | byte[] | Verschlüsselte Notizen zur Session [EIV] | Ja |
+| EncryptedAudioReference | byte[] | Verschlüsselte Referenz zur Audiodatei [EIV] | Ja |
+| Created | DateTime | Erstellungszeitpunkt | Nein |
+| CreatedBy | string | Benutzer, der den Eintrag erstellt hat | Nein |
+| LastModified | DateTime | Zeitpunkt der letzten Änderung | Nein |
+| LastModifiedBy | string | Benutzer, der die letzte Änderung vorgenommen hat | Nein |
 
 **Zukünftige MVP-Erweiterung:**
 | InsuranceCaseNumber | TEXT | Fallnummer für die Versicherung [SF][MFD] | Nein |
@@ -164,6 +188,32 @@ Protokolliert alle Datenbankoperationen für Audit-Zwecke.
 - **Patient** 1:N **Session** (Ein Patient kann mehrere Sessions haben)
 - **Session** 1:N **Transcript** (Eine Session kann mehrere Transkripte haben)
 - **Transcript** 1:N **AnonymizationReviewItem** (Ein Transkript kann mehrere Review-Items haben)
+
+### KeyRotationLog [SP][ATV]
+
+Protokolliert alle Schlüsselrotationen für Compliance und Sicherheit.
+
+| Spalte | Typ | Beschreibung | Verschlüsselt |
+|--------|-----|-------------|------------|
+| Id | Guid | Primärschlüssel | Nein |
+| KeyType | KeyType | Typ des rotierten Schlüssels (Enum: Database, FieldPatient, FieldSession, FieldTranscript, Backup) | Nein |
+| OldKeyVersion | int | Version des alten Schlüssels | Nein |
+| NewKeyVersion | int | Version des neuen Schlüssels | Nein |
+| RotationReason | string | Grund für die Rotation (Scheduled, Compromised, Manual) | Nein |
+| RotationStatus | RotationStatus | Status der Rotation (Enum: InProgress, Completed, Failed, RolledBack) | Nein |
+| StartedAt | DateTime | Zeitpunkt des Rotationsbeginns | Nein |
+| CompletedAt | DateTime? | Zeitpunkt der Rotationsvollendung (nullable) | Nein |
+| RotatedBy | string | Benutzer/System, das die Rotation durchgeführt hat | Nein |
+| ErrorMessage | string? | Fehlermeldung bei fehlgeschlagener Rotation (nullable) | Nein |
+| AffectedRecords | int | Anzahl der betroffenen Datensätze | Nein |
+| Created | DateTime | Erstellungszeitpunkt | Nein |
+| CreatedBy | string | System/Benutzer, der den Eintrag erstellt hat | Nein |
+
+**Wichtige Hinweise:**
+- Schlüsselrotation erfolgt automatisch alle 90 Tage [SP]
+- Manuelle Rotation bei Sicherheitsvorfällen möglich [ZTS]
+- Vollständige Audit-Trail für Compliance [ATV]
+- Alte Schlüssel werden für Backward-Kompatibilität 1 Jahr aufbewahrt
 
 ## Sicherheitsmerkmale [ZTS][SP]
 

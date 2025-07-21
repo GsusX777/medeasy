@@ -60,6 +60,22 @@ Diese Dokumentation beschreibt das Design-System und die Styling-Richtlinien fü
 - **Gefahr**: Fehlerrot für kritische Aktionen
 - **Sicherheit**: Sicherheitsgrün für sichere Aktionen
 
+##### Button-Styling-Regeln
+- **Border-Radius**: 6-8px für Standard-Buttons
+- **Feste Breite**: Buttons dürfen sich NICHT in der Größe ändern bei Content-Änderungen
+- **Monospace für dynamische Inhalte**: Zeit/Datum-Anzeigen verwenden Monospace-Font
+- **Keine Zoom-Animationen**: Ausgeschlossen für professionelle Medizin-UI
+- **Hover-Effekte**: Nur subtile Farbübergänge (opacity: 0.8-0.9)
+
+#### Menüpunkte
+- **Kein Border-Radius**: Menüpunkte bleiben rechteckig und ganzflächig
+- **Status-Abhebung**: Leichte Hintergrundfarb-Änderung je nach Status
+  - **Normal**: Transparenter Hintergrund
+  - **Hover**: rgba(255, 255, 255, 0.1)
+  - **Active**: rgba(255, 255, 255, 0.2)
+  - **Selected**: Primärfarbe mit 0.1 opacity
+- **Ganzflächige Bereiche**: Menüpunkte füllen komplette verfügbare Breite
+
 #### Formulare
 - **Input-Felder**: Grauer Rahmen, Fokus in Primärfarbe
 - **Labels**: Dunkelgrau, fett
@@ -71,6 +87,13 @@ Diese Dokumentation beschreibt das Design-System und die Styling-Richtlinien fü
 - **Sicherheit**: Grüner Rahmen für sichere Inhalte
 - **Warnung**: Gelber Rahmen für Warnungen
 - **Fehler**: Roter Rahmen für Fehler
+
+### Header-Styling
+
+- **Hauptheader**: Heller blauer Gradient (#3b82f6 → #2563eb) für Branding
+- **SubHeader**: Dunkler Gradient (#0f172a → #1e293b) für Kontext-Informationen
+- **Navigation**: Dunkler Hintergrund mit subtilen Hover-Effekten
+- **Status-Indikatoren**: Farbkodiert nach Zustand (grün=aktiv, rot=fehler, gelb=warnung)
 
 ## Responsive Design
 
@@ -157,6 +180,22 @@ Diese Dokumentation beschreibt das Design-System und die Styling-Richtlinien fü
 - Konsistente Spacing-Skala
 - Wiederverwendbare Komponenten-Klassen
 - CSS Custom Properties für Themes
+
+### Animation-Richtlinien
+- **Erlaubte Animationen**: Subtile Hover-Effekte, sanfte Farbübergänge
+- **Verbotene Animationen**: 
+  - ❌ Zoom-Effekte bei Buttons oder Menüpunkten
+  - ❌ Bounce- oder Spring-Animationen
+  - ❌ Rotation (außer Status-Indikatoren bei Bedarf)
+  - ❌ Shake- oder Wobble-Effekte
+- **Transition-Zeiten**: Maximal 200ms für professionelle Responsivität
+- **Easing**: `ease-out` für natürliche Bewegungen
+
+### Layout-Stabilität
+- **Feste Dimensionen**: UI-Elemente dürfen sich nicht in Größe ändern
+- **Monospace für dynamische Texte**: Zeit, Datum, Zähler verwenden Monospace
+- **Konsistente Abstände**: Spacing bleibt konstant bei Content-Änderungen
+- **Vorhersagbare Layouts**: Keine überraschenden Verschiebungen
 
 ### Sicherheitsrichtlinien
 - Sicherheitsstatus immer sichtbar [CT]

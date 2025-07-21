@@ -4,14 +4,43 @@
 
 Diese Dokumentation beschreibt alle UI-Komponenten der MedEasy-Anwendung.
 
+## Komponentenstatistiken
+
+- **Gesamt**: 15 Komponenten
+- **Hauptkomponenten**: 5 (AppLayout, Header, SubHeader, Sidebar, SessionRecorder, TranscriptViewer)
+- **Sicherheitskomponenten**: 8
+- **Gemeinsame Komponenten**: 4 (ConfirmDialog, SecurityBadge, Spinner, PerformanceMonitor)
+
 ## Komponentenübersicht
 
 ### Hauptkomponenten
 
 #### AppLayout.svelte
 - **Zweck**: Haupt-Layout-Komponente der Anwendung
-- **Features**: Navigation, Header, Sidebar
+- **Features**: Header, SubHeader, Integration der Sidebar-Komponente
 - **Sicherheit**: Zeigt Sicherheitsstatus und Verschlüsselungsindikator [CT]
+
+#### Sidebar.svelte
+**Zweck:** Hauptnavigation mit Aufnahme-Controls und integrierter Performance-Anzeige  
+**Features:**
+- Drei Hauptmenüpunkte: Dashboard, Patienten, Einstellungen
+- Großer roter Aufnahmebutton (●) mit rechteckigen Pause (❚❚) und Stop (■) Controls
+- Mikrofon dB-Level-Anzeige während Aufnahme
+- Integrierte Performance-Anzeige (CPU, RAM, optional GPU) - einklappbar
+- Footer mit Versionsnummer
+- Anonymisierung immer sichtbar [AIU]
+- Bessere Button-Erkennbarkeit mit Farbkodierung (Rot=Aufnahme/Stop, Orange=Pause)
+**Sicherheit:** Aufnahme-Status transparent, Performance-Überwachung [ZTS]
+
+#### Header.svelte
+- **Zweck**: Hauptheader mit essentiellen Informationen (55px Höhe)
+- **Features**: Logo (160x48px), Schweizer Datum/Zeit-Format [SF]
+- **Sicherheit**: Notfall-Killswitch [DK], Benutzerinformationen
+
+#### SubHeader.svelte
+- **Zweck**: Sekundärer Header mit Kontext-Informationen (35px Höhe)
+- **Features**: Aktueller Patient [MFD], Session-Status-Anzeige [TSF], Sprach-Status [SDH]
+- **Layout**: Positioniert neben Sidebar (240px margin-left), weiße Schrift für Status
 
 #### SessionRecorder.svelte
 - **Zweck**: Aufnahme und Verwaltung von Patientensitzungen
@@ -65,6 +94,11 @@ Diese Dokumentation beschreibt alle UI-Komponenten der MedEasy-Anwendung.
 - **Features**: Filterung, Export, Detailansicht
 - **Sicherheit**: Vollständige Protokollierung [ATV]
 
+#### PerformanceMonitor.svelte
+- **Zweck**: System-Performance-Überwachung für Stabilität [PSF]
+- **Features**: CPU/RAM/GPU-Auslastung, Farbkodierung nach Status, Warnungen bei hoher Last
+- **Sicherheit**: Performance-Monitoring für Systemstabilität [ZTS], GPU-Beschleunigung optional
+
 ### Gemeinsame Komponenten (Common)
 
 #### ConfirmDialog.svelte
@@ -78,9 +112,9 @@ Diese Dokumentation beschreibt alle UI-Komponenten der MedEasy-Anwendung.
 - **Sicherheit**: Visuelle Sicherheitsindikatoren [CT]
 
 #### Spinner.svelte
-- **Zweck**: Ladeanzeige für asynchrone Operationen
-- **Features**: Anpassbare Größe und Farbe
-- **Sicherheit**: Keine sicherheitskritischen Aspekte
+- **Zweck**: Ladeanzeigen für asynchrone Operationen
+- **Features**: Verschiedene Größen und Stile
+- **Sicherheit**: Zeigt Verarbeitungsstatus an [CT]
 
 ## Routen-Komponenten
 
@@ -92,10 +126,11 @@ Diese Dokumentation beschreibt alle UI-Komponenten der MedEasy-Anwendung.
 ## Komponentenrichtlinien
 
 ### Entwicklungsstandards
-- Alle Komponenten verwenden TypeScript
-- Props werden mit Interfaces definiert
-- Sicherheitskritische Komponenten haben unveränderliche Eigenschaften [ZTS]
-- Medizinische Terminologie in deutscher Sprache [MDL]
+- Alle Komponenten folgen Clean Architecture [CAS]
+- Sicherheitsfeatures sind unveränderlich [AIU][ATV][SP]
+- Schweizer Compliance in allen UI-Elementen [SF][MDL]
+- Neue Sidebar mit integriertem Performance-Monitor [ZTS][PSF]
+- Aufnahme-Steuerung mit unveränderlicher Anonymisierung [AIU]
 
 ### Sicherheitsrichtlinien
 - Patientendaten werden automatisch anonymisiert [AIU]

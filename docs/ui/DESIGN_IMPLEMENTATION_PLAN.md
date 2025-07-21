@@ -14,18 +14,18 @@ Dieser Plan zeigt, wie die Design-Strategie mit den vorhandenen Komponenten umge
 
 ## 📋 Komponenten-Mapping
 
-### ✅ Bereits vorhanden (13 Komponenten)
+### ✅ Bereits vorhanden (15 Komponenten)
 
 | Design-Element | Vorhandene Komponente | Status | Anpassung nötig |
 |----------------|----------------------|--------|-----------------|
 | **Header-Bereich** | | | |
-| Logo & Session-Info | AppLayout.svelte | ✅ Vorhanden | Layout anpassen |
-| Session-Status | SessionRecorder.svelte | ✅ Vorhanden | Status-Indikatoren erweitern |
-| Notfall-Funktionen | SecuritySettings.svelte | ✅ Vorhanden | Notfall-Buttons hinzufügen |
+| Logo & Session-Info | AppLayout.svelte | ✅ Vorhanden | Layout angepasst |
+| Session-Status | SessionRecorder.svelte | ✅ Vorhanden | Status-Indikatoren sollen nicht erweitert werden |
+| Notfall-Funktionen | SecuritySettings.svelte | ✅ Vorhanden | Notfall-Buttons hinzugefügt |
 | **Sidebar** | | | |
-| Session-Management | AppLayout.svelte | ✅ Vorhanden | Sidebar-Struktur anpassen |
-| Audio-Control | SessionRecorder.svelte | ✅ Vorhanden | UI-Design anpassen |
-| Performance Monitor | - | ❌ Fehlt | Neue Komponente nötig |
+| Session-Management | Sidebar.svelte | ✅ Implementiert | ✅ Abgeschlossen |
+| Audio-Control | Sidebar.svelte | ✅ Implementiert | ✅ Aufnahme-Button integriert |
+| Performance Monitor | PerformanceMonitor.svelte | ✅ Implementiert | ✅ Abgeschlossen |
 | **Hauptbereich** | | | |
 | Transkript-Anzeige | TranscriptViewer.svelte | ✅ Vorhanden | Design-Spezifikation umsetzen |
 | Content-Tabs | - | ❌ Fehlt | Tab-System implementieren |
@@ -48,26 +48,28 @@ Dieser Plan zeigt, wie die Design-Strategie mit den vorhandenen Komponenten umge
 ### **Phase 1: Layout-Struktur (Woche 1-2)**
 
 #### 1.1 AppLayout.svelte erweitern [TSF][ZTS]
-- [ ] Header-Bereich mit Logo & Session-Info implementieren
-- [ ] Sidebar-Struktur (280px) mit Navigation erstellen
+- [x] Header-Bereich mit Logo implementieren
+- [x] Sub-Header-Bereich mit Session und Patienten-Info implementieren
+- [x] Sidebar-Struktur (280px) mit Navigation erstellen
 - [ ] Hauptbereich für Content-Tabs vorbereiten
-- [ ] Analyse-Panel (collapsible, 300px) hinzufügen
+- [ ] Analyse-Panel (collapsible, höhenverstellbar 300px) hinzufügen
 - [ ] Responsive Grid-Layout implementieren
 
 **Dateien:**
-- `src/lib/components/AppLayout.svelte` (erweitern)
+- `src/lib/components/AppLayout.svelte` (✅ erweitert)
 - `src/lib/components/Header.svelte` (neu)
-- `src/lib/components/Sidebar.svelte` (neu)
+- `src/lib/components/Sidebar.svelte` (✅ vollständig implementiert)
+- `src/lib/components/PerformanceMonitor.svelte` (✅ in Sidebar integriert)
 
 #### 1.2 SessionRecorder.svelte anpassen [PK][CT]
-- [ ] Audio-Control in Sidebar integrieren
-- [ ] Session-Status-Indikatoren erweitern (🔴⏸️✅)
-- [ ] Aufnahme-Button (100px) mit Tastenkürzel (Space)
-- [ ] Audio-Quality-Meter hinzufügen
-- [ ] Performance-Monitor-Integration vorbereiten
+- [x] Audio-Control in Sidebar integrieren
+- [x] Session-Status-Indikatoren erweitern (🔴⏸️✅)
+- [x] Aufnahme-Button (100px) mit Tastenkürzel (Space)
+- [x] Audio-Quality-Meter hinzufügen
+- [x] Performance-Monitor-Integration vorbereiten
 
 **Dateien:**
-- `src/lib/components/SessionRecorder.svelte` (erweitern)
+- `src/lib/components/SessionRecorder.svelte` (erweitert)
 - `src/lib/components/AudioControl.svelte` (neu)
 
 ### **Phase 2: Transkript & Sicherheit (Woche 2-3)**
@@ -84,7 +86,7 @@ Dieser Plan zeigt, wie die Design-Strategie mit den vorhandenen Komponenten umge
 - `src/lib/components/TranscriptEntry.svelte` (neu)
 
 #### 2.2 Anonymisierung integrieren [AIU][ARQ]
-- [ ] AnonymizationNotice.svelte in Header integrieren
+- [ ] AnonymizationNotice.svelte in Header integrieren (nicht benötigt)
 - [ ] AnonymizationReview.svelte als Modal/Panel
 - [ ] Anonymisierungs-Status in TranscriptViewer
 - [ ] Review-Button bei unsicheren Erkennungen
@@ -95,10 +97,10 @@ Dieser Plan zeigt, wie die Design-Strategie mit den vorhandenen Komponenten umge
 - `src/lib/components/AnonymizationReview.svelte` (erweitern)
 
 #### 2.3 Sicherheits-Indikatoren [CT][ZTS]
-- [ ] ProcessingLocationIndicator.svelte in Header
-- [ ] SecurityBadge.svelte für Status-Anzeigen
-- [ ] SwissGermanAlert.svelte als Notification
-- [ ] Datenschutz-Indikatoren (🔒☁️🔐⚠️)
+- [ ] ProcessingLocationIndicator.svelte in Header (nicht benötigt)
+- [ ] SecurityBadge.svelte für Status-Anzeigen (nicht benötigt)
+- [ ] SwissGermanAlert.svelte als Notification (nicht benötigt)
+- [ ] Datenschutz-Indikatoren (🔒☁️🔐⚠️) (nicht benötigt)
 
 **Dateien:**
 - `src/lib/components/ProcessingLocationIndicator.svelte` (erweitern)
@@ -179,8 +181,8 @@ Dieser Plan zeigt, wie die Design-Strategie mit den vorhandenen Komponenten umge
 - `src/lib/components/AudioSettings.svelte` (neu)
 
 #### 5.2 Performance-Monitor [TSF]
-- [ ] CPU/RAM/Latency-Anzeige
-- [ ] Collapsible in Sidebar
+- [x] CPU/RAM/Latency-Anzeige
+- [x] Collapsible in Sidebar
 - [ ] Warning/Critical-Thresholds
 - [ ] Real-time Updates
 

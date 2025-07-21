@@ -44,6 +44,9 @@ export enum SessionStatus {
 export interface SessionDto {
   id: string;
   patient_id: string;
+  session_date: string; // Format: DD.MM.YYYY [SF]
+  start_time: string; // Format: HH:MM
+  end_time?: string; // Format: HH:MM (optional)
   status: string; // SessionStatus as string
   notes?: string;
   audio_file_path?: string;

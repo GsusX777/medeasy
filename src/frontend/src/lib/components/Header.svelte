@@ -22,8 +22,6 @@
   // State
   let currentDate = new Date();
   let currentTime = new Date();
-  let sessionStatus: 'idle' | 'recording' | 'paused' | 'processing' = 'idle';
-  
   // [SF] Schweizer Formate - Datum: DD.MM.YYYY, Zeit: HH:mm:ss
   function formatSwissDate(date: Date): string {
     return date.toLocaleDateString('de-CH'); // DD.MM.YYYY Format
@@ -37,24 +35,7 @@
     }); // HH:mm:ss Format
   }
   
-  // Session Status Icons [TSF]
-  function getSessionStatusIcon(status: typeof sessionStatus): string {
-    switch (status) {
-      case 'recording': return '🔴';
-      case 'paused': return '⏸️';
-      case 'processing': return '⚙️';
-      default: return '✅';
-    }
-  }
-  
-  function getSessionStatusText(status: typeof sessionStatus): string {
-    switch (status) {
-      case 'recording': return 'Aufnahme läuft';
-      case 'paused': return 'Pausiert';
-      case 'processing': return 'Verarbeitung';
-      default: return 'Bereit';
-    }
-  }
+
   
   // [DK] Diagnose-Killswitch - Notfall-Funktionen
   function handleEmergencyStop() {
@@ -70,15 +51,8 @@
       currentTime = new Date();
     }, 1000);
     
-    // Simuliere Session-Status-Änderungen für Demo
-    const statusInterval = setInterval(() => {
-      const statuses: typeof sessionStatus[] = ['idle', 'recording', 'paused', 'processing'];
-      sessionStatus = statuses[Math.floor(Math.random() * statuses.length)];
-    }, 10000);
-    
     return () => {
       clearInterval(interval);
-      clearInterval(statusInterval);
     };
   });
 </script>
@@ -90,25 +64,14 @@
       <img src="/logo.svg" alt="MedEasy" class="logo-image" />
     </div>
     
-    <!-- Session Status [TSF] -->
-    <div class="session-status">
-      <div class="status-indicator {sessionStatus}">
-        <span class="status-icon">{getSessionStatusIcon(sessionStatus)}</span>
-        <span class="status-text">{getSessionStatusText(sessionStatus)}</span>
-      </div>
-      <div class="datetime">
-        <span class="date">{formatSwissDate(currentDate)}</span>
-        <span class="time">{formatSwissTime(currentTime)}</span>
-      </div>
+    <!-- Datum/Zeit [SF] -->
+    <div class="datetime">
+      <span class="date">{formatSwissDate(currentDate)}</span>
+      <span class="time">{formatSwissTime(currentTime)}</span>
     </div>
   </div>
   
-  <div class="header-center">
-    <!-- [SDH] Schweizerdeutsch-Warnung - Nur bei Bedarf -->
-    <div class="language-status">
-      <span class="status-badge language">🇩🇪 Hochdeutsch</span>
-    </div>
-  </div>
+
   
   <div class="header-right">
     <!-- [DK] Notfall-Funktionen -->
@@ -132,12 +95,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%);
+    padding: 0.5rem 1.5rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: 70px;
+    min-height: 55px;
   }
   
   .header-left {
@@ -153,101 +116,29 @@
   }
   
   .logo-image {
-    width: 200px;
-    height: 60px;
+    width: 160px;
+    height: 48px;
     /* Original-Logo-Farben beibehalten */
   }
   
 
   
-  .session-status {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
+
   
-  .status-indicator {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-  
-  .status-indicator.idle {
-    background: rgba(34, 197, 94, 0.2);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-  }
-  
-  .status-indicator.recording {
-    background: rgba(239, 68, 68, 0.2);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    animation: pulse 2s infinite;
-  }
-  
-  .status-indicator.paused {
-    background: rgba(251, 191, 36, 0.2);
-    border: 1px solid rgba(251, 191, 36, 0.3);
-  }
-  
-  .status-indicator.processing {
-    background: rgba(59, 130, 246, 0.2);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    animation: spin 2s linear infinite;
-  }
-  
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-  }
-  
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
+
   
   .datetime {
     display: flex;
     gap: 0.5rem;
     font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.8);
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    /* Feste Breite für Layout-Stabilität - verhindert Größenänderungen */
+    width: 140px;
+    justify-content: center;
   }
   
-  .header-center {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  .language-status {
-    display: flex;
-    align-items: center;
-  }
-  
-  .status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-  }
-  
-  .status-badge.transcription {
-    background: rgba(34, 197, 94, 0.2);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    color: rgba(255, 255, 255, 0.9);
-  }
-  
-  .status-badge.language {
-    background: rgba(59, 130, 246, 0.2);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    color: rgba(255, 255, 255, 0.9);
-  }
+
   
   .header-right {
     display: flex;
@@ -272,8 +163,10 @@
   }
   
   .emergency-stop:hover {
-    background: rgba(239, 68, 68, 0.3);
-    transform: scale(1.1);
+    background: rgba(239, 68, 68, 0.5);
+    border: 1px solid rgba(239, 68, 68, 0.7);
+    /* Deutlicher Hover-Effekt für kritische Notfall-Funktion */
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
   }
   
   .user-menu {

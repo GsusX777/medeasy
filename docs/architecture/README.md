@@ -2,7 +2,7 @@
 
 # MedEasy Architektur
 
-*Letzte Aktualisierung: 08.07.2025*
+*Letzte Aktualisierung: 21.07.2025*
 
 ## Clean Architecture [CAM]
 
@@ -59,14 +59,15 @@ Der AI Layer implementiert die KI-Funktionen und kommuniziert über gRPC mit dem
 
 ### Frontend Layer (`src/frontend`)
 
-Der Frontend Layer implementiert die Benutzeroberfläche als Desktop-Anwendung mit Tauri und Svelte.
+Der Frontend Layer implementiert die Benutzeroberfläche als Desktop-Anwendung mit Svelte und kommuniziert über HTTP/REST mit dem separaten .NET Backend.
 
-#### Tauri Backend (`src-tauri`)
+#### Desktop-App (Tauri + Svelte)
 
-- **Rust**: Sicheres Backend für die Desktop-Anwendung
-- **SQLCipher**: Verschlüsselte lokale Datenspeicherung [SP]
-- **Tauri Commands**: Bridge zwischen Frontend und Backend [MLB]
-- **Audit-Logging**: Protokollierung aller Benutzeraktionen [ATV]
+- **Tauri 1.5**: Desktop-App-Framework (nur für UI-Container) [TSF]
+- **Svelte 4**: Reaktives UI-Framework für die Benutzeroberfläche
+- **HTTP-Client**: REST API-Kommunikation mit .NET Backend [CAS]
+- **JWT-Authentifizierung**: Sichere API-Zugriffskontrolle [ZTS]
+- **Keine direkte Datenbankverbindung**: Alle Daten über .NET Backend API [CAS]
 
 #### Svelte Frontend (`src`)
 
@@ -143,7 +144,7 @@ AI Services (Python + FastAPI)
 - **ORM**: Entity Framework Core
 - **API**: REST mit JWT-Authentifizierung
 - **Frontend**: 
-  - **Desktop**: Tauri 1.5 (Rust) + Svelte 4 (TypeScript)
+  - **Desktop**: Tauri 1.5 (Frontend) + .NET 8 Backend + Svelte 4 (TypeScript)
   - **UI-Framework**: Svelte 4 mit TypeScript
   - **State Management**: Svelte Stores
   - **Build-System**: Vite + SvelteKit
@@ -156,3 +157,79 @@ Die Architektur wurde entwickelt, um folgende Vorschriften zu erfüllen:
 - Schweizer nDSG (Datenschutzgesetz)
 - DSGVO/GDPR (für EU-Kompatibilität)
 - Medizinprodukteverordnung (MDR) für medizinische Software
+
+## 🚨 FINALE ARCHITEKTUR-ENTSCHEIDUNG [CAS][TSF]
+
+**Datum der Entscheidung**: 21.07.2025  
+**Status**: ✅ FINAL - Keine weiteren Änderungen
+
+### Zielarchitektur: .NET Backend + Svelte Frontend
+
+Nach umfassender Analyse und Dokumentations-Korrektur wurde die finale Architektur festgelegt:
+
+```
+Frontend (Svelte Desktop App)
+       ↓ ↑
+   HTTP/REST + JWT
+       ↓ ↑
+Backend (.NET 8 Minimal API)
+       ↓ ↑
+   SQLCipher Database
+       ↓ ↑
+      gRPC
+       ↓ ↑
+AI Services (Python + FastAPI)
+```
+
+### Architektur-Migration: Rust → .NET [CAS]
+
+**VORHER (Rust/Tauri Backend):**
+- ❌ Frontend kommunizierte über Tauri Commands/IPC
+- ❌ Rust Backend mit direkter SQLCipher-Integration
+- ❌ Architektur-Konflikt mit Clean Architecture Regeln
+
+**NACHHER (.NET Backend):**
+- ✅ Frontend kommuniziert über HTTP/REST API
+- ✅ .NET 8 Backend mit Entity Framework Core
+- ✅ Clean Architecture mit strikter Schichtentrennung [CAM]
+- ✅ Vollständige Compliance mit MedEasy-Projektregeln [TSF][MLB]
+
+### Entfernte Komponenten [ZU LÖSCHEN]
+
+**Rust/Tauri Backend Code:**
+```
+❌ src/frontend/src-tauri/           # Gesamter Rust Backend
+❌ build.rs                          # Tauri Build-Skript
+❌ Cargo.toml                        # Rust Dependencies
+❌ tauri.conf.json                   # Tauri Konfiguration
+❌ Dockerfile.test                   # Rust Security Tests
+❌ run_security_tests.ps1           # Rust Test-Skript
+```
+
+### Begründung der Entscheidung [PSF][CAM]
+
+1. **Clean Architecture Compliance**: .NET Backend ermöglicht strikte Schichtentrennung
+2. **Medizinische Sicherheit**: Entity Framework bietet bessere Audit-Trails [ATV]
+3. **Schweizer Compliance**: .NET bietet robustere Verschlüsselungs-APIs [SP][ZTS]
+4. **Wartbarkeit**: Getrennte Frontend/Backend-Entwicklung [CAS]
+5. **Testbarkeit**: Bessere Testinfrastruktur für medizinische Software [TR]
+
+### Implementierungsstand
+
+- ✅ **Dokumentation**: Vollständig auf .NET Backend migriert
+- ✅ **Database Schema**: .NET Entity Framework Datentypen
+- ✅ **Security Tests**: 52 .NET Tests geplant und dokumentiert
+- ✅ **Project Structure**: Rust-Code als "ZU LÖSCHEN" markiert
+- ⏳ **Backend Implementation**: In Entwicklung (Phase 9.2)
+- ⏳ **Frontend Migration**: HTTP-Client statt Tauri Commands
+- ⏳ **Code Cleanup**: Rust-Code Entfernung nach erfolgreicher Migration
+
+### Keine Rückkehr zu Rust [TSF]
+
+Diese Architektur-Entscheidung ist **FINAL** und **UNVERÄNDERLICH**. Alle zukünftigen Entwicklungen basieren ausschließlich auf:
+- **.NET 8 Backend** mit Clean Architecture
+- **Svelte Frontend** mit HTTP/REST Kommunikation
+- **Python AI-Services** über gRPC
+- **SQLCipher Database** über Entity Framework Core
+
+Jede Abweichung von dieser Architektur würde die MedEasy-Projektregeln [TSF][CAS][MLB] verletzen und ist nicht gestattet.

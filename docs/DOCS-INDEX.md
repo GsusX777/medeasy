@@ -26,7 +26,7 @@ Dieser Index bietet einen Überblick über alle Dokumentationsdateien im MedEasy
 | Dokument | Beschreibung | Projektregeln |
 |----------|-------------|--------------|
 | [docs/database/SCHEMA.md](./database/SCHEMA.md) | Detailliertes Datenbankschema mit Tabellendefinitionen und Verschlüsselungsstrategie | [SP], [EIV], [NUS] |
-| [docs/database/IMPLEMENTATION.md](./database/IMPLEMENTATION.md) | Implementierung der SQLCipher-Datenbank in Rust mit Repositories und Sicherheitsmerkmalen | [SP], [AIU], [ATV], [CAS], [DD] |
+| [docs/database/IMPLEMENTATION.md](./database/IMPLEMENTATION.md) | Implementierung der SQLCipher-Datenbank in .NET Entity Framework mit Repositories und Sicherheitsmerkmalen | [SP], [AIU], [ATV], [CAS], [DD] |
 | [docs/database/RELATIONSHIPS.mermaid](./database/RELATIONSHIPS.mermaid) | Mermaid-Diagramm der Datenbankbeziehungen und Entitätsrelationen | [EIV], [SK] |
 
 ## API
@@ -61,6 +61,7 @@ Dieser Index bietet einen Überblick über alle Dokumentationsdateien im MedEasy
 | [docs/ui/testing/README.md](./ui/testing/README.md) | UI-Testing mit Vitest, Playwright, Security Tests und Accessibility Testing | [KP100], [AIU], [ATV], [SP], [CT], [PSF] |
 | [docs/ui/accessibility/README.md](./ui/accessibility/README.md) | WCAG 2.1 AA Compliance, medizinische Accessibility und Schweizer Besonderheiten | [PSF], [SF], [MDL], [CT], [ZTS] |
 | [docs/ui/deployment/README.md](./ui/deployment/README.md) | Build- und Deployment-Prozess mit Sicherheitskonfiguration und Compliance | [SP], [ZTS], [ATV], [AIU], [DSC] |
+| [docs/ui/dashboard/README.md](./ui/dashboard/README.md) | Vereinfachtes Dashboard mit Tagesübersicht und Konsultationslisten | [SF], [SK], [DSU], [EIV], [AIU], [ATV] |
 
 ## Compliance und Sicherheit
 

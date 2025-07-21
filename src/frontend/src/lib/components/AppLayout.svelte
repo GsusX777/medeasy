@@ -9,54 +9,25 @@
   import type { AppState, Session } from '$lib/types/app-state';
   import { appState } from '$lib/stores/session';
   import Header from './Header.svelte';
+  import SubHeader from './SubHeader.svelte';
+  import Sidebar from './Sidebar.svelte';
   
   // Props
   export let title = 'MedEasy';
 </script>
 
 <div class="app-layout">
-  <!-- [TSF][ZTS] Neuer Header mit Logo und Session-Info -->
+  <!-- [TSF][ZTS] Hauptheader mit Logo, Datum/Zeit, Killswitch -->
   <Header {title} />
   
+  <!-- [TSF][ZTS] SubHeader full-width aber Content nach Sidebar-Breite [SF] -->
+  <div class="subheader-wrapper">
+    <SubHeader />
+  </div>
+  
   <div class="app-content">
-    <nav class="sidebar">
-      <ul class="nav-menu">
-        <li class="nav-item active">
-          <a href="/" class="nav-link">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-text">Dashboard</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="/sessions" class="nav-link">
-            <span class="nav-icon">🎙️</span>
-            <span class="nav-text">Konsultationen</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="/patients" class="nav-link">
-            <span class="nav-icon">👥</span>
-            <span class="nav-text">Patienten</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="/reports" class="nav-link">
-            <span class="nav-icon">📊</span>
-            <span class="nav-text">Berichte</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="/settings" class="nav-link">
-            <span class="nav-icon">⚙️</span>
-            <span class="nav-text">Einstellungen</span>
-          </a>
-        </li>
-      </ul>
-      
-      <div class="sidebar-footer">
-        <div class="app-version">v{$appState.version || '0.1.0'}</div>
-      </div>
-    </nav>
+    <!-- [TSF][ZTS] Neue Sidebar-Komponente -->
+    <Sidebar />
     
     <main class="main-content">
       <slot></slot>
@@ -70,6 +41,13 @@
     flex-direction: column;
     height: 100vh;
     background-color: #f9fafb;
+  }
+  
+  /* SubHeader wrapper für full-width Layout [SF] */
+  .subheader-wrapper {
+    width: 100%;
+    position: relative;
+    z-index: 10;
   }
   
   .app-header {
@@ -140,68 +118,15 @@
     display: flex;
     flex: 1;
     overflow: hidden;
+    position: relative;
   }
   
-  .sidebar {
-    width: 240px;
-    background-color: #1e293b;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    overflow-y: auto;
-  }
-  
-  .nav-menu {
-    list-style: none;
-    padding: 1rem 0;
-    margin: 0;
-  }
-  
-  .nav-item {
-    margin: 0.25rem 0;
-  }
-  
-  .nav-link {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1.5rem;
-    color: #cbd5e1;
-    text-decoration: none;
-    transition: all 0.2s;
-  }
-  
-  .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-  }
-  
-  .nav-item.active .nav-link {
-    background-color: #2563eb;
-    color: white;
-    font-weight: 500;
-  }
-  
-  .nav-icon {
-    font-size: 1.125rem;
-    width: 1.5rem;
-    text-align: center;
-  }
-  
-  .sidebar-footer {
-    padding: 1rem 1.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .app-version {
-    font-size: 0.75rem;
-    color: #64748b;
-  }
+
   
   .main-content {
     flex: 1;
-    padding: 1.5rem;
     overflow-y: auto;
+    padding: 1.5rem;
+    margin-left: 0; /* Sidebar ist bereits positioned */
   }
 </style>

@@ -75,27 +75,27 @@ medeasy/
 │       │   ├── lib/              # Bibliotheken
 │       │   ├── routes/           # SvelteKit-Routen
 │       │   └── stores/           # Svelte-Stores
-│       ├── src-tauri/            # Tauri-Quellcode
-│       │   ├── src/              # Rust-Quellcode
-│       │   │   ├── commands/     # Tauri-Befehle
-│       │   │   ├── database/     # Datenbankzugriff
-│       │   │   │   ├── connection.rs  # SQLCipher-Verbindung
-│       │   │   │   ├── encryption.rs  # Feldverschlüsselung
-│       │   │   │   ├── migrations.rs  # Datenbankmigrationen
-│       │   │   │   └── repositories/  # Datenzugriffsschicht
-│       │   │   │       ├── audit_repository.rs
-│       │   │   │       ├── patient_repository.rs
-│       │   │   │       ├── session_repository.rs
-│       │   │   │       └── transcript_repository.rs
-│       │   │   ├── models/       # Datenmodelle
-│       │   │   └── tests/        # Sicherheitstests
-│       │   │       ├── audit_tests.rs
-│       │   │       ├── database_tests.rs
-│       │   │       ├── encryption_tests.rs
-│       │   │       └── repository_tests.rs
-│       │   ├── build.rs          # Tauri-Build-Skript
-│       │   ├── Cargo.toml        # Rust-Abhängigkeiten
-│       │   └── tauri.conf.json   # Tauri-Konfiguration
+│       ├── ❌ ZU LÖSCHEN: src-tauri/            # ❌ ZU LÖSCHEN: Rust/Tauri Backend-Code
+│       │   ├── ❌ ZU LÖSCHEN: src/              # ❌ ZU LÖSCHEN: Gesamter Rust-Quellcode
+│       │   │   ├── ❌ ZU LÖSCHEN: commands/     # ❌ ZU LÖSCHEN: Tauri-Befehle
+│       │   │   ├── ❌ ZU LÖSCHEN: database/     # ❌ ZU LÖSCHEN: Rust-Datenbankzugriff
+│       │   │   │   ├── ❌ ZU LÖSCHEN: connection.rs  # ❌ ZU LÖSCHEN: SQLCipher-Verbindung
+│       │   │   │   ├── ❌ ZU LÖSCHEN: encryption.rs  # ❌ ZU LÖSCHEN: Feldverschlüsselung
+│       │   │   │   ├── ❌ ZU LÖSCHEN: migrations.rs  # ❌ ZU LÖSCHEN: Datenbankmigrationen
+│       │   │   │   └── ❌ ZU LÖSCHEN: repositories/  # ❌ ZU LÖSCHEN: Datenzugriffsschicht
+│       │   │   │       ├── ❌ ZU LÖSCHEN: audit_repository.rs      # ❌ ZU LÖSCHEN
+│       │   │   │       ├── ❌ ZU LÖSCHEN: patient_repository.rs    # ❌ ZU LÖSCHEN
+│       │   │   │       ├── ❌ ZU LÖSCHEN: session_repository.rs    # ❌ ZU LÖSCHEN
+│       │   │   │       └── ❌ ZU LÖSCHEN: transcript_repository.rs # ❌ ZU LÖSCHEN
+│       │   │   ├── ❌ ZU LÖSCHEN: models/       # ❌ ZU LÖSCHEN: Datenmodelle
+│       │   │   └── ❌ ZU LÖSCHEN: tests/        # ❌ ZU LÖSCHEN: Rust-Sicherheitstests
+│       │   │       ├── ❌ ZU LÖSCHEN: audit_tests.rs        # ❌ ZU LÖSCHEN
+│       │   │       ├── ❌ ZU LÖSCHEN: database_tests.rs     # ❌ ZU LÖSCHEN
+│       │   │       ├── ❌ ZU LÖSCHEN: encryption_tests.rs   # ❌ ZU LÖSCHEN
+│       │   │       └── ❌ ZU LÖSCHEN: repository_tests.rs   # ❌ ZU LÖSCHEN
+│       │   ├── ❌ ZU LÖSCHEN: build.rs          # ❌ ZU LÖSCHEN: Tauri-Build-Skript
+│       │   ├── ❌ ZU LÖSCHEN: Cargo.toml        # ❌ ZU LÖSCHEN: Rust-Abhängigkeiten
+│       │   └── ❌ ZU LÖSCHEN: tauri.conf.json   # ❌ ZU LÖSCHEN: Tauri-Konfiguration
 │       ├── static/               # Statische Dateien
 │       │   └── favicon.svg
 │       ├── .env                  # Umgebungsvariablen
@@ -114,10 +114,10 @@ medeasy/
 ├── tools/                        # Entwicklungswerkzeuge
 │   └── scripts/                  # Hilfsskripte
 │       └── check-tools.ps1       # Überprüfung der Entwicklungsumgebung
-├── Dockerfile.test               # Docker für Sicherheitstests
+├── ❌ ZU LÖSCHEN: Dockerfile.test               # ❌ ZU LÖSCHEN: Docker für Rust-Sicherheitstests
 ├── LICENSE                       # Lizenzinformationen
 ├── README.md                     # Projektübersicht
-├── run_security_tests.ps1        # Skript für Sicherheitstests
+├── ❌ ZU LÖSCHEN: run_security_tests.ps1        # ❌ ZU LÖSCHEN: Skript für Rust-Sicherheitstests
 └── setup-branch-protection.ps1   # GitHub Branch-Schutz-Konfiguration
 ```
 
@@ -132,13 +132,14 @@ Die Backend-Komponente folgt der Clean Architecture mit klarer Trennung der Schi
 - **MedEasy.Infrastructure**: Enthält SQLCipher, gRPC und externe Services
 - **MedEasy.API**: Stellt REST-APIs mit JWT-Authentifizierung bereit
 
-### Frontend (Tauri + Svelte)
+### Frontend (Svelte Desktop App)
 
-Das Frontend kombiniert Tauri für die Desktop-Anwendung mit Svelte für die Benutzeroberfläche:
+Das Frontend ist eine Svelte-basierte Desktop-Anwendung, die über HTTP mit dem .NET Backend kommuniziert:
 
 - **Svelte-Komponenten**: UI-Elemente und Logik
-- **Tauri-Rust-Code**: Native Funktionalität und Datenbankzugriff
-- **SQLCipher-Integration**: Verschlüsselte Datenspeicherung
+- **HTTP-Client**: REST API-Kommunikation mit .NET Backend
+- **Keine direkte Datenbankverbindung**: Alle Daten über .NET Backend API
+- **JWT-Authentifizierung**: Sichere API-Kommunikation
 
 ### AI-Service (Python)
 
@@ -148,14 +149,16 @@ Der AI-Service ist in Python implementiert und kommuniziert über gRPC:
 - **Provider-Kette**: Unterstützung für mehrere KI-Provider mit Fallback
 - **Whisper-Integration**: Spracherkennung mit Schweizerdeutsch-Unterstützung
 
-### Sicherheitsfeatures
+### Sicherheitsfeatures (.NET Backend)
 
-Die Sicherheitsimplementierung umfasst:
+Die Sicherheitsimplementierung erfolgt ausschließlich im .NET Backend:
 
-- **SQLCipher**: AES-256-Verschlüsselung für die Datenbank
-- **Feldverschlüsselung**: AES-256-GCM für sensible Felder
-- **Anonymisierung**: Automatische Erkennung und Maskierung von PII
-- **Audit-Trail**: Vollständige Protokollierung aller Operationen
+- **SQLCipher**: AES-256-Verschlüsselung für die Datenbank (Entity Framework)
+- **Feldverschlüsselung**: AES-256 für sensible Felder (.NET Cryptography)
+- **Anonymisierung**: Automatische Erkennung und Maskierung von PII [AIU]
+- **Audit-Trail**: Vollständige Protokollierung aller Operationen [ATV]
+- **JWT-Authentifizierung**: Sichere API-Zugriffskontrolle [ZTS]
+- **Key-Rotation**: Automatische Schlüsselrotation alle 90 Tage [SP]
 
 ## Dokumentationsstruktur
 
@@ -191,4 +194,42 @@ Alle Implementierungen müssen den MedEasy-Projektregeln entsprechen:
 - [ZTS] Zero Tolerance Security
 - [DSC] Datenschutz Schweiz
 
-Stand: 12.07.2025
+## 🚨 MIGRATION ZU .NET BACKEND
+
+### Zu löschende Ordner und Dateien nach .NET Integration
+
+**WICHTIG**: Diese Elemente müssen nach erfolgreicher .NET Backend Integration gelöscht werden:
+
+#### Frontend (Rust/Tauri Code)
+```
+src/frontend/src-tauri/           # Gesamter Rust/Tauri Backend-Code
+├── src/                          # Alle Rust-Quelldateien
+├── build.rs                      # Tauri-Build-Skript
+├── Cargo.toml                    # Rust-Abhängigkeiten
+└── tauri.conf.json              # Tauri-Konfiguration
+```
+
+#### Root-Level Dateien
+```
+Dockerfile.test                   # Docker für Rust-Sicherheitstests
+run_security_tests.ps1           # PowerShell-Skript für Rust-Tests
+```
+
+### Migrationspfad [CAS]
+
+1. **Phase 9.2**: .NET Backend implementieren und testen
+2. **Phase 9.3**: Frontend auf HTTP-Client umstellen (Mock-Daten entfernen)
+3. **Phase 9.4**: Rust/Tauri-Code vollständig entfernen
+4. **Produktions-Readiness**: Nur .NET Backend + Svelte Frontend
+
+### Neue Architektur nach Migration
+
+```
+Frontend (Svelte) ←→ HTTP/REST ←→ .NET Backend ←→ SQLCipher DB
+                                      ↕
+                                  gRPC/Python AI
+```
+
+**Keine direkte Datenbankverbindung vom Frontend!** [CAS]
+
+Stand: 21.07.2025

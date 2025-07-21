@@ -39,6 +39,7 @@ Diese Dokumentation verfolgt den Implementierungsstatus aller MedEasy-Features g
 | Anonymisierungs-Review | ✅ Implementiert | 1.0.0 | UI für Review-Queue | [ARQ], [ATV] |
 | Cloud-Transparenz | ✅ Implementiert | 1.0.0 | Anzeige der Verarbeitungsquelle | [CT], [DSC] |
 | Swiss German Warnung | ✅ Implementiert | 1.0.0 | Beta-Warnung für Schweizerdeutsch | [SDH], [MFD] |
+| Vereinfachtes Dashboard | ✅ Implementiert | 1.0.0 | Tagesübersicht mit offenen und letzten Konsultationen | [SF], [SK], [DSU] |
 
 ## Geplante Features
 

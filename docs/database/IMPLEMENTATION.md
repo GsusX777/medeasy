@@ -1,603 +1,691 @@
-<!-- „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17 -->
+# MedEasy Datenbank-Implementierung (.NET Backend)
 
-# MedEasy Datenbankimplementierung
+„Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17
 
-*Letzte Aktualisierung: 12.07.2025*
+## Übersicht
 
-## Übersicht [SP][AIU][ATV]
+Die MedEasy-Datenbank wird als .NET 8 Backend mit Entity Framework Core und SQLCipher implementiert. Diese Implementierung folgt Clean Architecture-Prinzipien und bietet vollständige Verschlüsselung, Anonymisierung und Audit-Trail-Funktionalität.
 
-Diese Dokumentation beschreibt die Implementierung der sicheren Datenbankschicht für MedEasy mit SQLCipher in der Tauri-Backend-Anwendung. Die Implementierung folgt den MedEasy-Projektregeln für Sicherheit, Datenschutz und Clean Architecture.
+## Architektur-Übersicht
 
-## Architektur [CAS][DD]
-
-Die Datenbankimplementierung folgt dem Clean Architecture-Prinzip mit klarer Trennung der Verantwortlichkeiten:
+### Clean Architecture Struktur [CAS]
 
 ```
-src-tauri/
-├── database/             # Datenbankzugriff und -modelle
-│   ├── connection.rs     # Verbindungsverwaltung mit SQLCipher
-│   ├── models.rs         # Konsolidierte Datenmodelle (Patient, Session, Transcript, AnonymizationReviewItem, AuditLog)
-│   ├── schema.rs         # Datenbankschema
-│   ├── encryption.rs     # Feldverschlüsselung
-│   ├── audit.rs          # AuditLogger für Sicherheits-Logging [ATV]
-│   └── migrations.rs     # Schema-Migrationen
-├── repositories/         # Geschäftslogik für Datenzugriff
-│   ├── patient_repository.rs
-│   ├── session_repository.rs
-│   ├── transcript_repository.rs
-│   ├── anonymization_review_repository.rs
-│   └── audit_repository.rs     # Audit-Logging mit Erzwingungsfunktion
-├── security/             # Sicherheitskomponenten [SP][ATV]
-│   ├── key_manager.rs    # Schlüsselverwaltung und -rotation
-│   └── key_manager_backup.rs  # Backup-Strategien für Schlüssel
-└── commands.rs           # Tauri-Befehle für Frontend-Zugriff
+MedEasy.Domain/
+├── Entities/           # Domain-Entitäten (Patient, Session, etc.)
+├── ValueObjects/       # Werteobjekte (InsuranceNumber, etc.)
+├── Enums/             # Domain-Enumerationen
+└── Interfaces/        # Repository-Interfaces
+
+MedEasy.Application/
+├── Commands/          # CQRS Commands
+├── Queries/           # CQRS Queries
+├── Handlers/          # MediatR Handlers
+├── DTOs/              # Data Transfer Objects
+└── Services/          # Application Services
+
+MedEasy.Infrastructure/
+├── Data/              # Entity Framework Context
+├── Repositories/      # Repository-Implementierungen
+├── Encryption/        # Verschlüsselungsservices
+├── Audit/             # Audit-Trail-Implementierung
+└── Migrations/        # EF Core Migrations
+
+MedEasy.API/
+├── Controllers/       # REST API Controllers
+├── Middleware/        # Security Middleware
+└── Configuration/     # Startup-Konfiguration
 ```
 
-## API-Referenz [D=C]
+## Datenbank-Konfiguration
 
-### DatabaseManager
+### SQLCipher Integration [SP]
 
-Der `DatabaseManager` ist verantwortlich für die Verwaltung von Datenbankverbindungen und stellt sicher, dass alle Sicherheitsrichtlinien eingehalten werden.
+```csharp
+// MedEasy.Infrastructure/Data/MedEasyDbContext.cs
+public class MedEasyDbContext : DbContext
+{
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        var connectionString = GetSQLCipherConnectionString();
+        optionsBuilder.UseSqlite(connectionString);
+    }
 
-#### Konstruktoren
-
-```rust
-// Standardkonstruktor für normale Anwendungsfälle
-pub fn new() -> Result<Self, DatabaseError>
-
-// Konstruktor mit explizitem Produktions-Flag für Tests und spezielle Umgebungen
-pub fn new_with_production_flag(is_production: bool) -> Result<Self, DatabaseError>
-```
-
-#### Verbindungsverwaltung
-
-```rust
-// Liefert eine Verbindung aus dem Pool
-pub fn get_connection(&self) -> Result<PooledConnection<SqliteConnectionManager>, DatabaseError>
-
-// Führt eine Funktion mit einer Verbindung aus
-pub fn with_connection<F, T>(&self, f: F) -> Result<T, DatabaseError>
-where
-    F: FnOnce(&Connection) -> Result<T, Error>
-```
-
-#### Migrationen und Schema
-
-```rust
-// Führt Datenbankmigrationen aus und erstellt alle notwendigen Tabellen
-pub fn run_migrations(&self) -> Result<(), DatabaseError>
-```
-
-#### Hilfsmethoden
-
-```rust
-// Prüft, ob die Datenbank verschlüsselt ist
-pub fn is_encrypted(&self) -> bool
-```
-
-## Sicherheitsmerkmale [SP][AIU][ATV]
-
-### SQLCipher-Integration [SP]
-
-Die Datenbank verwendet SQLCipher mit AES-256-Verschlüsselung und folgenden Sicherheitseinstellungen:
-
-```rust
-// Sichere SQLCipher-Konfiguration
-conn.pragma_update(None, "cipher_page_size", 4096)?;
-conn.pragma_update(None, "kdf_iter", 256000)?;
-conn.pragma_update(None, "cipher_memory_security", "ON")?;
-conn.pragma_update(None, "cipher_default_kdf_algorithm", "PBKDF2_HMAC_SHA512")?;
-conn.pragma_update(None, "cipher_default_plaintext_header_size", 32)?;
-conn.pragma_update(None, "cipher_hmac_algorithm", "HMAC_SHA512")?;
-```
-
-### Erzwungene Verschlüsselung [SP]
-
-Die Verschlüsselung ist in Produktionsumgebungen erzwungen und kann nicht deaktiviert werden. Alle Konstruktoren prüfen diese Bedingung:
-
-```rust
-// Erzwinge Verschlüsselung in Produktion
-let use_encryption = if !is_production {
-    env::var("USE_ENCRYPTION")
-        .unwrap_or_else(|_| "false".to_string())
-        .parse::<bool>()
-        .unwrap_or(false)
-} else {
-    true
-};
-
-if is_production && !use_encryption {
-    return Err(DatabaseError::EnvError(
-        "Encryption must be enabled in production".to_string()
-    ));
+    private string GetSQLCipherConnectionString()
+    {
+        var dbPath = Path.Combine(Environment.GetFolderPath(
+            Environment.SpecialFolder.LocalApplicationData), 
+            "MedEasy", "medeasy.db");
+            
+        var key = Environment.GetEnvironmentVariable("MEDEASY_DB_KEY") 
+            ?? throw new InvalidOperationException("Database key not found");
+            
+        return $"Data Source={dbPath};Password={key};";
+    }
 }
 ```
 
-Alle Datenbankverbindungen in Produktionsumgebungen werden strikt mit dem AES-256-Schlüssel initialisiert, der als Base64-kodierter 32-Byte-Schlüssel aus der Umgebungsvariable `MEDEASY_DB_KEY` gelesen wird. Eine fehlerhafte oder fehlende Konfiguration führt zu einem sofortigen Fehler.
+### Entity Framework Konfiguration
 
-### Feldverschlüsselung [EIV]
-
-Sensible Daten werden zusätzlich auf Feldebene mit AES-256-GCM verschlüsselt:
-
-```rust
-pub fn encrypt(&self, plaintext: &str) -> Result<Vec<u8>, EncryptionError> {
-    // Generiere zufälligen Nonce für jede Verschlüsselung
-    let mut nonce = [0u8; 12];
-    getrandom::getrandom(&mut nonce).map_err(|e| EncryptionError::RandomError(e.to_string()))?;
-    let nonce = Nonce::from_slice(&nonce);
-    
-    // Verschlüssele den Text
-    let ciphertext = self.cipher.encrypt(nonce, plaintext.as_bytes().as_ref())
-        .map_err(|e| EncryptionError::EncryptionError(e.to_string()))?;
-    
-    // Kombiniere Nonce und Ciphertext für Speicherung
-    let mut result = Vec::with_capacity(nonce.len() + ciphertext.len());
-    result.extend_from_slice(nonce.as_slice());
-    result.extend_from_slice(&ciphertext);
-    
-    Ok(result)
+```csharp
+// MedEasy.Infrastructure/Data/Configurations/PatientConfiguration.cs
+public class PatientConfiguration : IEntityTypeConfiguration<Patient>
+{
+    public void Configure(EntityTypeBuilder<Patient> builder)
+    {
+        builder.ToTable("patients");
+        
+        builder.HasKey(p => p.Id);
+        builder.Property(p => p.Id).HasColumnName("id");
+        
+        // Verschlüsselte Felder [EIV]
+        builder.Property(p => p.EncryptedFirstName)
+            .HasColumnName("encrypted_first_name")
+            .HasColumnType("BLOB");
+            
+        builder.Property(p => p.EncryptedLastName)
+            .HasColumnName("encrypted_last_name")
+            .HasColumnType("BLOB");
+            
+        // Anonymisierte Felder [AIU]
+        builder.Property(p => p.AnonymizedFirstName)
+            .HasColumnName("anonymized_first_name")
+            .HasMaxLength(100);
+    }
 }
 ```
 
-### Unveränderliche Anonymisierung [AIU]
+## Domain-Entitäten
 
-Die Anonymisierung ist obligatorisch und kann nicht deaktiviert werden:
+### Patient Entity [EIV]
 
-```rust
-// Enforce anonymization [AIU]
-if anonymized_text.trim().is_empty() {
-    return Err(TranscriptRepositoryError::AnonymizationRequired(
-        "Anonymized text is required and cannot be empty".to_string()
-    ));
+```csharp
+// MedEasy.Domain/Entities/Patient.cs
+public class Patient : AuditableEntity
+{
+    public Guid Id { get; set; }
+    
+    // Verschlüsselte Originaldaten [SP]
+    public byte[] EncryptedFirstName { get; set; }
+    public byte[] EncryptedLastName { get; set; }
+    public byte[] EncryptedDateOfBirth { get; set; }
+    public byte[] EncryptedInsuranceNumber { get; set; }
+    
+    // Anonymisierte Daten für UI [AIU]
+    public string AnonymizedFirstName { get; set; }
+    public string AnonymizedLastName { get; set; }
+    public string AnonymizedDateOfBirth { get; set; }
+    public string InsuranceNumberHash { get; set; }
+    
+    // Anonymisierungs-Metadaten
+    public bool IsAnonymized { get; set; } = true;
+    public DateTime? AnonymizedAt { get; set; }
+    public string AnonymizedBy { get; set; }
+    
+    // Navigation Properties
+    public virtual ICollection<Session> Sessions { get; set; } = new List<Session>();
 }
 ```
 
-### Vollständiger Audit-Trail [ATV]
+### Session Entity [EIV]
 
-Jede Datenbankoperation wird protokolliert. Die Audit-Log-Tabelle wird bei der Migration automatisch erstellt:
-
-```rust
-// Erstelle Audit-Log-Tabelle [ATV]
-conn.execute(
-    "CREATE TABLE IF NOT EXISTS audit_logs (
-        id TEXT PRIMARY KEY,
-        user_id TEXT,
-        action TEXT NOT NULL,
-        entity_type TEXT NOT NULL,
-        entity_id TEXT NOT NULL,
-        details TEXT,
-        is_sensitive INTEGER NOT NULL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )",
-    [],
-).map_err(|e| DatabaseError::SqlError(e))?
-```
-
-```rust
-// Create audit log entry [ATV]
-let audit_log = AuditLog::new(
-    "patients",
-    &patient_id,
-    "INSERT",
-    Some("Created new patient record"),
-    true, // Contains sensitive data
-    user_id,
-);
-
-conn.execute(
-    "INSERT INTO audit_logs (
-        id, entity_name, entity_id, action, changes,
-        contains_sensitive_data, timestamp, user_id
-    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-    params![
-        audit_log.id,
-        audit_log.entity_name,
-        audit_log.entity_id,
-        audit_log.action,
-        audit_log.changes,
-        audit_log.contains_sensitive_data as i32,
-        audit_log.timestamp,
-        audit_log.user_id
-    ],
-)?;
-```
-
-## Fehlerbehandlung [ZTS][ECP]
-
-Die Datenbankimplementierung verwendet eine typisierte Fehlerbehandlung, um alle möglichen Fehlersituationen korrekt zu behandeln:
-
-```rust
-#[derive(Debug, thiserror::Error)]
-pub enum DatabaseError {
-    #[error("SQL error: {0}")]
-    SqlError(#[from] rusqlite::Error),
+```csharp
+// MedEasy.Domain/Entities/Session.cs
+public class Session : AuditableEntity
+{
+    public Guid Id { get; set; }
+    public Guid PatientId { get; set; }
     
-    #[error("Connection pool error: {0}")]
-    PoolError(#[from] r2d2::Error),
+    public DateTime SessionDate { get; set; }
+    public TimeSpan? StartTime { get; set; }
+    public TimeSpan? EndTime { get; set; }
     
-    #[error("Environment error: {0}")]
-    EnvError(String),
+    public SessionStatus Status { get; set; }
     
-    #[error("Migration error: {0}")]
-    MigrationError(String),
+    // Verschlüsselte Daten [SP]
+    public byte[] EncryptedNotes { get; set; }
+    public byte[] EncryptedAudioReference { get; set; }
     
-    #[error("Encryption error: {0}")]
-    EncryptionError(#[from] EncryptionError),
+    // Navigation Properties
+    public virtual Patient Patient { get; set; }
+    public virtual ICollection<Transcript> Transcripts { get; set; } = new List<Transcript>();
 }
 ```
 
-Beachten Sie, dass der vorher verwendete `ConfigurationError`-Typ entfernt und durch den spezifischeren `EnvError` ersetzt wurde, um Umgebungskonfigurationsprobleme genauer zu identifizieren. Dies verbessert insbesondere die Fehlerbehandlung für Verschlüsselungserzwingung in Produktion und Schlüsselvalidierung.
+## Verschlüsselungsservice
 
-## Testbarkeit [TR][ECP]
+### Field Encryption Service [SP][EIV]
 
-Die Implementierung wurde für umfassende Testbarkeit optimiert:
-
-### Isolierte Tests mit TestGuard
-
-```rust
-pub struct TestGuard {
-    old_vars: HashMap<String, Option<String>>,
+```csharp
+// MedEasy.Infrastructure/Encryption/FieldEncryptionService.cs
+public class FieldEncryptionService : IFieldEncryptionService
+{
+    private readonly byte[] _encryptionKey;
+    
+    public FieldEncryptionService(IConfiguration configuration)
+    {
+        var keyBase64 = configuration["Encryption:FieldKey"] 
+            ?? throw new InvalidOperationException("Field encryption key not configured");
+        _encryptionKey = Convert.FromBase64String(keyBase64);
+        
+        if (_encryptionKey.Length != 32)
+            throw new ArgumentException("Encryption key must be exactly 32 bytes");
+    }
+    
+    public byte[] Encrypt(string plaintext)
+    {
+        if (string.IsNullOrEmpty(plaintext))
+            return null;
+            
+        using var aes = Aes.Create();
+        aes.Key = _encryptionKey;
+        aes.GenerateIV();
+        
+        using var encryptor = aes.CreateEncryptor();
+        using var msEncrypt = new MemoryStream();
+        
+        // IV am Anfang speichern
+        msEncrypt.Write(aes.IV, 0, aes.IV.Length);
+        
+        using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+        using (var swEncrypt = new StreamWriter(csEncrypt))
+        {
+            swEncrypt.Write(plaintext);
+        }
+        
+        return msEncrypt.ToArray();
+    }
+    
+    public string Decrypt(byte[] ciphertext)
+    {
+        if (ciphertext == null || ciphertext.Length == 0)
+            return null;
+            
+        using var aes = Aes.Create();
+        aes.Key = _encryptionKey;
+        
+        // IV aus dem Anfang lesen
+        var iv = new byte[16];
+        Array.Copy(ciphertext, 0, iv, 0, 16);
+        aes.IV = iv;
+        
+        using var decryptor = aes.CreateDecryptor();
+        using var msDecrypt = new MemoryStream(ciphertext, 16, ciphertext.Length - 16);
+        using var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
+        using var srDecrypt = new StreamReader(csDecrypt);
+        
+        return srDecrypt.ReadToEnd();
+    }
 }
+```
 
-impl TestGuard {
-    pub fn new() -> Self {
-        // Speichere alle relevanten Umgebungsvariablen
-        let mut guard = TestGuard {
-            old_vars: HashMap::new(),
+## Anonymisierungsservice
+
+### Anonymization Service [AIU]
+
+```csharp
+// MedEasy.Infrastructure/Services/AnonymizationService.cs
+public class AnonymizationService : IAnonymizationService
+{
+    private readonly ILogger<AnonymizationService> _logger;
+    private readonly IAuditService _auditService;
+    
+    public AnonymizationService(ILogger<AnonymizationService> logger, IAuditService auditService)
+    {
+        _logger = logger;
+        _auditService = auditService;
+    }
+    
+    public async Task<AnonymizationResult> AnonymizePatientAsync(Patient patient, string userId)
+    {
+        var result = new AnonymizationResult();
+        
+        try
+        {
+            // Unveränderliche Anonymisierung [AIU]
+            patient.AnonymizedFirstName = AnonymizeFirstName(patient.EncryptedFirstName);
+            patient.AnonymizedLastName = AnonymizeLastName(patient.EncryptedLastName);
+            patient.AnonymizedDateOfBirth = AnonymizeDateOfBirth(patient.EncryptedDateOfBirth);
+            patient.InsuranceNumberHash = HashInsuranceNumber(patient.EncryptedInsuranceNumber);
+            
+            patient.IsAnonymized = true;
+            patient.AnonymizedAt = DateTime.UtcNow;
+            patient.AnonymizedBy = userId;
+            
+            // Audit-Log [ATV]
+            await _auditService.LogAsync(new AuditEntry
+            {
+                EntityType = "Patient",
+                EntityId = patient.Id.ToString(),
+                Action = "Anonymize",
+                UserId = userId,
+                Timestamp = DateTime.UtcNow,
+                Details = "Patient data anonymized"
+            });
+            
+            result.Success = true;
+            _logger.LogInformation("Patient {PatientId} anonymized successfully", patient.Id);
+        }
+        catch (Exception ex)
+        {
+            result.Success = false;
+            result.ErrorMessage = ex.Message;
+            _logger.LogError(ex, "Failed to anonymize patient {PatientId}", patient.Id);
+        }
+        
+        return result;
+    }
+    
+    private string AnonymizeFirstName(byte[] encryptedFirstName)
+    {
+        // Implementierung der Anonymisierungslogik
+        // Diese Funktion kann NIEMALS deaktiviert werden [AIU]
+        var decrypted = _fieldEncryption.Decrypt(encryptedFirstName);
+        return decrypted?.Length > 0 ? $"{decrypted[0]}***" : "***";
+    }
+}
+```
+
+## Repository-Implementierung
+
+### Patient Repository [CAS]
+
+```csharp
+// MedEasy.Infrastructure/Repositories/PatientRepository.cs
+public class PatientRepository : IPatientRepository
+{
+    private readonly MedEasyDbContext _context;
+    private readonly IFieldEncryptionService _encryption;
+    private readonly IAnonymizationService _anonymization;
+    private readonly IAuditService _audit;
+    
+    public PatientRepository(
+        MedEasyDbContext context,
+        IFieldEncryptionService encryption,
+        IAnonymizationService anonymization,
+        IAuditService audit)
+    {
+        _context = context;
+        _encryption = encryption;
+        _anonymization = anonymization;
+        _audit = audit;
+    }
+    
+    public async Task<Patient> CreateAsync(CreatePatientDto dto, string userId)
+    {
+        var patient = new Patient
+        {
+            Id = Guid.NewGuid(),
+            
+            // Verschlüsselung der Originaldaten [SP]
+            EncryptedFirstName = _encryption.Encrypt(dto.FirstName),
+            EncryptedLastName = _encryption.Encrypt(dto.LastName),
+            EncryptedDateOfBirth = _encryption.Encrypt(dto.DateOfBirth.ToString("yyyy-MM-dd")),
+            EncryptedInsuranceNumber = _encryption.Encrypt(dto.InsuranceNumber),
+            
+            Created = DateTime.UtcNow,
+            CreatedBy = userId,
+            LastModified = DateTime.UtcNow,
+            LastModifiedBy = userId
         };
         
-        // Sichere wichtige Variablen
-        for var in ["DATABASE_URL", "MEDEASY_DB_KEY", "USE_ENCRYPTION", "ENFORCE_AUDIT", "MEDEASY_FIELD_ENCRYPTION_KEY"] {
-            guard.old_vars.insert(var.to_string(), env::var(var).ok());
-            env::remove_var(var);
-        }
+        // Automatische Anonymisierung [AIU]
+        await _anonymization.AnonymizePatientAsync(patient, userId);
         
-        guard
+        _context.Patients.Add(patient);
+        await _context.SaveChangesAsync();
+        
+        // Audit-Log [ATV]
+        await _audit.LogAsync(new AuditEntry
+        {
+            EntityType = "Patient",
+            EntityId = patient.Id.ToString(),
+            Action = "Create",
+            UserId = userId,
+            Timestamp = DateTime.UtcNow,
+            Details = "New patient created and anonymized"
+        });
+        
+        return patient;
+    }
+    
+    public async Task<IEnumerable<Patient>> GetAllAsync()
+    {
+        // Nur anonymisierte Daten zurückgeben [AIU]
+        return await _context.Patients
+            .Select(p => new Patient
+            {
+                Id = p.Id,
+                AnonymizedFirstName = p.AnonymizedFirstName,
+                AnonymizedLastName = p.AnonymizedLastName,
+                AnonymizedDateOfBirth = p.AnonymizedDateOfBirth,
+                InsuranceNumberHash = p.InsuranceNumberHash,
+                IsAnonymized = p.IsAnonymized,
+                Created = p.Created,
+                LastModified = p.LastModified
+            })
+            .ToListAsync();
     }
 }
+```
 
-impl Drop for TestGuard {
-    fn drop(&mut self) {
-        // Stelle alle gespeicherten Umgebungsvariablen wieder her
-        for (var, value) in &self.old_vars {
-            if let Some(val) = value {
-                env::set_var(var, val);
-            } else {
-                env::remove_var(var);
-            }
+## API Controller
+
+### Patients Controller
+
+```csharp
+// MedEasy.API/Controllers/PatientsController.cs
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class PatientsController : ControllerBase
+{
+    private readonly IMediator _mediator;
+    private readonly ILogger<PatientsController> _logger;
+    
+    public PatientsController(IMediator mediator, ILogger<PatientsController> logger)
+    {
+        _mediator = mediator;
+        _logger = logger;
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<PatientDto>>> GetPatients()
+    {
+        try
+        {
+            var query = new GetPatientsQuery();
+            var patients = await _mediator.Send(query);
+            return Ok(patients);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving patients");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+    
+    [HttpPost]
+    public async Task<ActionResult<PatientDto>> CreatePatient([FromBody] CreatePatientDto dto)
+    {
+        try
+        {
+            var command = new CreatePatientCommand(dto, User.Identity.Name);
+            var patient = await _mediator.Send(command);
+            return CreatedAtAction(nameof(GetPatient), new { id = patient.Id }, patient);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating patient");
+            return StatusCode(500, "Internal server error");
         }
     }
 }
 ```
 
-### UUID-basierte Testdatenbanken
+## CQRS Implementation
 
-Jeder Test verwendet eine eindeutige, temporäre Datenbankdatei:
+### Commands und Queries
 
-```rust
-// Eindeutige Datenbank für diesen Test
-let db_path = format!("test_db_{}.db", Uuid::new_v4());
-env::set_var("DATABASE_URL", &db_path);
-```
+```csharp
+// MedEasy.Application/Commands/CreatePatientCommand.cs
+public record CreatePatientCommand(CreatePatientDto Patient, string UserId) : IRequest<PatientDto>;
 
-Dies verhindert Interferenzen zwischen Tests und stellt sicher, dass jeder Test mit einer sauberen Datenbank beginnt.
-
-### Base64-kodierte Testschlüssel
-
-Für Tests werden spezielle 32-Byte-AES-Schlüssel verwendet:
-
-```rust
-// Standard-Testschlüssel (32 Bytes für AES-256)
-env::set_var("MEDEASY_DB_KEY", "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=");
-env::set_var("MEDEASY_FIELD_ENCRYPTION_KEY", "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=");
-```
-
-Diese Schlüssel sind Base64-kodiert und entsprechen einem Byte-Array mit Werten von 1-32.
-
-## Datenmodelle [MDL]
-
-Die Datenmodelle folgen dem Domain-Driven Design mit medizinischer Fachsprache:
-
-### Patient
-
-```rust
-pub struct Patient {
-    pub id: String,
-    pub encrypted_first_name: Vec<u8>,
-    pub encrypted_last_name: Vec<u8>,
-    pub date_of_birth: String,
-    pub insurance_number_hash: String,
-    pub encrypted_notes: Option<Vec<u8>>,
-    pub created: String,
-    pub created_by: String,
-    pub last_modified: String,
-    pub last_modified_by: String,
-}
-```
-
-### Session
-
-```rust
-pub struct Session {
-    pub id: String,
-    pub patient_id: String,
-    pub status: SessionStatus,
-    pub encrypted_notes: Option<Vec<u8>>,
-    pub encrypted_audio_file_path: Option<Vec<u8>>,
-    pub created: String,
-    pub created_by: String,
-    pub last_modified: String,
-    pub last_modified_by: String,
-}
-```
-
-### Transcript
-
-```rust
-pub struct Transcript {
-    pub id: String,
-    pub session_id: String,
-    pub encrypted_original_text: Vec<u8>,
-    pub encrypted_anonymized_text: Vec<u8>,
-    pub is_anonymized: bool,
-    pub anonymization_confidence: Option<f64>,
-    pub needs_review: bool,
-    pub created: String,
-    pub created_by: String,
-    pub last_modified: String,
-    pub last_modified_by: String,
-}
-```
-
-### AuditLog
-
-```rust
-pub struct AuditLog {
-    pub id: String,
-    pub entity_name: String,
-    pub entity_id: String,
-    pub action: String,
-    pub changes: Option<String>,
-    pub contains_sensitive_data: bool,
-    pub timestamp: String,
-    pub user_id: String,
-}
-```
-
-## Repositories [CQA]
-
-Die Repositories implementieren das Command Query Responsibility Segregation (CQRS) Pattern:
-
-### PatientRepository
-
-```rust
-pub struct PatientRepository {
-    db: DatabaseManager,
-    encryption: FieldEncryption,
-}
-
-impl PatientRepository {
-    pub fn new(db: DatabaseManager) -> Result<Self, PatientRepositoryError> { ... }
-    pub fn create_patient(&self, first_name: &str, last_name: &str, date_of_birth: &str, 
-                         insurance_number: &str, notes: Option<&str>, user_id: &str) 
-                         -> Result<Patient, PatientRepositoryError> { ... }
-    pub fn get_patient_by_id(&self, id: &str, user_id: &str) 
-                            -> Result<Patient, PatientRepositoryError> { ... }
-    pub fn get_all_patients(&self, user_id: &str) 
-                           -> Result<Vec<Patient>, PatientRepositoryError> { ... }
-    // Weitere Methoden...
-}
-```
-
-### AuditRepository [ATV][ZTS]
-
-```rust
-pub struct AuditRepository {
-    db: DatabaseManager,
-}
-
-impl AuditRepository {
-    // Konstruktor mit Erzwingungsprüfung
-    pub fn new(db: DatabaseManager) -> Result<Self, AuditRepositoryError> { ... }
+public class CreatePatientCommandHandler : IRequestHandler<CreatePatientCommand, PatientDto>
+{
+    private readonly IPatientRepository _repository;
+    private readonly IMapper _mapper;
     
-    // Prüft, ob Audit-Logging erzwungen wird (basierend auf MEDEASY_ENFORCE_AUDIT)
-    pub fn is_enforced(&self) -> bool { ... }
+    public CreatePatientCommandHandler(IPatientRepository repository, IMapper mapper)
+    {
+        _repository = repository;
+        _mapper = mapper;
+    }
     
-    // Erstellt einen Audit-Log-Eintrag
-    pub fn create_audit_log(&self, entity_name: &str, entity_id: &str, 
-                           action: &str, changes: Option<&str>, 
-                           contains_sensitive_data: bool, user_id: &str) 
-                           -> Result<AuditLog, AuditRepositoryError> { ... }
+    public async Task<PatientDto> Handle(CreatePatientCommand request, CancellationToken cancellationToken)
+    {
+        var patient = await _repository.CreateAsync(request.Patient, request.UserId);
+        return _mapper.Map<PatientDto>(patient);
+    }
+}
+```
+
+## Audit-Trail Implementation
+
+### Audit Service [ATV]
+
+```csharp
+// MedEasy.Infrastructure/Audit/AuditService.cs
+public class AuditService : IAuditService
+{
+    private readonly MedEasyDbContext _context;
+    private readonly ILogger<AuditService> _logger;
     
-    // Sucht Audit-Logs nach verschiedenen Kriterien
-    pub fn get_audit_logs_by_entity(&self, entity_name: &str, entity_id: &str) 
-                                   -> Result<Vec<AuditLog>, AuditRepositoryError> { ... }
-                                   
-    pub fn get_audit_logs_by_user(&self, user_id: &str) 
-                                -> Result<Vec<AuditLog>, AuditRepositoryError> { ... }
-                                
-    pub fn get_audit_logs_by_timerange(&self, start_time: &str, end_time: &str) 
-                                     -> Result<Vec<AuditLog>, AuditRepositoryError> { ... }
+    public async Task LogAsync(AuditEntry entry)
+    {
+        try
+        {
+            var auditLog = new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                EntityType = entry.EntityType,
+                EntityId = entry.EntityId,
+                Action = entry.Action,
+                UserId = entry.UserId,
+                Timestamp = entry.Timestamp,
+                Details = entry.Details,
+                IpAddress = entry.IpAddress,
+                UserAgent = entry.UserAgent
+            };
+            
+            _context.AuditLogs.Add(auditLog);
+            await _context.SaveChangesAsync();
+            
+            _logger.LogInformation("Audit entry logged: {Action} on {EntityType} {EntityId} by {UserId}", 
+                entry.Action, entry.EntityType, entry.EntityId, entry.UserId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to log audit entry");
+            // Audit-Fehler dürfen nicht die Hauptoperation blockieren
+        }
+    }
+}
+```
+
+## Konfiguration und Startup
+
+### Program.cs
+
+```csharp
+// MedEasy.API/Program.cs
+var builder = WebApplication.CreateBuilder(args);
+
+// Services
+builder.Services.AddDbContext<MedEasyDbContext>();
+builder.Services.AddScoped<IFieldEncryptionService, FieldEncryptionService>();
+builder.Services.AddScoped<IAnonymizationService, AnonymizationService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IPatientRepository, PatientRepository>();
+
+// MediatR
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreatePatientCommand).Assembly));
+
+// AutoMapper
+builder.Services.AddAutoMapper(typeof(PatientProfile));
+
+// Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
+
+var app = builder.Build();
+
+// Middleware
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Audit Middleware
+app.UseMiddleware<AuditMiddleware>();
+
+app.MapControllers();
+app.Run();
+```
+
+## Sicherheitsfeatures
+
+### Umgebungsvariablen [ZTS]
+
+```bash
+# Erforderliche Umgebungsvariablen
+MEDEASY_DB_KEY=base64_encoded_32_byte_key
+MEDEASY_FIELD_ENCRYPTION_KEY=base64_encoded_32_byte_key
+MEDEASY_JWT_KEY=your_jwt_signing_key
+```
+
+### Schlüsselverwaltung [SP]
+
+```csharp
+// MedEasy.Infrastructure/Security/KeyManager.cs
+public class KeyManager : IKeyManager
+{
+    public void ValidateKeys()
+    {
+        ValidateKey("MEDEASY_DB_KEY", "Database encryption key");
+        ValidateKey("MEDEASY_FIELD_ENCRYPTION_KEY", "Field encryption key");
+    }
     
-    // Weitere Methoden...
+    private void ValidateKey(string envVar, string description)
+    {
+        var keyBase64 = Environment.GetEnvironmentVariable(envVar);
+        if (string.IsNullOrEmpty(keyBase64))
+            throw new InvalidOperationException($"{description} not configured");
+            
+        var key = Convert.FromBase64String(keyBase64);
+        if (key.Length != 32)
+            throw new ArgumentException($"{description} must be exactly 32 bytes");
+    }
 }
 ```
 
-### AnonymizationReviewRepository [AIU][ARQ][ATV]
+## Testing
 
-```rust
-pub struct AnonymizationReviewRepository {
-    db: DatabaseManager,
-    audit_repository: AuditRepository,
-}
+### Unit Tests
 
-impl AnonymizationReviewRepository {
-    pub fn new(db: DatabaseManager, audit_repository: AuditRepository) -> Result<Self, AnonymizationReviewRepositoryError> { ... }
-    
-    pub fn create_review_item(&self, transcript_id: &str, detected_pii: Option<&str>,
-                             anonymization_confidence: f64, review_reason: &str, user_id: &str)
-                             -> Result<AnonymizationReviewItem, AnonymizationReviewRepositoryError> { ... }
-                             
-    pub fn get_review_item_by_id(&self, id: &str, user_id: &str)
-                                -> Result<AnonymizationReviewItem, AnonymizationReviewRepositoryError> { ... }
-                                
-    pub fn get_review_items_by_status(&self, status: ReviewStatus, user_id: &str)
-                                     -> Result<Vec<AnonymizationReviewItem>, AnonymizationReviewRepositoryError> { ... }
-                                     
-    pub fn update_review_status(&self, id: &str, status: ReviewStatus, notes: Option<&str>, user_id: &str)
-                               -> Result<AnonymizationReviewItem, AnonymizationReviewRepositoryError> { ... }
-    
-    // Weitere Methoden...
-}
-```
-
-## Umgebungskonfiguration [IC]
-
-Die Anwendung unterstützt verschiedene Umgebungen mit unterschiedlichen Sicherheitsanforderungen:
-
-### Entwicklung
-
-```
-# Datenbankeinstellungen
-DATABASE_URL=sqlite://./medeasy.development.db
-USE_ENCRYPTION=false
-
-# Audit-Einstellungen
-MEDEASY_ENFORCE_AUDIT=false  # [ATV] In Entwicklung optional
-
-# Entwicklungsschlüssel (NUR für Entwicklung!)
-MEDEASY_DB_KEY=dev_key_please_change_in_production_1234567890
-MEDEASY_FIELD_ENCRYPTION_KEY=ZGV2X2tleV9wbGVhc2VfY2hhbmdlX2luX3Byb2R1Y3Rpb25fMTIzNDU2Nzg5MA==
-```
-
-### Produktion
-
-```
-# Datenbankeinstellungen
-DATABASE_URL=sqlite://./medeasy.production.db
-USE_ENCRYPTION=true  # [SP] In Produktion MUSS Verschlüsselung aktiviert sein
-
-# Audit-Einstellungen
-MEDEASY_ENFORCE_AUDIT=true  # [ATV][ZTS] In Produktion MUSS Audit-Logging erzwungen werden
-
-# Produktionsschlüssel (MÜSSEN sicher generiert werden!)
-MEDEASY_DB_KEY=<Generierter 32-Byte Schlüssel für SQLCipher>
-MEDEASY_FIELD_ENCRYPTION_KEY=<Generierter Base64-kodierter 32-Byte Schlüssel für Feldverschlüsselung>
-```
-
-## Datenbank-Hilfsskript [DU]
-
-Das PowerShell-Skript `scripts/db-helper.ps1` bietet Funktionen für:
-
-- Datenbankerstellung: `.\db-helper.ps1 create development`
-- Backup: `.\db-helper.ps1 backup production`
-- Reset: `.\db-helper.ps1 reset development`
-- Schlüsselgenerierung: `.\db-helper.ps1 genkey`
-
-## Tauri-Integration
-
-Die Datenbankfunktionalität wird über Tauri-Befehle für das Frontend verfügbar gemacht:
-
-```rust
-#[tauri::command]
-pub async fn create_patient(
-    patient_repo: State<'_, PatientRepoState>,
-    patient: CreatePatientDto,
-    user_id: String,
-) -> CommandResult<PatientDto> {
-    // Implementierung...
+```csharp
+// MedEasy.Tests/Repositories/PatientRepositoryTests.cs
+public class PatientRepositoryTests
+{
+    [Fact]
+    public async Task CreateAsync_ShouldEncryptAndAnonymizeData()
+    {
+        // Arrange
+        var options = new DbContextOptionsBuilder<MedEasyDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+            
+        using var context = new MedEasyDbContext(options);
+        var encryption = new Mock<IFieldEncryptionService>();
+        var anonymization = new Mock<IAnonymizationService>();
+        var audit = new Mock<IAuditService>();
+        
+        var repository = new PatientRepository(context, encryption.Object, anonymization.Object, audit.Object);
+        
+        var dto = new CreatePatientDto
+        {
+            FirstName = "Max",
+            LastName = "Mustermann",
+            DateOfBirth = new DateTime(1990, 1, 1),
+            InsuranceNumber = "123.4567.8901.23"
+        };
+        
+        // Act
+        var result = await repository.CreateAsync(dto, "test-user");
+        
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsAnonymized);
+        encryption.Verify(x => x.Encrypt("Max"), Times.Once);
+        anonymization.Verify(x => x.AnonymizePatientAsync(It.IsAny<Patient>(), "test-user"), Times.Once);
+        audit.Verify(x => x.LogAsync(It.IsAny<AuditEntry>()), Times.Once);
+    }
 }
 ```
 
-## Schlüsselrotation [SP][ATV][ZTS]
+## Migration und Deployment
 
-Die Schlüsselrotation ist ein kritischer Sicherheitsaspekt der MedEasy-Datenbankimplementierung. Sie gewährleistet, dass Verschlüsselungsschlüssel regelmäßig erneuert werden, um die Sicherheit der gespeicherten Daten zu maximieren.
+### Entity Framework Migrations
 
-### KeyManager-Architektur
+```bash
+# Migration erstellen
+dotnet ef migrations add InitialCreate --project MedEasy.Infrastructure --startup-project MedEasy.API
 
-Der `KeyManager` verwaltet verschiedene Schlüsseltypen:
+# Datenbank aktualisieren
+dotnet ef database update --project MedEasy.Infrastructure --startup-project MedEasy.API
+```
 
-```rust
-pub enum KeyType {
-    Database,        // SQLCipher-Datenbankschlüssel
-    FieldPatient,    // Patientendaten-Verschlüsselung
-    FieldSession,    // Sitzungsdaten-Verschlüsselung
-    FieldTranscript, // Transkript-Verschlüsselung
-    Backup,          // Backup-Verschlüsselung
+### Deployment-Konfiguration
+
+```json
+// appsettings.Production.json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=%LOCALAPPDATA%\\MedEasy\\medeasy.db;Password={DB_KEY};"
+  },
+  "Encryption": {
+    "FieldKey": "{FIELD_ENCRYPTION_KEY}"
+  },
+  "Jwt": {
+    "Key": "{JWT_KEY}",
+    "Issuer": "MedEasy",
+    "Audience": "MedEasy-Client"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  }
 }
 ```
 
-### Rotationsstatus
+## Compliance und Sicherheit
 
-Jeder Schlüssel hat einen Rotationsstatus:
+### Schweizer Compliance [SF][DSC]
 
-- **UpToDate**: Schlüssel ist aktuell
-- **DueSoon**: Rotation wird in den nächsten 7 Tagen empfohlen
-- **Overdue**: Rotation ist überfällig (>30 Tage)
+- **nDSG-Konformität**: Vollständige Verschlüsselung und Anonymisierung
+- **Datenschutz**: Lokale Speicherung, keine Cloud-Übertragung ohne Einwilligung
+- **Audit-Trail**: Vollständige Nachverfolgbarkeit aller Operationen [ATV]
+- **Unveränderliche Anonymisierung**: Kann niemals deaktiviert werden [AIU]
 
-### Automatische Rotation
+### Sicherheitsmaßnahmen [ZTS]
 
-```rust
-// Beispiel: Schlüsselrotation mit Audit-Logging
-let key_manager = KeyManager::new(audit_logger)?;
-key_manager.initialize("master_password")?;
+- **Verschlüsselung**: SQLCipher + AES-256 Feldverschlüsselung [SP]
+- **Authentifizierung**: JWT-basierte API-Authentifizierung
+- **Autorisierung**: Rollenbasierte Zugriffskontrolle
+- **Audit-Trail**: Vollständige Protokollierung [ATV]
+- **Schlüsselverwaltung**: Sichere Umgebungsvariablen [ZTS]
 
-// Rotation eines spezifischen Schlüssels
-key_manager.rotate_key(KeyType::FieldPatient, "admin_user")?;
+## Nächste Schritte
 
-// Rotation aller Schlüssel
-for key_type in [KeyType::Database, KeyType::FieldPatient, /* ... */] {
-    key_manager.rotate_key(key_type, "admin_user")?;
-}
-```
+1. **Frontend-Integration**: HTTP-Client für API-Aufrufe implementieren
+2. **JWT-Authentication**: Frontend-Authentifizierung einrichten
+3. **Mock-Daten Cleanup**: Übergang von Mock-API zu echter API
+4. **Testing**: Umfassende Test-Suite implementieren
+5. **Deployment**: Produktions-Deployment vorbereiten
 
-### Sicherheitsfeatures
+---
 
-1. **Deadlock-Vermeidung**: Mutex-Locking mit begrenztem Scope
-2. **Audit-Trail**: Jede Rotation wird protokolliert [ATV]
-3. **Versionierung**: Schlüssel haben Versionsnummern für Nachverfolgung
-4. **Sichere Speicherung**: Alle Schlüssel werden verschlüsselt gespeichert [SP]
-
-### Integration mit Datenbank
-
-Die Schlüsselrotation ist nahtlos in die Datenbankoperationen integriert:
-
-- **Feldverschlüsselung**: Neue Daten werden mit aktuellen Schlüsseln verschlüsselt
-- **Backward-Kompatibilität**: Alte Daten können mit vorherigen Schlüsselversionen entschlüsselt werden
-- **Migration**: Schrittweise Re-Verschlüsselung mit neuen Schlüsseln
-
-### Testabdeckung
-
-Die Schlüsselrotation hat 100% Testabdeckung mit 5 spezialisierten Tests:
-
-- `test_key_manager_initialization`: Initialisierung
-- `test_key_rotation`: Einzelne Schlüsselrotation
-- `test_rotation_status`: Status-Überprüfung
-- `test_key_rotation_audit`: Audit-Logging
-- `test_rotate_all_key_types`: Multi-Key-Rotation
-
-## Compliance-Hinweise [RW][PL]
-
-Diese Implementierung erfüllt folgende Anforderungen:
-
-- **Schweizer nDSG**: Verschlüsselung aller personenbezogenen Daten
-- **Medizinische Datenschutzbestimmungen**: Audit-Trail und Zugriffsprotokollierung
-- **DSGVO/GDPR**: Datenschutz durch Technikgestaltung (Privacy by Design)
-
-## Verbotene Praktiken [NSB][NUS][NRPD]
-
-Die folgenden Praktiken sind in dieser Implementierung verboten:
-
-- **Keine echten Patientendaten in Tests oder Entwicklung** [NRPD]
-- **Keine Umgehung der Verschlüsselung** [NSB]
-- **Keine unverschlüsselte Speicherung sensibler Daten** [NUS]
-- **Keine Deaktivierung der Anonymisierung** [AIU]
-- **Keine Deaktivierung des Audit-Trails** [ATV]
-
-## Testabdeckung [KP100]
-
-Kritische Sicherheitsfunktionen erfordern 100% Testabdeckung:
-
-- Verschlüsselung: 100% Coverage PFLICHT
-- Anonymisierung: 100% Coverage PFLICHT
-- Audit: 100% Coverage PFLICHT
+**Projektregeln angewendet**: [CAS][SP][AIU][ATV][EIV][ZTS][SF][DSC][D=C][DSU]

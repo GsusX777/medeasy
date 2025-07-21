@@ -32,6 +32,8 @@ pub fn create_tables(conn: &Connection) -> Result<()> {
             id TEXT PRIMARY KEY,
             patient_id TEXT NOT NULL,
             session_date TEXT NOT NULL,
+            start_time TEXT,
+            end_time TEXT,
             status TEXT NOT NULL,
             encrypted_notes BLOB,
             encrypted_audio_file_reference BLOB,
