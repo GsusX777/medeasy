@@ -37,33 +37,20 @@ Sensible Daten werden zusätzlich auf Feldebene verschlüsselt:
 
 ## Authentifizierung und Autorisierung [ZTS]
 
-### JWT-Authentifizierung
+### Desktop-Authentifizierung
 
-- **Token-Typ**: JWT mit RS256-Signatur
-- **Gültigkeit**: 15 Minuten (konfigurierbar)
-- **Refresh-Token**: 24 Stunden (konfigurierbar)
-- **Validierung**:
-  - Issuer
-  - Audience
-  - Ablaufzeit
-  - Signaturschlüssel
+- **Session-Management**: JWT für lokale Session-Verwaltung
+- **Gültigkeit**: 8 Stunden Arbeitszeit (konfigurierbar)
+- **Auto-Lock**: Nach 30 Minuten Inaktivität
+- **Biometrische Integration**: Windows Hello/Touch ID Support (geplant)
+- **Validierung**: Lokale Signaturprüfung ohne externe Services
 
-### Rollenbasierte Zugriffssteuerung
+### Funktionsbasierte Zugriffssteuerung
 
-| Rolle | Berechtigungen |
-|-------|---------------|
-| Administrator | Vollzugriff auf alle Funktionen |
-| Arzt | Zugriff auf Patientendaten, Sessions, Transkripte |
-| MPA | Eingeschränkter Zugriff auf Patientendaten, Sessions |
-| Reviewer | Zugriff auf Anonymisierungs-Review-Queue |
-
-### Zwei-Faktor-Authentifizierung
-
-- Optional für alle Benutzer
-- Verpflichtend für Administratoren
-- Unterstützte Methoden:
-  - TOTP (z.B. Google Authenticator)
-  - SMS (Fallback)
+- **Einzelbenutzer-Modus**: Ein Arzt pro Anwendungsinstanz
+- **Funktions-Toggles**: Aktivierung/Deaktivierung von Features
+- **Sicherheitsstufen**: Verschiedene Sicherheitsmodi (Standard/Hoch)
+- **Audit**: Alle Konfigurationsänderungen werden protokolliert [ATV]
 
 ## Audit-Logging [ATV]
 
@@ -95,30 +82,28 @@ Sicherheitsrelevante Ereignisse werden separat protokolliert:
 - **Konfigurationsänderungen**: Änderungen an Sicherheitseinstellungen
 - **Schlüsselverwendung**: Verwendung von Verschlüsselungsschlüsseln
 
-## Netzwerksicherheit [ZTS]
+## Desktop-Anwendungssicherheit [ZTS]
 
-### TLS/HTTPS
+### Lokale HTTP-Server Sicherheit
 
-- **Minimum**: TLS 1.3
-- **Zertifikate**: Let's Encrypt mit automatischer Erneuerung
-- **HSTS**: Strict-Transport-Security mit max-age=31536000
-- **Zertifikatspinning**: Im Frontend implementiert
+- **Binding**: 127.0.0.1 only (keine externe Erreichbarkeit)
+- **Port**: Dynamisch zugewiesen durch .NET (nicht fest)
+- **CORS**: Restriktiv auf Tauri WebView beschränkt
+- **Request-Validierung**: Alle API-Anfragen werden validiert
 
-### Sicherheitsheader
+### Tauri Security Model
 
-- **X-Content-Type-Options**: nosniff
-- **X-Frame-Options**: DENY
-- **X-XSS-Protection**: 1; mode=block
-- **Referrer-Policy**: strict-origin-when-cross-origin
-- **Content-Security-Policy**: default-src 'self'
-- **Permissions-Policy**: camera=(), microphone=(), geolocation=()
+- **CSP**: Tauri-spezifische Content Security Policy
+- **IPC-Sicherheit**: Sichere Kommunikation zwischen Frontend und Backend
+- **Allowlist**: Nur explizit erlaubte Tauri-Commands verfügbar
+- **File System**: Beschränkter Zugriff auf definierte Verzeichnisse
 
-### Firewall und Rate-Limiting
+### Process-Sicherheit
 
-- **Globales Rate-Limit**: 100 Anfragen/Minute pro Benutzer
-- **Sensible Endpunkte**: 10 Anfragen/Minute pro Benutzer
-- **Anmeldung**: 5 Versuche/Minute pro IP-Adresse
-- **IP-Blacklisting**: Automatische Sperrung nach verdächtigen Aktivitäten
+- **Isolation**: Backend (.NET) und Frontend (Tauri) laufen getrennt
+- **Memory Protection**: Sensible Daten werden nach Verwendung gelöscht
+- **Single-User**: Nur ein Benutzer pro Anwendungsinstanz
+- **Session-Timeout**: Automatische Abmeldung nach Inaktivität
 
 ## Anonymisierung [AIU][AR][NAU]
 

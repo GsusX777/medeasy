@@ -1,19 +1,19 @@
-<!-- â€žDer Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein â€“ ja, lass gelingen, was wir tun!" Psalm 90,17 -->
+<!-- Ã¢â‚¬Å¾Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein Ã¢â‚¬â€œ ja, lass gelingen, was wir tun!" Psalm 90,17 -->
 
 # MedEasy [PSF][PbD][RA]
 
-MedEasy ist eine sichere medizinische Software für die automatisierte Transkription und Anonymisierung von Arzt-Patienten-Gesprächen, speziell entwickelt für den Schweizer Gesundheitsmarkt.
+MedEasy ist eine sichere medizinische Software fÃ¼r die automatisierte Transkription und Anonymisierung von Arzt-Patienten-GesprÃ¤chen, speziell entwickelt fÃ¼r den Schweizer Gesundheitsmarkt.
 
-![MedEasy Logo](docs/assets/logo.png)
+![MedEasy Logo](src/frontend/static/logo.svg)
 
-## Projektübersicht [MDL]
+## ProjektÃ¼bersicht [MDL]
 
-MedEasy unterstützt Ärzte bei der effizienten Dokumentation von Patientengesprächen durch:
+MedEasy unterstÃ¼tzt Ã„rzte bei der effizienten Dokumentation von PatientengesprÃ¤chen durch:
 
-- **Automatische Transkription** von Arzt-Patienten-Gesprächen mit Whisper [WMM]
-- **Zuverlässige Anonymisierung** sensibler Patientendaten [AIU]
-- **KI-gestützte Analyse** für Diagnosevorschläge (mit Arztbestätigung) [DK]
-- **Sichere Datenspeicherung** mit Ende-zu-Ende-Verschlüsselung [SP]
+- **Automatische Transkription** von Arzt-Patienten-GesprÃ¤chen mit Whisper [WMM]
+- **ZuverlÃ¤ssige Anonymisierung** sensibler Patientendaten [AIU]
+- **KI-gestÃ¼tzte Analyse** fÃ¼r DiagnosevorschlÃ¤ge (mit ArztbestÃ¤tigung) [DK]
+- **Sichere Datenspeicherung** mit Ende-zu-Ende-VerschlÃ¼sselung [SP]
 - **Schweizer Compliance** mit nDSG, DSGVO und MDR [SC][DSC]
 
 ## Technologie-Stack [TSF]
@@ -22,22 +22,21 @@ MedEasy unterstützt Ärzte bei der effizienten Dokumentation von Patientengespräc
 - **KI-Dienste**: Python 3.11 mit FastAPI und gRPC
 - **Frontend**: Tauri 1.5 mit Svelte 4
 - **Datenbank**: SQLite mit SQLCipher (AES-256)
-- **Deployment**: Docker und Kubernetes
+- **Deployment**: Desktop Installation
 
 ## Projektstruktur [CAS]
 
 ```
 medeasy/
-¦
+Â¦
 +-- .windsurf/              # Windsurf AI-Assistenten-Konfiguration
 +-- docs/                   # Projektdokumentation
-+-- src/                    # Quellcode
-+-- tests/                  # Tests
++-- src/                    # Quellcode (.NET Backend + Svelte Frontend)
 +-- config/                 # Konfigurationsdateien
-+-- tools/scripts/          # Entwicklungs- und Deployment-Skripte
-+-- data/test-samples/      # Testdaten
-+-- deployment/             # Deployment-Konfigurationen
-+-- database/               # Datenbank-Migrationen und -Schemas
++-- tools/                  # Entwicklungs- und Build-Skripte
++-- data/                   # Testdaten und Samples
++-- test-data/              # ZusÃ¤tzliche Testdaten
++-- scripts/                # Deployment- und Setup-Skripte
 ```
 
 Detaillierte Informationen zur Struktur finden Sie in den jeweiligen README-Dateien der Unterverzeichnisse.
@@ -46,39 +45,38 @@ Detaillierte Informationen zur Struktur finden Sie in den jeweiligen README-Date
 
 MedEasy folgt einer strengen Clean Architecture mit klarer Trennung der Verantwortlichkeiten:
 
-1. **Domain Layer**: Enthält die Geschäftslogik und Entitäten ohne externe Abhängigkeiten
-2. **Application Layer**: Orchestriert Anwendungsfälle mit CQRS-Pattern
+1. **Domain Layer**: EnthÃ¤lt die GeschÃ¤ftslogik und EntitÃ¤ten ohne externe AbhÃ¤ngigkeiten
+2. **Application Layer**: Orchestriert AnwendungsfÃ¤lle mit CQRS-Pattern
 3. **Infrastructure Layer**: Implementiert technische Concerns wie Datenbank und externe Dienste
 4. **API Layer**: REST-API mit JWT-Authentifizierung
-5. **AI Layer**: Python-basierte KI-Dienste für Transkription und Analyse
+5. **AI Layer**: Python-basierte KI-Dienste fÃ¼r Transkription und Analyse
 
-Alle Abhängigkeiten zeigen nach innen (Domain Layer).
+Alle AbhÃ¤ngigkeiten zeigen nach innen (Domain Layer).
 
 ## Sicherheit [ZTS][PbD]
 
-MedEasy implementiert umfassende Sicherheitsmaßnahmen:
+MedEasy implementiert umfassende SicherheitsmaÃŸnahmen:
 
-- **Datenverschlüsselung**: AES-256 für alle Patientendaten [SP]
-- **Unveränderliche Anonymisierung**: Kann niemals deaktiviert werden [AIU]
+- **DatenverschlÃ¼sselung**: AES-256 fÃ¼r alle Patientendaten [SP]
+- **UnverÃ¤nderliche Anonymisierung**: Kann niemals deaktiviert werden [AIU]
 - **Audit-Logging**: Alle Datenzugriffe werden protokolliert [ATV]
 - **Zero-Trust-Architektur**: Keine impliziten Vertrauensbeziehungen
 - **Sichere Authentifizierung**: JWT mit kurzer Lebensdauer und Refresh-Tokens
 
 ## Schweiz-spezifische Funktionen [SC][MFD]
 
-- **Spracherkennung**: Optimiert für Hochdeutsch und Schweizerdeutsch [SDH]
-- **Schweizer Formate**: Unterstützung für Schweizer Datumsformat (DD.MM.YYYY) und Versicherungsnummern
+- **Spracherkennung**: Optimiert fÃ¼r Hochdeutsch und Schweizerdeutsch [SDH]
+- **Schweizer Formate**: UnterstÃ¼tzung fÃ¼r Schweizer Datumsformat (DD.MM.YYYY) und Versicherungsnummern
 - **Schweizer Fachbegriffe**: Verwendung korrekter medizinischer Terminologie (DE-CH)
-- **Compliance**: Vollständige Einhaltung des nDSG und anderer Schweizer Vorschriften [DSC]
+- **Compliance**: VollstÃ¤ndige Einhaltung des nDSG und anderer Schweizer Vorschriften [DSC]
 
 ## Entwicklung [DM]
 
 ### Voraussetzungen
 
-- .NET SDK 8.0 oder höher
-- Python 3.11 oder höher
-- Node.js 18 oder höher
-- Docker (für lokale Entwicklung)
+- .NET SDK 8.0 oder hÃ¶her
+- Python 3.11 oder hÃ¶her
+- Node.js 18 oder hÃ¶her
 
 ### Einrichtung der Entwicklungsumgebung
 
@@ -91,7 +89,7 @@ cd medeasy
 ./tools/scripts/development/setup-dev-env.ps1
 ```
 
-### Ausführen der Anwendung
+### AusfÃ¼hren der Anwendung
 
 ```bash
 # Backend starten
@@ -107,49 +105,53 @@ cd src/MedEasy.Frontend
 npm run dev
 ```
 
-### Tests ausführen [KP100]
+### Tests ausfÃ¼hren [KP100]
 
 ```bash
-# Alle Tests ausführen
-./tools/scripts/testing/run-unit-tests.ps1
-./tools/scripts/testing/run-integration-tests.ps1
-./tools/scripts/testing/run-e2e-tests.ps1
+# .NET Backend Tests
+cd src/MedEasy.API
+dotnet test
 
-# Sicherheitstests ausführen
-./tools/scripts/testing/security-scan.ps1
+# Frontend Tests
+cd src/frontend
+npm test
+
+# E2E Tests
+npm run test:e2e
+
+# Sicherheitstests (.NET)
+dotnet test --filter Category=Security
 ```
 
-## Deployment [ZTS]
+## Installation [ZTS]
 
-MedEasy kann in verschiedenen Umgebungen bereitgestellt werden:
+MedEasy wird als Desktop-Anwendung installiert:
 
 ```bash
 # Entwicklungsumgebung
-./deployment/scripts/deploy.sh dev
+npm run tauri:dev
 
-# Staging-Umgebung
-./deployment/scripts/deploy.sh staging
+# Produktions-Build erstellen
+npm run tauri:build
 
-# Produktionsumgebung
-./deployment/scripts/deploy.sh prod
+# Installer erstellen
+npm run tauri:bundle
 ```
 
-Weitere Informationen finden Sie in der [Deployment-Dokumentation](deployment/README.md).
+Weitere Informationen finden Sie in der [Installation-Dokumentation](docs/ui/deployment/README.md).
 
 ## Dokumentation [DM]
 
-Umfassende Dokumentation ist verfügbar unter:
+Umfassende Dokumentation ist verfÃ¼gbar unter:
 
 - [Architektur](docs/architecture/README.md)
 - [API-Referenz](docs/api/API_REFERENCE.md)
-- [Datenbank-Schema](docs/database/DB_SCHEMA.md)
-- [Compliance](docs/compliance/README.md)
-- [Aktueller Status](docs/CURRENT_STATE.md)
-- [Abhängigkeiten](docs/DEPENDENCIES.md)
+- [Datenbank-Schema](docs/database/SCHEMA.md)
+- [Compliance](docs/compliance/SECURITY.md)
+- [Aktueller Status](docs/FEATURE_STATUS.md)
+- [AbhÃ¤ngigkeiten](docs/architecture/Dependency_Graph.svg)
 
-## Beitragen
-
-Wir freuen uns über Beiträge! Bitte lesen Sie unsere [Beitragsrichtlinien](CONTRIBUTING.md) und den [Verhaltenskodex](CODE_OF_CONDUCT.md).
+Weitere Dokumentationen findest du unter [DOCS-INDEX.md](docs/DOCS-INDEX.md).
 
 ## Lizenz
 
@@ -157,10 +159,10 @@ Dieses Projekt ist unter der [MIT-Lizenz](LICENSE) lizenziert.
 
 ## Sicherheitshinweise [ZTS][NRPD]
 
-- **Keine echten Patientendaten**: Verwenden Sie niemals echte Patientendaten für Entwicklung oder Tests
+- **Keine echten Patientendaten**: Verwenden Sie niemals echte Patientendaten fÃ¼r Entwicklung oder Tests
 - **Sicherheitsprobleme**: Melden Sie Sicherheitsprobleme direkt an security@medeasy.ch
-- **Geheime Schlüssel**: Speichern Sie niemals API-Schlüssel oder Geheimnisse im Code [NEA]
+- **Geheime SchlÃ¼ssel**: Speichern Sie niemals API-SchlÃ¼ssel oder Geheimnisse im Code [NEA]
 
 ---
 
-[PSF][PbD][RA][ZTS] MedEasy - Sichere medizinische Transkription und Analyse für Schweizer Ärzte
+[PSF][PbD][RA][ZTS] MedEasy - Sichere medizinische Transkription und Analyse fÃ¼r Schweizer Ã„rzte

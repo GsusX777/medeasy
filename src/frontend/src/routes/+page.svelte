@@ -1,488 +1,305 @@
 <!-- „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17 -->
 
+<!-- 
+  [TSF] Technologie-Stack Fest - Svelte 4 + TypeScript
+  [ZTS] Zero Tolerance Security - Sichere Initialisierung
+  [AIU] Anonymisierung ist UNVERÄNDERLICH - Alle Tabs respektieren Anonymisierung
+  [SP] SQLCipher Pflicht - Datenbank wird verschlüsselt initialisiert
+-->
 <script lang="ts">
   import { onMount } from 'svelte';
   import AppLayout from '$lib/components/AppLayout.svelte';
-  import { loadPatients, loadPatientSessions, patients, sessions, initDb } from '$lib/stores/database';
-  import type { PatientDto, SessionDto } from '$lib/types/database';
+  import ContentTabs from '$lib/components/ContentTabs.svelte';
+  import { initDb } from '$lib/stores/database';
   
-  // State
-  let todaySessions: SessionDto[] = [];
-  let recentSessions: SessionDto[] = [];
-  let openSessions: SessionDto[] = [];
-  let allPatients: PatientDto[] = [];
-  let allSessions: SessionDto[] = [];
+  // State Management [ZTS]
   let loading = true;
   let error = '';
-  
-  // Aktuelles Datum [SF] - Schweizer Format DD.MM.YYYY
-  const today = new Date();
-  const todayString = today.toLocaleDateString('de-CH', {
-    day: '2-digit',
-    month: '2-digit', 
-    year: 'numeric'
-  });
-  
-  // Wochentag auf Deutsch [SF]
-  const weekday = today.toLocaleDateString('de-CH', { weekday: 'long' });
+  let activeTab = 'transcript';
   
   onMount(async () => {
-    await loadDashboardData();
+    await initializeApp();
   });
   
-  async function loadDashboardData() {
+  async function initializeApp() {
     try {
       loading = true;
       error = '';
       
-      // Initialisiere Datenbank falls nötig
+      // Initialisiere Datenbank falls nötig [SP][ZTS]
       const dbInitialized = await initDb();
       if (!dbInitialized) {
         error = 'Fehler beim Initialisieren der Datenbank';
         return;
       }
       
-      // Lade alle Patienten
-      allPatients = await loadPatients();
-      
-      // Lade Sessions für alle Patienten
-      const sessionPromises = allPatients.map(patient => loadPatientSessions(patient.id));
-      const sessionArrays = await Promise.all(sessionPromises);
-      allSessions = sessionArrays.flat();
-      
-      // Filtere Sessions für heute
-      todaySessions = allSessions.filter(session => {
-        // session.session_date ist bereits im DD.MM.YYYY Format [SF]
-        return session.session_date === todayString;
-      });
-      
-      // Letzte 5 abgeschlossene Konsultationen
-      recentSessions = allSessions
-        .filter(session => session.status === 'Completed')
-        .sort((a, b) => {
-          // Konvertiere DD.MM.YYYY zu Date für Sortierung
-          const dateA = new Date(a.session_date.split('.').reverse().join('-'));
-          const dateB = new Date(b.session_date.split('.').reverse().join('-'));
-          return dateB.getTime() - dateA.getTime();
-        })
-        .slice(0, 5);
-      
-      // Offene Konsultationen (geplant oder laufend)
-      openSessions = allSessions
-        .filter(session => session.status === 'Scheduled' || session.status === 'InProgress')
-        .sort((a, b) => {
-          // Konvertiere DD.MM.YYYY zu Date für Sortierung
-          const dateA = new Date(a.session_date.split('.').reverse().join('-'));
-          const dateB = new Date(b.session_date.split('.').reverse().join('-'));
-          return dateA.getTime() - dateB.getTime();
-        });
+      console.log('MedEasy erfolgreich initialisiert [AIU][ATV][SP]');
       
     } catch (err) {
-      error = `Fehler beim Laden des Dashboards: ${err}`;
-      console.error(error);
+      console.error('Initialisierungsfehler:', err);
+      error = 'Fehler beim Starten der Anwendung';
     } finally {
       loading = false;
     }
   }
   
-  // Hilfsfunktion: Patient-Name finden
-  function getPatientName(patientId: string): string {
-    const patient = allPatients.find((p: PatientDto) => p.id === patientId);
-    return patient ? `${patient.first_name} ${patient.last_name}` : 'Unbekannter Patient';
-  }
-  
-  // Hilfsfunktion: Status-Icon
-  function getStatusIcon(status: string): string {
-    switch (status) {
-      case 'Scheduled': return '📅';
-      case 'InProgress': return '🔴';
-      case 'Completed': return '✅';
-      case 'Cancelled': return '❌';
-      default: return '❓';
-    }
-  }
-  
-  // Hilfsfunktion: Status-Text [SF]
-  function getStatusText(status: string): string {
-    switch (status) {
-      case 'Scheduled': return 'Geplant';
-      case 'InProgress': return 'Laufend';
-      case 'Completed': return 'Abgeschlossen';
-      case 'Cancelled': return 'Abgebrochen';
-      default: return 'Unbekannt';
-    }
+  function handleTabChanged(event: CustomEvent) {
+    activeTab = event.detail.activeTab;
+    console.log('Tab gewechselt zu:', activeTab);
   }
 </script>
 
-<AppLayout title="Dashboard">
-  <div class="dashboard">
-    <div class="dashboard-header">
-      <h1>Übersicht</h1>
-      <div class="date-info">
-        <span class="weekday">{weekday}</span>
-        <span class="date">{todayString}</span>
-      </div>
-    </div>
-    
+<AppLayout title="MedEasy">
+  <div class="main-container">
     {#if loading}
-      <div class="loading">
-        <div class="spinner"></div>
-        <p>Lade Dashboard-Daten...</p>
+      <div class="loading-state">
+        <div class="spinner">⟳</div>
+        <p>MedEasy wird gestartet...</p>
+        <div class="loading-details">
+          <span class="loading-step">🔒 Datenbank wird initialisiert...</span>
+          <span class="loading-step">🛡️ Sicherheitsfeatures werden geladen...</span>
+          <span class="loading-step">📝 Anonymisierung wird aktiviert...</span>
+        </div>
       </div>
     {:else if error}
-      <div class="error">
-        <p>⚠️ {error}</p>
-        <button on:click={loadDashboardData} class="retry-button">Erneut versuchen</button>
+      <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <h3>Fehler beim Starten</h3>
+        <p class="error-message">{error}</p>
+        <button class="btn-retry" on:click={initializeApp}>
+          <span class="icon">🔄</span>
+          Erneut versuchen
+        </button>
       </div>
     {:else}
-      <div class="dashboard-grid">
-        
-        <!-- Tagesübersicht -->
-        <div class="dashboard-card today-overview">
-          <h2>📅 Heute ({todayString})</h2>
-          {#if todaySessions.length === 0}
-            <div class="empty-state">
-              <p>Keine Konsultationen für heute geplant</p>
-            </div>
-          {:else}
-            <div class="session-list">
-              {#each todaySessions as session}
-                <div class="session-item today">
-                  <div class="session-info">
-                    <div class="session-patient">
-                      <span class="patient-icon">👤</span>
-                      <span class="patient-name">{getPatientName(session.patient_id)}</span>
-                    </div>
-                    <div class="session-time">
-                      {session.start_time} - {session.end_time || 'offen'}
-                    </div>
-                  </div>
-                  <div class="session-status">
-                    <span class="status-icon">{getStatusIcon(session.status)}</span>
-                    <span class="status-text">{getStatusText(session.status)}</span>
-                  </div>
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </div>
-        
-        <!-- Offene Konsultationen -->
-        <div class="dashboard-card open-sessions">
-          <h2>📋 Offene Konsultationen</h2>
-          {#if openSessions.length === 0}
-            <div class="empty-state">
-              <p>Keine offenen Konsultationen</p>
-            </div>
-          {:else}
-            <div class="session-list">
-              {#each openSessions as session}
-                <div class="session-item open">
-                  <div class="session-info">
-                    <div class="session-patient">
-                      <span class="patient-icon">👤</span>
-                      <span class="patient-name">{getPatientName(session.patient_id)}</span>
-                    </div>
-                    <div class="session-date-time">
-                      <span class="session-date">{session.session_date}</span>
-                      <span class="session-time">{session.start_time}</span>
-                    </div>
-                  </div>
-                  <div class="session-status">
-                    <span class="status-icon">{getStatusIcon(session.status)}</span>
-                    <span class="status-text">{getStatusText(session.status)}</span>
-                  </div>
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </div>
-        
-        <!-- Letzte Konsultationen -->
-        <div class="dashboard-card recent-sessions">
-          <h2>📝 Letzte Konsultationen</h2>
-          {#if recentSessions.length === 0}
-            <div class="empty-state">
-              <p>Noch keine abgeschlossenen Konsultationen</p>
-            </div>
-          {:else}
-            <div class="session-list">
-              {#each recentSessions as session}
-                <div class="session-item recent">
-                  <div class="session-info">
-                    <div class="session-patient">
-                      <span class="patient-icon">👤</span>
-                      <span class="patient-name">{getPatientName(session.patient_id)}</span>
-                    </div>
-                    <div class="session-date-time">
-                      <span class="session-date">{session.session_date}</span>
-                      <span class="session-time">{session.start_time} - {session.end_time}</span>
-                    </div>
-                  </div>
-                  <div class="session-status completed">
-                    <span class="status-icon">✅</span>
-                    <span class="status-text">Abgeschlossen</span>
-                  </div>
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </div>
-        
+      <!-- Hauptbereich mit 3 Tabs [TSF][ZTS][AIU] -->
+      <div class="content-wrapper">
+        <ContentTabs on:tabChanged={handleTabChanged} />
       </div>
     {/if}
   </div>
 </AppLayout>
 
 <style>
-  .dashboard {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1.5rem;
-  }
-  
-  .dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #e5e7eb;
-  }
-  
-  .dashboard-header h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #1f2937;
-    margin: 0;
-  }
-  
-  .date-info {
+  .main-container {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 0.25rem;
+    height: 100%;
+    background-color: #f9fafb;
   }
-  
-  .weekday {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #3b82f6;
-    text-transform: capitalize;
-  }
-  
-  .date {
-    font-size: 0.875rem;
-    color: #6b7280;
-    font-family: 'JetBrains Mono', monospace;
-  }
-  
-  .loading, .error {
+
+  .loading-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem;
+    padding: 48px;
     text-align: center;
+    height: 100%;
+    gap: 24px;
   }
-  
+
   .spinner {
-    width: 2rem;
-    height: 2rem;
-    border: 3px solid #e5e7eb;
-    border-top: 3px solid #3b82f6;
-    border-radius: 50%;
+    font-size: 48px;
     animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
+    color: #3b82f6;
+    margin-bottom: 16px;
   }
-  
+
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
-  
-  .error {
+
+  .loading-state p {
+    color: #374151;
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .loading-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .loading-step {
+    color: #6b7280;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    text-align: center;
+    height: 100%;
+    gap: 16px;
+  }
+
+  .error-icon {
+    font-size: 64px;
     color: #dc2626;
   }
-  
-  .retry-button {
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
-    background: #3b82f6;
+
+  .error-state h3 {
+    color: #1f2937;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .error-message {
+    color: #dc2626;
+    font-size: 16px;
+    margin: 0;
+    max-width: 400px;
+  }
+
+  .btn-retry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background-color: #3b82f6;
     color: white;
     border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .retry-button:hover {
-    background: #2563eb;
-  }
-  
-  .dashboard-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-    gap: 1.5rem;
-  }
-  
-  .dashboard-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e7eb;
-  }
-  
-  .dashboard-card h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0 0 1rem 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  .today-overview {
-    grid-column: 1 / -1; /* Vollbreite */
-    border-left: 4px solid #3b82f6;
-  }
-  
-  .open-sessions {
-    border-left: 4px solid #f59e0b;
-  }
-  
-  .recent-sessions {
-    border-left: 4px solid #10b981;
-  }
-  
-  .empty-state {
-    text-align: center;
-    padding: 2rem;
-    color: #6b7280;
-    font-style: italic;
-  }
-  
-  .session-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  
-  .session-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
     border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    transition: all 0.2s;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
   }
-  
-  .session-item:hover {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .btn-retry:hover {
+    background-color: #2563eb;
     transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
   }
-  
-  .session-item.today {
-    background: linear-gradient(135deg, #dbeafe 0%, #f0f9ff 100%);
-    border-color: #3b82f6;
+
+  .btn-retry:active {
+    transform: translateY(0);
   }
-  
-  .session-item.open {
-    background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
-    border-color: #f59e0b;
-  }
-  
-  .session-item.recent {
-    background: linear-gradient(135deg, #d1fae5 0%, #f0fdf4 100%);
-    border-color: #10b981;
-  }
-  
-  .session-info {
+
+  .content-wrapper {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    overflow: hidden;
   }
-  
-  .session-patient {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+
+  .icon {
+    font-size: 16px;
   }
-  
-  .patient-icon {
-    font-size: 1rem;
-  }
-  
-  .patient-name {
-    font-weight: 600;
-    color: #1f2937;
-  }
-  
-  .session-date-time {
-    display: flex;
-    gap: 0.75rem;
-    font-size: 0.875rem;
-    color: #6b7280;
-  }
-  
-  .session-time {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.875rem;
-    color: #6b7280;
-  }
-  
-  .session-date {
-    font-family: 'JetBrains Mono', monospace;
-  }
-  
-  .session-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-  }
-  
-  .status-icon {
-    font-size: 1rem;
-  }
-  
-  .status-text {
-    color: #374151;
-  }
-  
-  /* Responsive Design */
+
+  /* Responsive Design [PSF] */
   @media (max-width: 768px) {
-    .dashboard-grid {
-      grid-template-columns: 1fr;
+    .loading-state, .error-state {
+      padding: 24px 16px;
     }
-    
-    .dashboard-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1rem;
+
+    .loading-state p {
+      font-size: 16px;
     }
-    
-    .date-info {
-      align-items: flex-start;
+
+    .error-state h3 {
+      font-size: 20px;
     }
-    
-    .session-item {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.75rem;
+
+    .error-message {
+      font-size: 14px;
     }
-    
-    .session-status {
-      align-self: flex-end;
+
+    .btn-retry {
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+
+    .spinner {
+      font-size: 36px;
+    }
+
+    .error-icon {
+      font-size: 48px;
+    }
+  }
+
+  /* Accessibility [PSF] */
+  .btn-retry:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  .btn-retry:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Loading Animation Enhancement */
+  .loading-step {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease forwards;
+  }
+
+  .loading-step:nth-child(1) {
+    animation-delay: 0.2s;
+  }
+
+  .loading-step:nth-child(2) {
+    animation-delay: 0.4s;
+  }
+
+  .loading-step:nth-child(3) {
+    animation-delay: 0.6s;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* High Contrast Mode Support [PSF] */
+  @media (prefers-contrast: high) {
+    .loading-state p {
+      color: #000000;
+    }
+
+    .loading-step {
+      color: #333333;
+    }
+
+    .error-message {
+      color: #cc0000;
+    }
+  }
+
+  /* Reduced Motion Support [PSF] */
+  @media (prefers-reduced-motion: reduce) {
+    .spinner {
+      animation: none;
+    }
+
+    .loading-step {
+      animation: none;
+      opacity: 1;
+    }
+
+    .btn-retry:hover {
+      transform: none;
     }
   }
 </style>

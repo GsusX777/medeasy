@@ -105,7 +105,7 @@ jobs:
 ### Security Checks [KP100]
 - **Dependency Scanning**: npm audit, cargo audit
 - **SAST**: Static Application Security Testing
-- **Container Scanning**: Docker image vulnerabilities
+- **Dependency Scanning**: Package vulnerabilities
 - **License Compliance**: Open source license checks
 
 ## Distribution

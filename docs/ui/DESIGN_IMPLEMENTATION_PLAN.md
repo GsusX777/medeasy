@@ -51,9 +51,9 @@ Dieser Plan zeigt, wie die Design-Strategie mit den vorhandenen Komponenten umge
 - [x] Header-Bereich mit Logo implementieren
 - [x] Sub-Header-Bereich mit Session und Patienten-Info implementieren
 - [x] Sidebar-Struktur (280px) mit Navigation erstellen
-- [ ] Hauptbereich für Content-Tabs vorbereiten
-- [ ] Analyse-Panel (collapsible, höhenverstellbar 300px) hinzufügen
-- [ ] Responsive Grid-Layout implementieren
+- [x] Hauptbereich für Content-Tabs vorbereiten (3 Tabs: Transkript, Patienten, Konsultationen)
+- [x] Analyse-Panel (collapsible, höhenverstellbar 300px) hinzufügen
+- [x] Responsive Grid-Layout implementieren
 
 **Dateien:**
 - `src/lib/components/AppLayout.svelte` (✅ erweitert)
@@ -72,67 +72,130 @@ Dieser Plan zeigt, wie die Design-Strategie mit den vorhandenen Komponenten umge
 - `src/lib/components/SessionRecorder.svelte` (erweitert)
 - `src/lib/components/AudioControl.svelte` (neu)
 
-### **Phase 2: Transkript & Sicherheit (Woche 2-3)**
+### **Phase 2: Hauptbereich-Seiten & Navigation (Woche 2-3)**
 
-#### 2.1 TranscriptViewer.svelte erweitern [AIU][ATV]
-- [ ] Live-Transkript-Header mit Anonymisierungs-Status
-- [ ] Transkript-Einträge mit Speaker-Kennzeichnung
-- [ ] Editierbare Einträge implementieren
-- [ ] Timestamp-Anzeige hinzufügen
-- [ ] Scroll-to-latest-Funktionalität
-
-**Dateien:**
-- `src/lib/components/TranscriptViewer.svelte` (erweitern)
-- `src/lib/components/TranscriptEntry.svelte` (neu)
-
-#### 2.2 Anonymisierung integrieren [AIU][ARQ]
-- [ ] AnonymizationNotice.svelte in Header integrieren (nicht benötigt)
-- [ ] AnonymizationReview.svelte als Modal/Panel
-- [ ] Anonymisierungs-Status in TranscriptViewer
-- [ ] Review-Button bei unsicheren Erkennungen
-- [ ] Confidence-Level-Anzeige
-
-**Dateien:**
-- `src/lib/components/AnonymizationNotice.svelte` (erweitern)
-- `src/lib/components/AnonymizationReview.svelte` (erweitern)
-
-#### 2.3 Sicherheits-Indikatoren [CT][ZTS]
-- [ ] ProcessingLocationIndicator.svelte in Header (nicht benötigt)
-- [ ] SecurityBadge.svelte für Status-Anzeigen (nicht benötigt)
-- [ ] SwissGermanAlert.svelte als Notification (nicht benötigt)
-- [ ] Datenschutz-Indikatoren (🔒☁️🔐⚠️) (nicht benötigt)
-
-**Dateien:**
-- `src/lib/components/ProcessingLocationIndicator.svelte` (erweitern)
-- `src/lib/components/SecurityBadge.svelte` (erweitern)
-- `src/lib/components/SwissGermanAlert.svelte` (erweitern)
-
-### **Phase 3: Erweiterte Features (Woche 3-4)**
-
-#### 3.1 Content-Tabs implementieren [TSF]
-- [ ] Tab-System für Transkript/Zusammenfassung
-- [ ] Tab-Navigation mit Icons (📝📊)
-- [ ] Content-Switching-Logik
-- [ ] Tab-State-Management
+#### 2.1 Content-Tabs implementieren [TSF][ZTS]
+- [x] Tab-Navigation für 3 Hauptseiten erstellen
+- [x] Tab 1: Transkriptionsansicht (bestehend)
+- [x] Tab 2: Patientenlistenansicht (neu)
+- [x] Tab 3: Konsultationsübersicht (neu)
+- [ ] Tab-State-Management mit Svelte Stores global einrichten
 
 **Dateien:**
 - `src/lib/components/ContentTabs.svelte` (neu)
-- `src/lib/components/SummaryView.svelte` (neu)
+- `src/lib/components/PatientListView.svelte` (neu)
+- `src/lib/components/ConsultationListView.svelte` (neu)
 
-#### 3.2 Analyse-Panel erstellen [PK]
-- [ ] Collapsible Panel (300px Höhe)
-- [ ] Tabs: Symptome, Diagnose, Export
-- [ ] AI-Provider-Anzeige (OpenAI/Claude/Gemini/Lokal)
-- [ ] Processing-Status mit Spinner
-- [ ] Symptom-Liste mit ICD-Codes
+#### 2.2 Patientenlistenansicht implementieren [EIV][AIU][SF]
+- [x] Patiententabelle mit Datenbankfeldern:
+  - [x] AnonymizedFirstName, AnonymizedLastName [AIU]
+  - [x] AnonymizedDateOfBirth (DD.MM.YYYY Format) [SF]
+  - [x] InsuranceNumberHash (maskiert anzeigen)
+  - [x] Anzahl Sessions pro Patient
+  - [x] Created/LastModified Zeitstempel
+- [x] Patient neu anlegen Button mit Modal-Dialog
+- [x] Patient importieren Button (ausgegraut/disabled)
+- [x] Suchfunktion und Filteroptionen
+- [x] Sortierung nach Name, Geburtsdatum, Erstellungsdatum
+- [x] Paginierung für große Patientenlisten
 
 **Dateien:**
-- `src/lib/components/AnalysisPanel.svelte` (neu)
+- `src/lib/components/PatientListView.svelte` (neu)
+- `src/lib/components/PatientCreateModal.svelte` (neu)
+- `src/lib/components/PatientImportButton.svelte` (neu, disabled)
+
+#### 2.3 Konsultationsübersicht implementieren [EIV][SF]
+- [x] Konsultationstabelle mit Session-Datenbankfeldern:
+  - [x] Patient (AnonymizedFirstName + AnonymizedLastName) [AIU]
+  - [x] SessionDate (DD.MM.YYYY Format) [SF]
+  - [x] StartTime - EndTime (HH:MM Format)
+  - [x] Status (Scheduled, InProgress, Completed, Cancelled)
+  - [x] EncryptedNotes (Vorschau, verschlüsselt) [EIV]
+  - [x] Created/LastModified Zeitstempel
+- [x] Status-Filter (Alle, Geplant, Laufend, Abgeschlossen, Abgebrochen)
+- [x] Datumsbereich-Filter
+- [x] Sortierung nach Datum, Patient, Status
+- [x] Konsultation bearbeiten/öffnen Funktionalität
+- [x] Neue Konsultation anlegen Button
+
+**Dateien:**
+- `src/lib/components/ConsultationListView.svelte` (neu)
+- `src/lib/components/ConsultationCreateModal.svelte` (neu)
+- `src/lib/components/SessionStatusBadge.svelte` (neu)
+
+### **Phase 3: UX-Optimierung & Subheader (Woche 3-4)**
+
+#### 3.1 Subheader mit Patienteninfo implementieren [MDL][PSF]
+- [x] Subheader-Komponente erstellen
+- [x] Gewählter Patient anzeigen (anonymisiert)
+- [x] Aktuelle Session-Info (Datum, Status, Dauer)
+- [x] Aufnahme-Controls (🔴 REC, ⏸️ Pause, ⏹️ Stop)
+- [x] Session-Timer mit Live-Update
+- [x] Patient-Session-Zuordnung implementieren
+
+**Dateien:**
+- `src/lib/components/SubHeader.svelte` (neu)
+- `src/lib/components/RecordingControls.svelte` (neu)
+- `src/lib/components/SessionTimer.svelte` (neu)
+#### 4.1 TranscriptViewer Split-View implementieren [MDL][AIU]
+- [x] Split-View Layout: Transkript (links) + Analyse (rechts)
+- [x] Live-Transkript-Bereich:
+  - [x] Speaker-Kennzeichnung
+  - [x] Editierbare Einträge
+  - [x] Timestamp-Anzeige
+  - [x] Scroll-to-latest-Funktionalität
+- [x] Analyse-Bereich (rechts):
+  - [x] Confidence-Review-Panel
+  - [x] Live-Analyse-Panel
+  - [x] Export-Panel
+
+**Dateien:**
+- `src/lib/components/TranscriptViewer.svelte` (erweitern)
+- `src/lib/components/TranscriptSplitView.svelte` (neu)
+- `src/lib/components/TranscriptEntry.svelte` (neu)
+
+#### 4.2 Confidence-Review integrieren [AIU][ARQ]
+- [x] Kombinierte Confidence-Review:
+  - [x] Anonymisierung (Namen, Adressen, Tel.)
+  - [x] Medizinische Begriffe (Symptome, Diagnosen)
+  - [x] Unklare Wörter (Akustik-Probleme)
+- [x] Visuelles Confidence-System:
+  - [x] 🟢 Hoch (>80%): Auto-akzeptiert
+  - [x] ⚠️ Mittel (50-80%): Gelb markiert
+  - [x] 🔴 Niedrig (<50%): Review erforderlich
+- [x] Batch-Review-Funktionen
+
+**Dateien:**
+- `src/lib/components/ConfidenceReview.svelte` (neu)
+- `src/lib/components/AnonymizationReview.svelte` (erweitern)
+- `src/lib/components/ConfidenceIndicator.svelte` (neu)
+
+#### 4.3 Live-Analyse-Panel [PK][MDL]
+- [x] Tabs: Symptome, Diagnose, Export
+- [x] AI-Provider-Anzeige (OpenAI/Claude/Gemini/Lokal)
+- [x] Processing-Status mit Spinner
+- [x] Live-Symptom-Erkennung:
+  - [x] Symptom-Liste mit ICD-Codes (G43.9, K30, R50.9, J06.9)
+  - [x] Confidence-Level pro Symptom (70-100%)
+  - [x] Keyword-basierte Erkennung
+- [x] Diagnose-Vorschläge:
+  - [x] ICD-10-Codes mit Wahrscheinlichkeit
+  - [x] Symptom-basierte Vorschläge
+  - [x] Confidence-Bewertung
+- [x] Export-Funktionen:
+  - [x] PDF-Export mit Schweizer Formatierung [SF]
+  - [x] Word, Text, JSON Export
+  - [x] Anonymisierung immer aktiv [AIU]
+
+**Dateien:**
+- `src/lib/components/LiveAnalysisPanel.svelte` (neu)
 - `src/lib/components/SymptomsTab.svelte` (neu)
 - `src/lib/components/DiagnosisTab.svelte` (neu)
 - `src/lib/components/ExportTab.svelte` (neu)
 
-#### 3.3 Einwilligungs-Management [PbD]
+### **Phase 5: Erweiterte Features (Woche 5-6)**
+
+#### 5.1 Einwilligungs-Management [PbD]
 - [ ] ConfirmDialog.svelte für Einwilligung erweitern
 - [ ] Checkboxes für Aufnahme/Cloud-Verarbeitung
 - [ ] Session-Start-Workflow implementieren
@@ -142,78 +205,59 @@ Dieser Plan zeigt, wie die Design-Strategie mit den vorhandenen Komponenten umge
 - `src/lib/components/ConfirmDialog.svelte` (erweitern)
 - `src/lib/components/ConsentDialog.svelte` (neu)
 
-### **Phase 4: Export & Split-View (Woche 4-5)**
-
-#### 4.1 Export-Funktionen [SF]
-- [ ] Export-Tab mit Optionen (E-PAT, PDF, FHIR)
-- [ ] Export-History-Anzeige
-- [ ] Download-Funktionalität
-- [ ] Split-View-Trigger
-
-**Dateien:**
-- `src/lib/components/ExportTab.svelte` (erweitern)
-- `src/lib/components/ExportHistory.svelte` (neu)
-
-#### 4.2 Split-View implementieren [TSF]
-- [ ] Split-View-Container (50%/50%)
-- [ ] Read-only Transkript links
-- [ ] Editierbares Dokument rechts
-- [ ] Toolbar mit Aktionen
-- [ ] Resize-Funktionalität
+#### 5.2 Patientenliste UX-Optimierung [MDL][PSF]
+- [ ] "Session starten" Button pro Patient
+- [ ] "Letzte Session anzeigen" Link
+- [ ] Session-Counter und letztes Datum anzeigen
+- [ ] Schnellaktionen: Neue Session, Session fortsetzen
+- [ ] Patient-Session-Zuordnung in Subheader
 
 **Dateien:**
-- `src/lib/components/SplitView.svelte` (neu)
-- `src/lib/components/DocumentEditor.svelte` (neu)
+- `src/lib/components/PatientListView.svelte` (erweitern)
+- `src/lib/components/PatientSessionActions.svelte` (neu)
+- `src/lib/components/QuickActions.svelte` (neu)
 
-### **Phase 5: Einstellungen & Performance (Woche 5-6)**
-
-#### 5.1 Einstellungen erweitern [ZTS][SP]
-- [ ] SecuritySettings.svelte für Audio/Performance
-- [ ] DatabaseSecuritySettings.svelte Integration
-- [ ] KeyManagement.svelte für Verschlüsselung
-- [ ] Whisper-Model-Auswahl
-- [ ] GPU-Acceleration-Toggle
-
-**Dateien:**
-- `src/lib/components/SecuritySettings.svelte` (erweitern)
-- `src/lib/components/DatabaseSecuritySettings.svelte` (erweitern)
-- `src/lib/components/KeyManagement.svelte` (erweitern)
-- `src/lib/components/AudioSettings.svelte` (neu)
-
-#### 5.2 Performance-Monitor [TSF]
-- [x] CPU/RAM/Latency-Anzeige
-- [x] Collapsible in Sidebar
-- [ ] Warning/Critical-Thresholds
-- [ ] Real-time Updates
+#### 5.3 Session-Detail-Ansicht [MDL][ATV]
+- [ ] Vollständige Transkription anzeigen/bearbeiten
+- [ ] Session-Notizen hinzufügen
+- [ ] Status ändern (Geplant → Laufend → Abgeschlossen)
+- [ ] Export-Funktionen [SF]
+- [ ] Session-Historie und Audit-Trail
 
 **Dateien:**
-- `src/lib/components/PerformanceMonitor.svelte` (neu)
-
-#### 5.3 Audit-Integration [ATV]
-- [ ] AuditTrailViewer.svelte in Panel
-- [ ] Audit-Logging für UI-Aktionen
-- [ ] Session-Audit-Anzeige
-
-**Dateien:**
-- `src/lib/components/AuditTrailViewer.svelte` (erweitern)
+- `src/lib/components/SessionDetailView.svelte` (neu)
+- `src/lib/components/SessionNotes.svelte` (neu)
+- `src/lib/components/SessionStatusEditor.svelte` (neu)
 
 ### **Phase 6: Polish & Testing (Woche 6-7)**
 
 #### 6.1 Design-System finalisieren [PSF]
-- [ ] Farbschema implementieren
-- [ ] Responsive Breakpoints
-- [ ] Animationen & Transitions
-- [ ] Accessibility-Features
+- [ ] Konsistente Farb- und Typografie-Palette
+- [ ] Icon-System standardisieren
+- [ ] Component-Library dokumentieren
+- [ ] Accessibility-Standards (WCAG 2.1 AA)
 
-#### 6.2 Keyboard-Shortcuts [PSF]
-- [ ] Globale Shortcuts (Space, Ctrl+S, F11)
-- [ ] Shortcut-Anzeige in UI
-- [ ] Accessibility-Navigation
+**Dateien:**
+- `src/lib/styles/design-system.css` (neu)
+- `src/lib/components/IconLibrary.svelte` (neu)
+- `docs/ui/component-library.md` (neu)
 
-#### 6.3 Error-Handling [ZTS]
-- [ ] Error-Boundaries
+#### 6.2 Keyboard-Shortcuts & Error-Handling [ZTS]
+- [ ] Globale Shortcuts (Ctrl+N für neue Session)
+- [ ] Tab-Navigation optimieren
+- [ ] Accessibility-Shortcuts
+- [ ] Shortcut-Hilfe-Dialog
+- [ ] Globale Error-Boundary
 - [ ] User-friendly Error-Messages
-- [ ] Fallback-UI-States
+- [ ] Retry-Mechanismen
+- [ ] Offline-Handling
+
+**Dateien:**
+- `src/lib/utils/keyboard-shortcuts.ts` (neu)
+- `src/lib/components/ShortcutHelp.svelte` (neu)
+- `src/lib/components/ErrorBoundary.svelte` (neu)
+- `src/lib/components/ErrorMessage.svelte` (neu)
+- `src/lib/utils/error-handling.ts` (neu)
 
 ---
 

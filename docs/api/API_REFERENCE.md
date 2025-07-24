@@ -16,11 +16,19 @@ Die MedEasy API bietet sichere Endpunkte für den Zugriff auf medizinische Daten
 - **Verschlüsselung**: Alle Daten werden mit AES-256 verschlüsselt [SP]
 - **Anonymisierung**: Automatische Erkennung und Maskierung von PII [AIU]
 
-## Basis-URL
+## Basis-URL [CAS][MLB]
+
+**Desktop-Anwendung (Lokal)** [CT]:
 
 ```
-https://api.medeasy.ch/api/v1
+# Entwicklung
+http://localhost:5000/api/v1
+
+# Produktion (Desktop)
+http://127.0.0.1:5000/api/v1
 ```
+
+**Architektur-Hinweis**: MedEasy ist eine Desktop-Anwendung mit getrennten Frontend (Svelte/Tauri) und Backend (.NET API) Prozessen. Die Kommunikation erfolgt über lokale HTTP-Verbindungen - **keine Cloud-Übertragung** [DSC][CT].
 
 ## Endpunkte
 
@@ -52,7 +60,9 @@ Liefert eine Liste aller Patienten (nur IDs und Versicherungsnummer-Hash).
 [
   {
     "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "insuranceNumberHash": "a1b2c3d4e5f6..."
+    "first_name": "Hans",
+    "last_name": "Müller",
+    "date_of_birth": "01.01.1980"
   }
 ]
 ```
@@ -69,9 +79,13 @@ Liefert Details zu einem bestimmten Patienten.
 ```json
 {
   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "encryptedName": "...",
-  "insuranceNumberHash": "a1b2c3d4e5f6...",
-  "dateOfBirth": "1980-01-01"
+  "first_name": "Hans",
+  "last_name": "Müller",
+  "date_of_birth": "01.01.1980",
+  "insurance_number": "756.1234.5678.90",
+  "notes": "Allergisch gegen Penicillin",
+  "created": "08.07.2025 08:00:00",
+  "last_modified": "08.07.2025 08:30:00"
 }
 ```
 
@@ -89,7 +103,9 @@ Liefert eine Liste aller Sessions (nur IDs und Datum).
 [
   {
     "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "sessionDate": "2025-07-08T08:30:00Z",
+    "session_date": "08.07.2025",
+    "start_time": "08:30",
+    "end_time": "09:15",
     "status": "Completed",
     "patientId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
   }
@@ -108,14 +124,15 @@ Liefert Details zu einer bestimmten Session.
 ```json
 {
   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "sessionDate": "2025-07-08T08:30:00Z",
+  "session_date": "08.07.2025",
+  "start_time": "08:30",
+  "end_time": "09:15",
   "status": "Completed",
   "patientId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "encryptedNotes": "...",
-  "created": "2025-07-08T08:30:00Z",
-  "createdBy": "dr.mueller@spital.ch",
-  "lastModified": "2025-07-08T09:15:00Z",
-  "lastModifiedBy": "dr.mueller@spital.ch"
+  "notes": "Routinekontrolle, Patient klagt über Kopfschmerzen",
+  "audio_file_path": "/encrypted/sessions/audio_3fa85f64.enc",
+  "created": "08.07.2025 08:30:00",
+  "last_modified": "08.07.2025 09:15:00"
 }
 ```
 
@@ -133,13 +150,11 @@ Liefert Details zu einem bestimmten Transkript.
 ```json
 {
   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "sessionId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "encryptedOriginalText": "...",
-  "encryptedAnonymizedText": "...",
-  "created": "2025-07-08T08:35:00Z",
-  "createdBy": "system",
-  "lastModified": "2025-07-08T08:36:00Z",
-  "lastModifiedBy": "system"
+  "session_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "anonymized_text": "Patient klagt über [SYMPTOM] seit [ZEITRAUM]",
+  "anonymization_confidence": 0.85,
+  "needs_review": false,
+  "created": "08.07.2025 08:35:00"
 }
 ```
 
@@ -157,9 +172,10 @@ Liefert eine Liste aller Anonymisierungs-Review-Items mit Status "Pending".
 [
   {
     "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "transcriptId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "anonymizationConfidence": 0.75,
-    "created": "2025-07-08T08:36:00Z"
+    "transcript_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "anonymization_confidence": 0.75,
+    "needs_review": true,
+    "created": "08.07.2025 08:36:00"
   }
 ]
 ```
@@ -172,9 +188,8 @@ Alle Fehler werden im standardisierten Format zurückgegeben:
 {
   "error": "Beschreibung des Fehlers",
   "statusCode": 400,
-  "timestamp": "2025-07-08T08:54:12Z",
-  "path": "/api/v1/patients/invalid-id",
-  "correlationId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  "timestamp": "08.07.2025 08:54:12",
+  "path": "/api/v1/patients/invalid-id"
 }
 ```
 
@@ -189,7 +204,7 @@ Alle Fehler werden im standardisierten Format zurückgegeben:
 {
   "status": "Healthy",
   "totalDuration": 12.34,
-  "timestamp": "2025-07-08T08:54:12Z",
+  "timestamp": "08.07.2025 08:54:12",
   "entries": [
     {
       "name": "self",
@@ -210,7 +225,7 @@ Alle Fehler werden im standardisierten Format zurückgegeben:
 {
   "status": "Healthy",
   "totalDuration": 45.67,
-  "timestamp": "2025-07-08T08:54:12Z",
+  "timestamp": "08.07.2025 08:54:12",
   "entries": [
     {
       "name": "database",

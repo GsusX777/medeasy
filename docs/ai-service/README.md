@@ -123,17 +123,6 @@ Die Konfiguration erfolgt über Umgebungsvariablen und die `.env`-Datei:
 ```bash
 python src/main.py
 ```
-
-### Mit Docker
-
-```bash
-# Docker-Image bauen
-docker build -t medeasy-ai-service .
-
-# Container starten
-docker run -p 50051:50051 --env-file .env medeasy-ai-service
-```
-
 ## Tests [KP100]
 
 ### Unit-Tests ausführen
@@ -170,26 +159,41 @@ src/ai-service/
 ├── protos/                  # gRPC Protobuf-Definitionen
 │   └── medeasy.proto        # Service- und Nachrichtendefinitionen
 ├── src/
-│   ├── metrics/             # Metriken-Komponenten
+│   ├── __init__.py          # Package-Initialisierung
+│   ├── anonymization/       # Anonymisierungs-Komponenten [AIU]
+│   │   ├── __init__.py
+│   │   ├── pii_detector.py  # PII-Erkennung und Maskierung
+│   │   └── rules.py         # Anonymisierungsregeln
+│   ├── metrics/             # Metriken-Komponenten [ATV]
 │   │   ├── __init__.py
 │   │   └── collector.py     # Metriken-Sammler
-│   ├── swiss/               # Schweizerdeutsch-Komponenten
+│   ├── providers/           # AI-Provider-Kette [PK]
+│   │   ├── __init__.py
+│   │   ├── base_provider.py # Basis-Provider-Interface
+│   │   └── openai_client.py # OpenAI-Provider-Implementierung
+│   ├── swiss/               # Schweizerdeutsch-Komponenten [SDH]
 │   │   ├── __init__.py
 │   │   └── dialect_detector.py  # Schweizerdeutsch-Erkennung
-│   ├── config.py            # Konfiguration
-│   ├── grpc_service.py      # gRPC-Service-Implementierung
+│   ├── whisper/             # Whisper-Transkription [WMM]
+│   │   ├── __init__.py
+│   │   ├── models.py        # Whisper-Modell-Management
+│   │   └── transcription.py # Audio-Transkription
+│   ├── config.py            # Service-Konfiguration
+│   ├── grpc_service.py      # gRPC-Service-Implementierung [MLB]
 │   └── main.py              # Haupteinstiegspunkt
-├── tests/                   # Unit-Tests
+├── tests/                   # Unit-Tests [KP100]
 │   ├── test_anonymization.py
 │   ├── test_swiss_german_detector.py
 │   ├── test_metrics_collector.py
 │   ├── test_grpc_service_health.py
 │   ├── test_grpc_service_swiss_german.py
 │   └── test_grpc_service_metrics.py
+├── medeasy_pb2.py           # Generierte gRPC-Stubs
+├── medeasy_pb2_grpc.py      # Generierte gRPC-Service-Stubs
 ├── .env.example             # Beispiel-Umgebungsvariablen
-├── Dockerfile               # Docker-Build-Konfiguration
 ├── pyproject.toml           # Python-Projekt-Konfiguration
-└── requirements.txt         # Abhängigkeiten
+├── requirements.txt         # Abhängigkeiten
+└── venv/                    # Virtuelle Umgebung (lokal)
 ```
 
 ## gRPC-Dienste [MLB]

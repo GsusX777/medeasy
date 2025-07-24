@@ -44,6 +44,13 @@
     // TODO: Implementiere Killswitch-Logik
   }
   
+  // [UX] Einstellungen öffnen
+  function handleSettings() {
+    // TODO: Implementiere Einstellungen-Dialog oder Navigation
+    console.log('⚙️ Einstellungen öffnen');
+    // Placeholder für Einstellungen-Modal oder -Route
+  }
+  
   onMount(() => {
     // Aktualisiere Datum und Zeit jede Sekunde
     const interval = setInterval(() => {
@@ -77,6 +84,11 @@
     <!-- [DK] Notfall-Funktionen -->
     <button class="emergency-stop" on:click={handleEmergencyStop} title="Notfall-Stopp: Alle AI-Funktionen deaktivieren">
       🚨
+    </button>
+    
+    <!-- Einstellungen-Link [UX] -->
+    <button class="settings-link" on:click={handleSettings} title="Einstellungen öffnen">
+      ⚙️
     </button>
     
     <!-- Benutzer-Info [MFD] -->
@@ -167,6 +179,28 @@
     border: 1px solid rgba(239, 68, 68, 0.7);
     /* Deutlicher Hover-Effekt für kritische Notfall-Funktion */
     box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+  }
+  
+  .settings-link {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .settings-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
   }
   
   .user-menu {

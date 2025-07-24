@@ -129,7 +129,7 @@ The service uses a hierarchical configuration system with environment variable o
 
 The AI service is deployed as a standalone gRPC server that can be run:
 
-1. As a Docker container
+1. As a local service
 2. As a systemd service
 3. Directly from Python (development only)
 

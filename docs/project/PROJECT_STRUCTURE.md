@@ -8,116 +8,129 @@ Diese Dokumentation bietet einen umfassenden Überblick über die Projektstruktu
 
 ```
 medeasy/
-├── .vscode/                      # VS Code Konfiguration
-│   └── settings.json
+├── .env.example                  # Beispiel-Umgebungsvariablen
+├── .git/                         # Git-Repository
+├── .github/                      # GitHub-Konfiguration
+│   └── workflows/                # GitHub Actions
+├── .gitignore                    # Git-Ignore-Datei
+├── .windsurf/                    # Windsurf AI Konfiguration
 ├── .windsurfrules                # Windsurf AI Regeln für das Projekt
+├── LICENSE                       # Projektlizenz
+├── README.md                     # Haupt-README
 ├── config/                       # Konfigurationsdateien
-│   └── README.md
+│   └── .gitkeep                  # Leeres Verzeichnis
 ├── data/                         # Datenspeicher (verschlüsselt)
 ├── docs/                         # Projektdokumentation
+│   ├── .gitkeep                  # Git-Platzhalter
+│   ├── DOCS-INDEX.md             # Zentrale Dokumentationsreferenz
+│   ├── FEATURE_STATUS.md         # Status der Funktionen
+│   ├── ai-service/               # AI-Service Dokumentation
+│   │   └── README.md             # AI-Service Übersicht
 │   ├── api/                      # API-Dokumentation
-│   │   └── API_REFERENCE.md
+│   │   └── API_REFERENCE.md      # API-Referenz
 │   ├── architecture/             # Architektur-Dokumentation
-│   │   ├── AI_SERVICE.md
-│   │   ├── DEPENDENCIES.md
-│   │   ├── Dependency_Graph.svg
-│   │   └── README.md
+│   │   ├── AI_SERVICE.md         # AI-Service Architektur
+│   │   ├── Dependency_Graph.svg  # Abhängigkeitsdiagramm
+│   │   └── README.md             # Architektur-Übersicht
 │   ├── compliance/               # Compliance und Sicherheit
-│   │   └── SECURITY.md
+│   │   └── SECURITY.md           # Sicherheitskonzept
+│   ├── config/                   # Konfigurationsdokumentation
+│   │   └── README.md             # Konfigurationsrichtlinien
 │   ├── database/                 # Datenbankdokumentation
-│   │   ├── IMPLEMENTATION.md
-│   │   ├── RELATIONSHIPS.mermaid
-│   │   └── SCHEMA.md
+│   │   ├── IMPLEMENTATION.md     # Implementierungsdetails
+│   │   ├── RELATIONSHIPS.mermaid # Entitätsbeziehungen
+│   │   ├── SCHEMA.md             # Datenbankschema
+│   │   └── [weitere Dateien]     # Zusätzliche DB-Dokumentation
 │   ├── frontend/                 # Frontend-Dokumentation
-│   │   └── DATABASE_INTEGRATION.md
+│   │   ├── NOT_USE_ROADMAP.md    # Veraltete Roadmap (nicht verwenden)
+│   │   ├── NOT_USE_SECURITY.md   # Veraltete Sicherheitsdoku (nicht verwenden)
+│   │   ├── README.md             # Frontend-Übersicht
+│   │   └── TESTING.md            # Frontend-Tests
 │   ├── project/                  # Projektmanagement
-│   │   ├── PROJECT_STRUCTURE.md
-│   │   ├── PROJECT_STRUCTURE_COMPLETE.md
-│   │   └── checkliste.md
+│   │   ├── PROJECT_STRUCTURE.md  # Diese Datei
+│   │   └── checkliste.md         # Entwicklungs-Checkliste
 │   ├── security/                 # Sicherheitsdokumentation
 │   ├── testing/                  # Testdokumentation
-│   │   └── SECURITY_TESTING.md
-│   ├── DOCS-INDEX.md             # Zentrale Dokumentationsreferenz
-│   └── FEATURE_STATUS.md         # Status der Funktionen
-├── scripts/                      # Hilfsskripte
+│   │   └── SECURITY_TESTING.md   # Sicherheitstests
+│   └── ui/                       # UI-Dokumentation
+│       ├── DESIGN_IMPLEMENTATION_PLAN.md # Design-Implementierungsplan
+│       ├── DESIGN_STRATEGY.md    # Design-Strategie
+│       ├── README.md             # UI-Übersicht
+│       ├── accessibility/        # Barrierefreiheit
+│       ├── api/                  # UI-API-Dokumentation
+│       ├── components/           # Komponenten-Dokumentation
+│       ├── dashboard/            # Dashboard-Dokumentation
+│       ├── deployment/           # UI-Deployment
+│       ├── routing/              # Routing-Dokumentation
+│       ├── stores/               # Store-Dokumentation
+│       ├── styling/              # Styling-Dokumentation
+│       └── types/                # TypeScript-Typen
+├── scripts/                      # Hilfsskripte (leer)
 ├── src/                          # Quellcode
-│   ├── ai-service/               # Python AI-Service
+│   ├── .gitkeep                  # Git-Platzhalter
+│   ├── ai-service/               # Python AI-Service (28 Dateien)
 │   │   ├── protos/               # gRPC Protokolldefinitionen
-│   │   │   └── medeasy.proto
-│   │   ├── pyproject.toml        # Python-Projektdefinition
+│   │   ├── src/                  # Python-Quellcode (17 Dateien)
+│   │   │   ├── __init__.py       # Package-Initialisierung
+│   │   │   ├── config.py         # Service-Konfiguration
+│   │   │   ├── grpc_service.py   # gRPC-Server-Implementierung
+│   │   │   ├── main.py           # Haupteinstiegspunkt
+│   │   │   ├── anonymization/    # Anonymisierungslogik [AIU]
+│   │   │   ├── metrics/          # Metriken-Sammlung [ATV]
+│   │   │   ├── providers/        # AI-Provider-Kette [PK]
+│   │   │   ├── swiss/            # Schweizerdeutsch-Erkennung [SDH]
+│   │   │   └── whisper/          # Audio-Transkription [WMM]
+│   │   ├── tests/                # Python-Tests (6 Dateien)
+│   │   ├── medeasy_pb2.py        # Generierte gRPC-Stubs
+│   │   ├── medeasy_pb2_grpc.py   # Generierte gRPC-Service-Stubs
 │   │   ├── requirements.txt      # Python-Abhängigkeiten
-│   │   └── src/                  # Python-Quellcode
-│   │       ├── config/           # Konfiguration
-│   │       ├── models/           # KI-Modelle
-│   │       ├── services/         # gRPC-Services
-│   │       └── utils/            # Hilfsfunktionen
-│   ├── backend/                  # .NET Backend
-│   │   ├── MedEasy.API/          # REST API
-│   │   │   ├── Controllers/      # API-Controller
-│   │   │   ├── Middleware/       # API-Middleware
-│   │   │   └── Program.cs        # Einstiegspunkt
-│   │   ├── MedEasy.Application/  # Anwendungslogik
-│   │   │   ├── Commands/         # CQRS-Befehle
-│   │   │   ├── Queries/          # CQRS-Abfragen
-│   │   │   └── Services/         # Anwendungsdienste
-│   │   ├── MedEasy.Domain/       # Domänenlogik
-│   │   │   ├── Entities/         # Domänenentitäten
-│   │   │   ├── Exceptions/       # Domänenspezifische Ausnahmen
-│   │   │   └── ValueObjects/     # Wertobjekte
-│   │   ├── MedEasy.Infrastructure/ # Infrastruktur
-│   │   │   ├── Data/             # Datenzugriff
-│   │   │   ├── Migrations/       # Datenbankmigrationen
-│   │   │   └── Services/         # Externe Dienste
+│   │   ├── pyproject.toml        # Python-Projekt-Konfiguration
+│   │   ├── .env.example          # Beispiel-Umgebungsvariablen
+│   │   └── venv/                 # Virtuelle Umgebung (lokal)
+│   ├── backend/                  # .NET Backend (26 Dateien)
+│   │   ├── MedEasy.API/          # HTTP-API für Desktop-Frontend (10 Dateien)
+│   │   ├── MedEasy.Application/  # Anwendungslogik (2 Dateien)
+│   │   ├── MedEasy.Domain/       # Domain-Modelle (6 Dateien)
+│   │   ├── MedEasy.FinalSecurityTests/ # Sicherheitstests (2 Dateien)
+│   │   ├── MedEasy.Infrastructure/ # Infrastruktur (5 Dateien)
 │   │   └── MedEasy.sln           # Visual Studio Solution
-│   └── frontend/                 # Tauri + Svelte Frontend
-│       ├── src/                  # Svelte-Quellcode
-│       │   ├── components/       # UI-Komponenten
-│       │   ├── lib/              # Bibliotheken
-│       │   ├── routes/           # SvelteKit-Routen
-│       │   └── stores/           # Svelte-Stores
-│       ├── ❌ ZU LÖSCHEN: src-tauri/            # ❌ ZU LÖSCHEN: Rust/Tauri Backend-Code
-│       │   ├── ❌ ZU LÖSCHEN: src/              # ❌ ZU LÖSCHEN: Gesamter Rust-Quellcode
-│       │   │   ├── ❌ ZU LÖSCHEN: commands/     # ❌ ZU LÖSCHEN: Tauri-Befehle
-│       │   │   ├── ❌ ZU LÖSCHEN: database/     # ❌ ZU LÖSCHEN: Rust-Datenbankzugriff
-│       │   │   │   ├── ❌ ZU LÖSCHEN: connection.rs  # ❌ ZU LÖSCHEN: SQLCipher-Verbindung
-│       │   │   │   ├── ❌ ZU LÖSCHEN: encryption.rs  # ❌ ZU LÖSCHEN: Feldverschlüsselung
-│       │   │   │   ├── ❌ ZU LÖSCHEN: migrations.rs  # ❌ ZU LÖSCHEN: Datenbankmigrationen
-│       │   │   │   └── ❌ ZU LÖSCHEN: repositories/  # ❌ ZU LÖSCHEN: Datenzugriffsschicht
-│       │   │   │       ├── ❌ ZU LÖSCHEN: audit_repository.rs      # ❌ ZU LÖSCHEN
-│       │   │   │       ├── ❌ ZU LÖSCHEN: patient_repository.rs    # ❌ ZU LÖSCHEN
-│       │   │   │       ├── ❌ ZU LÖSCHEN: session_repository.rs    # ❌ ZU LÖSCHEN
-│       │   │   │       └── ❌ ZU LÖSCHEN: transcript_repository.rs # ❌ ZU LÖSCHEN
-│       │   │   ├── ❌ ZU LÖSCHEN: models/       # ❌ ZU LÖSCHEN: Datenmodelle
-│       │   │   └── ❌ ZU LÖSCHEN: tests/        # ❌ ZU LÖSCHEN: Rust-Sicherheitstests
-│       │   │       ├── ❌ ZU LÖSCHEN: audit_tests.rs        # ❌ ZU LÖSCHEN
-│       │   │       ├── ❌ ZU LÖSCHEN: database_tests.rs     # ❌ ZU LÖSCHEN
-│       │   │       ├── ❌ ZU LÖSCHEN: encryption_tests.rs   # ❌ ZU LÖSCHEN
-│       │   │       └── ❌ ZU LÖSCHEN: repository_tests.rs   # ❌ ZU LÖSCHEN
-│       │   ├── ❌ ZU LÖSCHEN: build.rs          # ❌ ZU LÖSCHEN: Tauri-Build-Skript
-│       │   ├── ❌ ZU LÖSCHEN: Cargo.toml        # ❌ ZU LÖSCHEN: Rust-Abhängigkeiten
-│       │   └── ❌ ZU LÖSCHEN: tauri.conf.json   # ❌ ZU LÖSCHEN: Tauri-Konfiguration
-│       ├── static/               # Statische Dateien
-│       │   └── favicon.svg
-│       ├── .env                  # Umgebungsvariablen
-│       ├── .env.example          # Beispiel-Umgebungsvariablen
-│       ├── package.json          # NPM-Konfiguration
-│       ├── svelte.config.js      # Svelte-Konfiguration
-│       ├── tailwind.config.cjs   # Tailwind-Konfiguration
-│       ├── tsconfig.json         # TypeScript-Konfiguration
-│       └── vite.config.ts        # Vite-Konfiguration
+│   ├── frontend/                 # Tauri + Svelte Frontend (92 Dateien)
+│   │   ├── src/                  # Svelte-Quellcode (50 Dateien)
+│   │   │   ├── app.d.ts          # TypeScript-Definitionen
+│   │   │   ├── app.html          # HTML-Template
+│   │   │   ├── demo.spec.ts      # Demo-Test
+│   │   │   ├── lib/              # Bibliotheken (46 Dateien)
+│   │   │   └── routes/           # SvelteKit-Routen (1 Datei)
+│   │   ├── src-tauri/            # Tauri Desktop-Backend (27 Dateien)
+│   │   │   ├── scripts/          # Build-Skripte (1 Datei)
+│   │   │   ├── .env.development.example # Entwicklungs-Umgebungsvariablen
+│   │   │   ├── .env.production.example  # Produktions-Umgebungsvariablen
+│   │   │   └── tauri.conf.json   # Tauri-Konfiguration
+│   │   ├── static/               # Statische Dateien (2 Dateien)
+│   │   ├── .svelte-kit/          # SvelteKit-Build-Cache
+│   │   ├── dist/                 # Build-Ausgabe
+│   │   ├── node_modules/         # NPM-Abhängigkeiten
+│   │   ├── .gitignore            # Git-Ignore-Datei
+│   │   ├── .npmrc                # NPM-Konfiguration
+│   │   ├── .prettierignore       # Prettier-Ignore
+│   │   ├── .prettierrc           # Prettier-Konfiguration
+│   │   ├── eslint.config.js      # ESLint-Konfiguration
+│   │   ├── package.json          # NPM-Konfiguration
+│   │   ├── package-lock.json     # NPM-Lock-Datei
+│   │   ├── svelte.config.js      # Svelte-Konfiguration
+│   │   ├── tsconfig.json         # TypeScript-Konfiguration
+│   │   ├── vite.config.js        # Vite-Konfiguration
+│   │   ├── vite.config.ts        # Vite-TypeScript-Konfiguration
+│   │   └── vitest-setup-client.ts # Vitest-Setup
+│   └── frontend-backup/          # Frontend-Backup (11 Dateien)
 ├── test-data/                    # Testdaten
 │   ├── anonymization/            # Anonymisierungstests
 │   ├── audio/                    # Audiodateien für Tests
 │   │   ├── samples_ch/           # Schweizerdeutsche Beispiele
 │   │   └── samples_de/           # Hochdeutsche Beispiele
 │   └── mock-patients.json        # Mock-Patientendaten
-├── tools/                        # Entwicklungswerkzeuge
-│   └── scripts/                  # Hilfsskripte
-│       └── check-tools.ps1       # Überprüfung der Entwicklungsumgebung
-├── ❌ ZU LÖSCHEN: Dockerfile.test               # ❌ ZU LÖSCHEN: Docker für Rust-Sicherheitstests
 ├── LICENSE                       # Lizenzinformationen
 ├── README.md                     # Projektübersicht
-├── ❌ ZU LÖSCHEN: run_security_tests.ps1        # ❌ ZU LÖSCHEN: Skript für Rust-Sicherheitstests
 └── setup-branch-protection.ps1   # GitHub Branch-Schutz-Konfiguration
 ```
 
@@ -195,25 +208,6 @@ Alle Implementierungen müssen den MedEasy-Projektregeln entsprechen:
 - [DSC] Datenschutz Schweiz
 
 ## 🚨 MIGRATION ZU .NET BACKEND
-
-### Zu löschende Ordner und Dateien nach .NET Integration
-
-**WICHTIG**: Diese Elemente müssen nach erfolgreicher .NET Backend Integration gelöscht werden:
-
-#### Frontend (Rust/Tauri Code)
-```
-src/frontend/src-tauri/           # Gesamter Rust/Tauri Backend-Code
-├── src/                          # Alle Rust-Quelldateien
-├── build.rs                      # Tauri-Build-Skript
-├── Cargo.toml                    # Rust-Abhängigkeiten
-└── tauri.conf.json              # Tauri-Konfiguration
-```
-
-#### Root-Level Dateien
-```
-Dockerfile.test                   # Docker für Rust-Sicherheitstests
-run_security_tests.ps1           # PowerShell-Skript für Rust-Tests
-```
 
 ### Migrationspfad [CAS]
 

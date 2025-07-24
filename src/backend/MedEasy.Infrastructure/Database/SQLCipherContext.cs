@@ -114,8 +114,21 @@ namespace MedEasy.Infrastructure.Database
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).ValueGeneratedNever();
                 
+                // Zeit-Felder für Frontend-Kompatibilität [SF]
+                entity.Property(e => e.SessionDate)
+                      .HasColumnName("session_date")
+                      .IsRequired();
+                      
+                entity.Property(e => e.StartTime)
+                      .HasColumnName("start_time")
+                      .IsRequired(false); // Optional
+                      
+                entity.Property(e => e.EndTime)
+                      .HasColumnName("end_time")
+                      .IsRequired(false); // Optional
+                
                 // Verschlüsselte Felder als erforderlich markieren [SP]
-                entity.Property(e => e.EncryptedReason).IsRequired();
+                entity.Property(e => e.EncryptedReason).IsRequired(false); // Optional für Frontend-Kompatibilität
                 entity.Property(e => e.EncryptedNotes).IsRequired(false); // Notizen können leer sein
                 
                 // Beziehung zu Patient konfigurieren

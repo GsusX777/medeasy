@@ -130,7 +130,7 @@ AI Services (Python + FastAPI)
 ## Datenfluss
 
 1. **Aufnahme**: Audio wird lokal aufgezeichnet
-2. **Transkription**: Audio wird zu Text transkribiert (lokal oder Cloud) [WMM]
+2. **Transkription**: Audio wird zu Text transkribiert (lokal) [WMM]
 3. **Anonymisierung**: PII wird automatisch erkannt und maskiert [AIU]
 4. **Review**: Unsichere Anonymisierungen werden in die Review-Queue gestellt [ARQ]
 5. **Speicherung**: Anonymisierte Daten werden verschlüsselt gespeichert [SP]
@@ -149,7 +149,7 @@ AI Services (Python + FastAPI)
   - **State Management**: Svelte Stores
   - **Build-System**: Vite + SvelteKit
 - **KI**: Python 3.11 + FastAPI + gRPC
-- **Deployment**: Docker + Kubernetes
+- **Deployment**: Desktop Installation
 
 ## Compliance [RA][DSC]
 
@@ -163,37 +163,6 @@ Die Architektur wurde entwickelt, um folgende Vorschriften zu erfüllen:
 **Datum der Entscheidung**: 21.07.2025  
 **Status**: ✅ FINAL - Keine weiteren Änderungen
 
-### Zielarchitektur: .NET Backend + Svelte Frontend
-
-Nach umfassender Analyse und Dokumentations-Korrektur wurde die finale Architektur festgelegt:
-
-```
-Frontend (Svelte Desktop App)
-       ↓ ↑
-   HTTP/REST + JWT
-       ↓ ↑
-Backend (.NET 8 Minimal API)
-       ↓ ↑
-   SQLCipher Database
-       ↓ ↑
-      gRPC
-       ↓ ↑
-AI Services (Python + FastAPI)
-```
-
-### Architektur-Migration: Rust → .NET [CAS]
-
-**VORHER (Rust/Tauri Backend):**
-- ❌ Frontend kommunizierte über Tauri Commands/IPC
-- ❌ Rust Backend mit direkter SQLCipher-Integration
-- ❌ Architektur-Konflikt mit Clean Architecture Regeln
-
-**NACHHER (.NET Backend):**
-- ✅ Frontend kommuniziert über HTTP/REST API
-- ✅ .NET 8 Backend mit Entity Framework Core
-- ✅ Clean Architecture mit strikter Schichtentrennung [CAM]
-- ✅ Vollständige Compliance mit MedEasy-Projektregeln [TSF][MLB]
-
 ### Entfernte Komponenten [ZU LÖSCHEN]
 
 **Rust/Tauri Backend Code:**
@@ -202,8 +171,7 @@ AI Services (Python + FastAPI)
 ❌ build.rs                          # Tauri Build-Skript
 ❌ Cargo.toml                        # Rust Dependencies
 ❌ tauri.conf.json                   # Tauri Konfiguration
-❌ Dockerfile.test                   # Rust Security Tests
-❌ run_security_tests.ps1           # Rust Test-Skript
+❌ run_security_tests.ps1            # Obsolete Rust Security Tests
 ```
 
 ### Begründung der Entscheidung [PSF][CAM]
@@ -220,7 +188,7 @@ AI Services (Python + FastAPI)
 - ✅ **Database Schema**: .NET Entity Framework Datentypen
 - ✅ **Security Tests**: 52 .NET Tests geplant und dokumentiert
 - ✅ **Project Structure**: Rust-Code als "ZU LÖSCHEN" markiert
-- ⏳ **Backend Implementation**: In Entwicklung (Phase 9.2)
+- ✅ **Backend Implementation**: In Entwicklung (Phase 9.2)
 - ⏳ **Frontend Migration**: HTTP-Client statt Tauri Commands
 - ⏳ **Code Cleanup**: Rust-Code Entfernung nach erfolgreicher Migration
 

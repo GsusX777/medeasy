@@ -2,11 +2,11 @@
 
 # MedEasy Datenbankschema
 
-*Letzte Aktualisierung: 19.01.2025*
+*Letzte Aktualisierung: 23.07.2025*
 
 ## Frontend-Integration Status [AKTUELL]
 
-**Mock-API Phase (Januar 2025):**
+**Mock-API Phase:**
 - ✅ Dashboard verwendet temporäre Mock-Daten
 - ✅ TypeScript-DTOs erweitert um fehlende Session-Felder
 - ✅ Feldnamen korrigiert: camelCase → snake_case
@@ -16,11 +16,6 @@
 - Mock verwendet `string` IDs statt `Guid`
 - Mock-Daten nicht verschlüsselt (nur für Tests)
 - Schweizer Datumsformat (DD.MM.YYYY) korrekt implementiert [SF]
-
-**⚠️ Backend-Anpassungsbedarf:**
-- **Session-Tabelle**: Backend-Schema muss an Frontend-DTOs angepasst werden
-- Frontend erwartet: `session_date`, `start_time`, `end_time` als separate Felder
-- Aktuelles Schema zeigt noch alte Struktur - muss vor .NET Integration aktualisiert werden
 
 ## Übersicht [SP][EIV]
 

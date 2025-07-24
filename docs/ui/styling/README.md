@@ -186,7 +186,7 @@ Diese Dokumentation beschreibt das Design-System und die Styling-Richtlinien fü
 - **Verbotene Animationen**: 
   - ❌ Zoom-Effekte bei Buttons oder Menüpunkten
   - ❌ Bounce- oder Spring-Animationen
-  - ❌ Rotation (außer Status-Indikatoren bei Bedarf)
+  - ❌ Rotation (außer Status-Indikatoren bei Bedarf und Spinner)
   - ❌ Shake- oder Wobble-Effekte
 - **Transition-Zeiten**: Maximal 200ms für professionelle Responsivität
 - **Easing**: `ease-out` für natürliche Bewegungen

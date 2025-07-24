@@ -26,9 +26,19 @@ namespace MedEasy.Domain.Entities
         public Patient Patient { get; private set; }
 
         /// <summary>
-        /// Datum und Uhrzeit der Konsultation (Format: DD.MM.YYYY) [SF]
+        /// Datum der Konsultation (Format: DD.MM.YYYY) [SF]
         /// </summary>
         public DateTime SessionDate { get; private set; }
+
+        /// <summary>
+        /// Startzeit der Konsultation (Format: HH:MM) [SF]
+        /// </summary>
+        public TimeSpan? StartTime { get; private set; }
+
+        /// <summary>
+        /// Endzeit der Konsultation (Format: HH:MM) [SF]
+        /// </summary>
+        public TimeSpan? EndTime { get; private set; }
 
         /// <summary>
         /// Verschlüsselter Grund der Konsultation [EIV]
@@ -99,15 +109,19 @@ namespace MedEasy.Domain.Entities
         public static Session Create(
             Guid patientId, 
             DateTime sessionDate, 
-            byte[] encryptedReason, 
-            string audioFilePath, 
-            string createdBy)
+            TimeSpan? startTime = null,
+            TimeSpan? endTime = null,
+            byte[] encryptedReason = null, 
+            string audioFilePath = null, 
+            string createdBy = "System")
         {
             var session = new Session
             {
                 Id = Guid.NewGuid(),
                 PatientId = patientId,
                 SessionDate = sessionDate,
+                StartTime = startTime,
+                EndTime = endTime,
                 EncryptedReason = encryptedReason,
                 AudioFilePath = audioFilePath,
                 Status = SessionStatus.Active,
@@ -146,6 +160,16 @@ namespace MedEasy.Domain.Entities
         {
             AIProvider = provider;
             ProcessedInCloud = isCloud;
+            UpdateAuditInfo(modifiedBy);
+        }
+
+        /// <summary>
+        /// Aktualisiert die Start- und Endzeit der Session [SF]
+        /// </summary>
+        public void UpdateSessionTimes(TimeSpan? startTime, TimeSpan? endTime, string modifiedBy)
+        {
+            StartTime = startTime;
+            EndTime = endTime;
             UpdateAuditInfo(modifiedBy);
         }
     }
