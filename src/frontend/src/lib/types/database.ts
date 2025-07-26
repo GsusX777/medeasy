@@ -4,32 +4,35 @@
 // TypeScript definitions for database DTOs
 
 /**
- * Patient DTO
+ * Patient DTO [ZTS]
  */
 export interface PatientDto {
   id: string;
-  first_name: string;
-  last_name: string;
-  date_of_birth: string; // Format: DD.MM.YYYY [SF]
-  insurance_number: string; // Format: XXX.XXXX.XXXX.XX [SF]
+  firstName: string;                
+  lastName: string;               
+  dateOfBirth: string;            
+  dateOfBirthFormatted?: string;  
+  insuranceNumberMasked: string;  
   notes?: string;
   created: string;
-  last_modified: string;
+  lastModified: string;           
+  createdBy: string;              
+  lastModifiedBy: string;         
 }
 
 /**
- * DTO for creating a new patient
+ * DTO for creating a new patient [ZTS]
  */
 export interface CreatePatientDto {
-  first_name: string;
-  last_name: string;
-  date_of_birth: string; // Format: DD.MM.YYYY [SF]
-  insurance_number: string; // Format: XXX.XXXX.XXXX.XX [SF]
+  firstName: string;              
+  lastName: string;               
+  dateOfBirth: string;            
+  insuranceNumber: string;        
   notes?: string;
 }
 
 /**
- * Session status enum
+ * Session status enum [ZTS]
  */
 export enum SessionStatus {
   Scheduled = 'Scheduled',
@@ -39,26 +42,47 @@ export enum SessionStatus {
 }
 
 /**
- * Session DTO
+ * Anonymization status enum - ✅ NEW [AIU]
  */
-export interface SessionDto {
-  id: string;
-  patient_id: string;
-  session_date: string; // Format: DD.MM.YYYY [SF]
-  start_time: string; // Format: HH:MM
-  end_time?: string; // Format: HH:MM (optional)
-  status: string; // SessionStatus as string
-  notes?: string;
-  audio_file_path?: string;
-  created: string;
-  last_modified: string;
+export enum AnonymizationStatus {
+  Pending = 'Pending',
+  AutoAnonymized = 'AutoAnonymized',
+  PendingReview = 'PendingReview',
+  ReviewApproved = 'ReviewApproved',
+  ReviewRejected = 'ReviewRejected'
 }
 
 /**
- * DTO for creating a new session
+ * Session DTO [ZTS]
+ */
+export interface SessionDto {
+  id: string;
+  patientId: string;              // ✅ patient_id → patientId
+  sessionDate: string;            // ✅ session_date → sessionDate (ISO-8601)
+  sessionDateFormatted?: string;  // ✅ NEW: DD.MM.YYYY für UI [SF]
+  startTime: string;              // ✅ start_time → startTime (TimeSpan)
+  startTimeFormatted?: string;    // ✅ NEW: HH:mm für UI [SF]
+  endTime?: string;               // ✅ end_time → endTime (TimeSpan, optional)
+  endTimeFormatted?: string;      // ✅ NEW: HH:mm für UI [SF]
+  status: SessionStatus;          // ✅ Enum statt string [ZTS]
+  reason: string;
+  notes?: string;
+  anonymizedNotes?: string;       // ✅ NEW: Anonymisierte Notizen [AIU]
+  anonymizationStatus: AnonymizationStatus; // ✅ NEW: Anonymisierungs-Status [AIU]
+  created: string;
+  lastModified: string;           // ✅ last_modified → lastModified
+  createdBy: string;              // ✅ NEW: Audit-Trail [ATV]
+  lastModifiedBy: string;         // ✅ NEW: Audit-Trail [ATV]
+}
+
+/**
+ * DTO for creating a new session [ZTS]
  */
 export interface CreateSessionDto {
-  patient_id: string;
+  patientId: string;              // ✅ patient_id → patientId
+  reason: string;                 // ✅ NEW: Grund der Konsultation [PSF]
+  sessionDate?: string;           // ✅ NEW: Optional (ISO-8601)
+  startTime?: string;             // ✅ NEW: Optional (TimeSpan)
   notes?: string;
 }
 

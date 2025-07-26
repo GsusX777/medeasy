@@ -1,0 +1,190 @@
+// „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17
+
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using MedEasy.Application.DTOs;
+using MedEasy.Application.Interfaces;
+using System.Security.Claims;
+
+namespace MedEasy.API.Controllers;
+
+/// <summary>
+/// Patients API Controller - Verwendet neue DTOs mit camelCase [ZTS][SF]
+/// 🎯 KRITISCHER FIX: Implementiert getrennte Vor-/Nachnamen-Verarbeitung
+/// </summary>
+[ApiController]
+[Route("api/v1/[controller]")]
+[Authorize]
+public class PatientsController : ControllerBase
+{
+    private readonly IPatientService _patientService;
+    private readonly ILogger<PatientsController> _logger;
+
+    public PatientsController(
+        IPatientService patientService,
+        ILogger<PatientsController> logger)
+    {
+        _patientService = patientService ?? throw new ArgumentNullException(nameof(patientService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    /// <summary>
+    /// GET /api/v1/patients - Ruft alle Patienten ab [PbD]
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<PatientDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetPatients()
+    {
+        try
+        {
+            var currentUser = GetCurrentUser();
+            _logger.LogInformation("User {User} requesting all patients", currentUser);
+
+            var patients = await _patientService.GetAllPatientsAsync();
+
+            _logger.LogInformation("Returned {Count} patients to user {User}", patients.Count(), currentUser);
+            return Ok(patients);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving patients");
+            return StatusCode(StatusCodes.Status500InternalServerError, 
+                new { message = "Ein Fehler ist beim Abrufen der Patienten aufgetreten" });
+        }
+    }
+
+    /// <summary>
+    /// GET /api/v1/patients/{id} - Ruft einen spezifischen Patienten ab [ATV]
+    /// </summary>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(PatientDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetPatient(Guid id)
+    {
+        try
+        {
+            var currentUser = GetCurrentUser();
+            _logger.LogInformation("User {User} requesting patient {PatientId}", currentUser, id);
+
+            var patient = await _patientService.GetPatientByIdAsync(id);
+            if (patient == null)
+            {
+                _logger.LogWarning("Patient {PatientId} not found for user {User}", id, currentUser);
+                return NotFound(new { message = $"Patient mit ID {id} wurde nicht gefunden" });
+            }
+
+            _logger.LogInformation("Patient {PatientId} retrieved by user {User}", id, currentUser);
+            return Ok(patient);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving patient {PatientId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, 
+                new { message = "Ein Fehler ist beim Abrufen des Patienten aufgetreten" });
+        }
+    }
+
+    /// <summary>
+    /// POST /api/v1/patients - Erstellt einen neuen Patienten [EIV][SF]
+    /// 🎯 KRITISCHER FIX: Verwendet neue CreatePatientRequest mit getrennten Namen
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(PatientDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> CreatePatient([FromBody] CreatePatientRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state for patient creation: {Errors}", 
+                    string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+                return BadRequest(ModelState);
+            }
+
+            var currentUser = GetCurrentUser();
+            _logger.LogInformation("User {User} creating new patient", currentUser);
+
+            // 🎯 KRITISCHER FIX: Service verarbeitet getrennte Vor-/Nachnamen
+            var patient = await _patientService.CreatePatientAsync(request, currentUser);
+
+            _logger.LogInformation("Patient {PatientId} created successfully by user {User}", patient.Id, currentUser);
+            
+            return CreatedAtAction(
+                nameof(GetPatient), 
+                new { id = patient.Id }, 
+                patient);
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Invalid patient data provided");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating patient");
+            return StatusCode(StatusCodes.Status500InternalServerError, 
+                new { message = "Ein Fehler ist beim Erstellen des Patienten aufgetreten" });
+        }
+    }
+
+    /// <summary>
+    /// PUT /api/v1/patients/{id} - Aktualisiert einen Patienten [EIV][ATV]
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(PatientDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdatePatient(Guid id, [FromBody] UpdatePatientRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state for patient update: {Errors}", 
+                    string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+                return BadRequest(ModelState);
+            }
+
+            var currentUser = GetCurrentUser();
+            _logger.LogInformation("User {User} updating patient {PatientId}", currentUser, id);
+
+            var patient = await _patientService.UpdatePatientAsync(id, request, currentUser);
+            if (patient == null)
+            {
+                _logger.LogWarning("Patient {PatientId} not found for update by user {User}", id, currentUser);
+                return NotFound(new { message = $"Patient mit ID {id} wurde nicht gefunden" });
+            }
+
+            _logger.LogInformation("Patient {PatientId} updated successfully by user {User}", id, currentUser);
+            return Ok(patient);
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Invalid patient update data provided");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating patient {PatientId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, 
+                new { message = "Ein Fehler ist beim Aktualisieren des Patienten aufgetreten" });
+        }
+    }
+
+    /// <summary>
+    /// Extrahiert den aktuellen Benutzer aus dem JWT Token [ATV]
+    /// </summary>
+    private string GetCurrentUser()
+    {
+        return User?.Identity?.Name ?? User?.FindFirst(ClaimTypes.Name)?.Value ?? "System";
+    }
+}

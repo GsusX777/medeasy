@@ -8,7 +8,6 @@ Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
 * **Anonymisierung ist UNVERÄNDERLICH (AIU):** Die Anonymisierungsfunktion kann NIEMALS deaktiviert, optional gemacht oder umgangen werden. Jeder Code muss dies respektieren.
 * **SQLCipher Pflicht (SP):** Alle Patientendaten werden mit SQLCipher (AES-256) verschlüsselt. Keine Ausnahmen.
 * **Audit-Trail Vollständig (ATV):** Jede Datenbankoperation, jeder Zugriff, jede Änderung wird im Audit-Log erfasst.
-* **Diagnose-Killswitch (DK):** KI-Diagnosevorschläge haben einen Remote-Killswitch und lokalen Toggle. Arztbestätigung immer erforderlich.
 
 ## 🏗️ ARCHITEKTUR-SPEZIFISCH FÜR MEDEASY
 
@@ -22,7 +21,6 @@ Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
 * **Multi-Language Bridge (MLB):** 
   - .NET ↔ Python: Nur via gRPC
   - Frontend ↔ Backend: REST API + JWT
-  - Tauri ↔ Svelte: Tauri Commands
 
 * **Technologie-Stack Fest (TSF):**
   - Backend: .NET 8, kein Framework-Wechsel
@@ -59,10 +57,11 @@ Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
   BEVOR: Neuer API Endpoint
   PRÜFE: docs/DOCS-INDEX.md Abschnitt "## API"
   PRÜFE: docs/api/API_REFERENCE.md für bestehendes Pattern
+  PRÜFE: docs/architecture/NAMING_CONVENTIONS.md für Namenskonventionen
   
   BEVOR: Neue Dependency
   PRÜFE: docs/DOCS-INDEX.md Abschnitt "## Architektur"
-  PRÜFE: docs/architecture/DEPENDENCIES.md für Duplikate
+  PRÜFE: docs/architecture/NAMING_CONVENTIONS.md für Namenskonventionen
   PRÜFE: docs/architecture/Dependency_Graph.svg für Abhängigkeitsstruktur
   
   BEVOR: Security-Feature
@@ -100,12 +99,6 @@ Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
 
 ## 🇨🇭 SCHWEIZ-SPEZIFISCHE ANFORDERUNGEN
 
-* **Schweizerdeutsch-Handling (SDH):**
-  - Erkennung von Schweizerdeutsch
-  - Warnung anzeigen: "Schweizerdeutsch erkannt - eingeschränkte Genauigkeit"
-  - Flag setzen: betaAvailable = true
-  - Whisper arbeitet weiter, aber mit reduzierter Genauigkeit
-
 * **Datenschutz Schweiz (DSC):**
   - nDSG-Konformität erforderlich
   - Verschlüsselung aller Patientendaten
@@ -123,9 +116,9 @@ Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
 ## 🤖 KI-INTEGRATION MEDEASY
 
 * **Provider-Kette (PK):**
-  1. OpenAI GPT-4 (primär)
-  2. Claude 3 (fallback)
-  3. Gemini (fallback)
+  1. OpenAI GPT-4o (primär)
+  2. Claude 3.7 (fallback)
+  3. Gemini 2.5 (fallback)
   4. Lokales Modell (offline)
   - Bei Fehler: Nächster Provider automatisch
   - Immer anzeigen welcher Provider verwendet wurde
@@ -138,7 +131,6 @@ Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
   - KEIN Parallel-Vergleich
 
 * **Cloud-Transparenz (CT):**
-  - UI zeigt IMMER: 🔒 Lokal oder ☁️ Cloud
   - Cloud nur mit expliziter Session-Einwilligung
   - Opt-in per Feature, nicht global
 
@@ -234,7 +226,7 @@ Diese Regeln ergänzen die globalen Rules und sind spezifisch für MedEasy
 | Jede Änderung | docs/DOCS-INDEX.md | Alle relevanten Dateien im entsprechenden Abschnitt |
 | Neue Entity | docs/database/SCHEMA.md | Alle Dateien im Abschnitt "## Datenbank" |
 | Neue API | docs/api/API_REFERENCE.md | Alle Dateien im Abschnitt "## API" |
-| Neue Dependency | docs/architecture/DEPENDENCIES.md | Alle Dateien im Abschnitt "## Architektur" |
+| Neue Dependency | docs/architecture/NAMING_CONVENTIONS.md | Alle Dateien im Abschnitt "## Architektur" |
 | Security Feature | docs/compliance/SECURITY.md | Alle Dateien im Abschnitt "## Compliance und Sicherheit" |
 | Architektur | docs/architecture/README.md | Alle Dateien im Abschnitt "## Architektur" |
 

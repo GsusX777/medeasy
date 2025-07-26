@@ -28,9 +28,11 @@ medeasy/
 │   │   └── README.md             # AI-Service Übersicht
 │   ├── api/                      # API-Dokumentation
 │   │   └── API_REFERENCE.md      # API-Referenz
+│   │   └── API_CONTRACTS.md      # API-Kontrakte
 │   ├── architecture/             # Architektur-Dokumentation
 │   │   ├── AI_SERVICE.md         # AI-Service Architektur
 │   │   ├── Dependency_Graph.svg  # Abhängigkeitsdiagramm
+│   │   ├── NAMING_CONVENTIONS.md # Naming-Konventionen
 │   │   └── README.md             # Architektur-Übersicht
 │   ├── compliance/               # Compliance und Sicherheit
 │   │   └── SECURITY.md           # Sicherheitskonzept
@@ -52,6 +54,7 @@ medeasy/
 │   ├── security/                 # Sicherheitsdokumentation
 │   ├── testing/                  # Testdokumentation
 │   │   └── SECURITY_TESTING.md   # Sicherheitstests
+│   │   └── REPOSITORY_TESTING.md # Repository Tests
 │   └── ui/                       # UI-Dokumentation
 │       ├── DESIGN_IMPLEMENTATION_PLAN.md # Design-Implementierungsplan
 │       ├── DESIGN_STRATEGY.md    # Design-Strategie
@@ -87,22 +90,22 @@ medeasy/
 │   │   ├── pyproject.toml        # Python-Projekt-Konfiguration
 │   │   ├── .env.example          # Beispiel-Umgebungsvariablen
 │   │   └── venv/                 # Virtuelle Umgebung (lokal)
-│   ├── backend/                  # .NET Backend (26 Dateien)
-│   │   ├── MedEasy.API/          # HTTP-API für Desktop-Frontend (10 Dateien)
-│   │   ├── MedEasy.Application/  # Anwendungslogik (2 Dateien)
-│   │   ├── MedEasy.Domain/       # Domain-Modelle (6 Dateien)
-│   │   ├── MedEasy.FinalSecurityTests/ # Sicherheitstests (2 Dateien)
-│   │   ├── MedEasy.Infrastructure/ # Infrastruktur (5 Dateien)
+│   ├── backend/                  # .NET Backend (84 Dateien)
+│   │   ├── MedEasy.API/          # HTTP-API für Desktop-Frontend (16 Dateien)
+│   │   ├── MedEasy.Application/  # Anwendungslogik (15 Dateien)
+│   │   ├── MedEasy.Domain/       # Domain-Modelle (11 Dateien)
+│   │   ├── MedEasy.FinalSecurityTests/ # Sicherheitstests (27 Dateien)
+│   │   ├── MedEasy.Infrastructure/ # Infrastruktur (14 Dateien)
 │   │   └── MedEasy.sln           # Visual Studio Solution
-│   ├── frontend/                 # Tauri + Svelte Frontend (92 Dateien)
-│   │   ├── src/                  # Svelte-Quellcode (50 Dateien)
+│   ├── frontend/                 # Tauri + Svelte Frontend
+│   │   ├── src/                  # Svelte-Quellcode
 │   │   │   ├── app.d.ts          # TypeScript-Definitionen
 │   │   │   ├── app.html          # HTML-Template
 │   │   │   ├── demo.spec.ts      # Demo-Test
-│   │   │   ├── lib/              # Bibliotheken (46 Dateien)
-│   │   │   └── routes/           # SvelteKit-Routen (1 Datei)
-│   │   ├── src-tauri/            # Tauri Desktop-Backend (27 Dateien)
-│   │   │   ├── scripts/          # Build-Skripte (1 Datei)
+│   │   │   ├── lib/              # Bibliotheken
+│   │   │   └── routes/           # SvelteKit-Routen
+│   │   ├── src-tauri/            # Tauri Desktop-Backend
+│   │   │   ├── scripts/          # Build-Skripte
 │   │   │   ├── .env.development.example # Entwicklungs-Umgebungsvariablen
 │   │   │   ├── .env.production.example  # Produktions-Umgebungsvariablen
 │   │   │   └── tauri.conf.json   # Tauri-Konfiguration

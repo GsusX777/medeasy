@@ -16,9 +16,14 @@ namespace MedEasy.Domain.Entities
         public Guid Id { get; private set; }
 
         /// <summary>
-        /// Verschlüsselter Name des Patienten [EIV][SP]
+        /// Verschlüsselter Vorname des Patienten [EIV][SP]
         /// </summary>
-        public byte[] EncryptedName { get; private set; }
+        public byte[] EncryptedFirstName { get; private set; }
+
+        /// <summary>
+        /// Verschlüsselter Nachname des Patienten [EIV][SP]
+        /// </summary>
+        public byte[] EncryptedLastName { get; private set; }
 
         /// <summary>
         /// Hash der Versicherungsnummer (Format: XXX.XXXX.XXXX.XX) [SF]
@@ -46,14 +51,24 @@ namespace MedEasy.Domain.Entities
         public ICollection<Session> Sessions { get; private set; } = new List<Session>();
 
         /// <summary>
-        /// Zeitstempel der letzten Änderung für Audit-Trail [ATV]
+        /// Zeitstempel der Erstellung [ATV]
         /// </summary>
-        public DateTime LastModified { get; private set; }
+        public DateTime Created { get; set; }
+
+        /// <summary>
+        /// ID des Benutzers, der die Entity erstellt hat [ATV]
+        /// </summary>
+        public string CreatedBy { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Zeitstempel der letzten Änderung [ATV]
+        /// </summary>
+        public DateTime LastModified { get; set; }
 
         /// <summary>
         /// ID des Benutzers, der die letzte Änderung vorgenommen hat [ATV]
         /// </summary>
-        public string LastModifiedBy { get; private set; }
+        public string LastModifiedBy { get; set; } = string.Empty;
 
         /// <summary>
         /// Erstellt einen neuen Patienten mit verschlüsselten Daten
@@ -61,6 +76,46 @@ namespace MedEasy.Domain.Entities
         private Patient() 
         {
             // Für EF Core
+        }
+
+        /// <summary>
+        /// Factory-Methode: Erstellt einen neuen Patienten mit getrennten Namen [SF][EIV]
+        /// </summary>
+        public static Patient Create(
+            byte[] encryptedFirstName,
+            byte[] encryptedLastName,
+            string insuranceNumberHash,
+            DateOnly dateOfBirth,
+            byte[] encryptedGender,
+            byte[] encryptedInsuranceProvider,
+            string createdBy)
+        {
+            var patient = new Patient
+            {
+                Id = Guid.NewGuid(),
+                EncryptedFirstName = encryptedFirstName ?? throw new ArgumentNullException(nameof(encryptedFirstName)),
+                EncryptedLastName = encryptedLastName ?? throw new ArgumentNullException(nameof(encryptedLastName)),
+                InsuranceNumberHash = insuranceNumberHash ?? throw new ArgumentNullException(nameof(insuranceNumberHash)),
+                DateOfBirth = dateOfBirth,
+                EncryptedGender = encryptedGender ?? throw new ArgumentNullException(nameof(encryptedGender)),
+                EncryptedInsuranceProvider = encryptedInsuranceProvider ?? throw new ArgumentNullException(nameof(encryptedInsuranceProvider)),
+                Created = DateTime.UtcNow,
+                CreatedBy = createdBy ?? throw new ArgumentNullException(nameof(createdBy)),
+                LastModified = DateTime.UtcNow,
+                LastModifiedBy = createdBy ?? throw new ArgumentNullException(nameof(createdBy))
+            };
+
+            return patient;
+        }
+
+        /// <summary>
+        /// Aktualisiert die verschlüsselten Namen des Patienten [EIV][ATV]
+        /// </summary>
+        public void UpdateNames(byte[] encryptedFirstName, byte[] encryptedLastName, string modifiedBy)
+        {
+            EncryptedFirstName = encryptedFirstName ?? throw new ArgumentNullException(nameof(encryptedFirstName));
+            EncryptedLastName = encryptedLastName ?? throw new ArgumentNullException(nameof(encryptedLastName));
+            UpdateAuditInfo(modifiedBy);
         }
 
         /// <summary>

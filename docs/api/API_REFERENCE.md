@@ -2,24 +2,30 @@
 
 # MedEasy API Referenz
 
-*Letzte Aktualisierung: 08.07.2025*
+*Letzte Aktualisierung: 25.07.2025*  
+*Status: ✅ Aktuell implementierte APIs*
 
-## Übersicht
+## 🎯 Übersicht
 
-Die MedEasy API bietet sichere Endpunkte für den Zugriff auf medizinische Daten unter strikter Einhaltung der Schweizer Datenschutzbestimmungen (nDSG) und medizinischer Sicherheitsstandards.
+Die MedEasy API bietet sichere Endpunkte für medizinische Datenverarbeitung unter strikter Einhaltung der Schweizer Datenschutzbestimmungen (nDSG) und medizinischer Sicherheitsstandards.
 
-## Sicherheitsmerkmale [ZTS][PbD]
+## 🔐 Sicherheitsmerkmale [ZTS][PbD]
 
 - **JWT-Authentifizierung**: Alle sensiblen Endpunkte erfordern JWT-Token
-- **Rate-Limiting**: Schutz vor Brute-Force und DoS-Angriffen
+- **Rate-Limiting**: Schutz vor Brute-Force (10 req/min für sensible Daten)
 - **Audit-Logging**: Vollständige Protokollierung aller Zugriffe [ATV]
-- **Verschlüsselung**: Alle Daten werden mit AES-256 verschlüsselt [SP]
-- **Anonymisierung**: Automatische Erkennung und Maskierung von PII [AIU]
+- **AES-256-GCM Verschlüsselung**: Alle Patientendaten verschlüsselt [SP]
+- **SQLCipher**: Verschlüsselte SQLite-Datenbank [SP]
+- **Automatische Anonymisierung**: PII-Erkennung unveränderlich aktiv [AIU]
 
-## Basis-URL [CAS][MLB]
+## 🏗️ Architektur [CAM][MLB]
 
 **Desktop-Anwendung (Lokal)** [CT]:
+```
+Frontend (Svelte + Tauri) ↔ Backend (.NET 8 API) ↔ SQLCipher DB
+```
 
+**Basis-URLs**:
 ```
 # Entwicklung
 http://localhost:5000/api/v1
@@ -28,431 +34,360 @@ http://localhost:5000/api/v1
 http://127.0.0.1:5000/api/v1
 ```
 
-**Architektur-Hinweis**: MedEasy ist eine Desktop-Anwendung mit getrennten Frontend (Svelte/Tauri) und Backend (.NET API) Prozessen. Die Kommunikation erfolgt über lokale HTTP-Verbindungen - **keine Cloud-Übertragung** [DSC][CT].
+**Wichtig**: MedEasy ist eine **Desktop-Anwendung** - keine Cloud-Übertragung von Patientendaten [DSC][CT].
 
-## Endpunkte
+---
 
-### Status
+## 📊 API Status
 
-#### GET /status
+| Kategorie | Implementiert | Legacy | Geplant | Gesamt |
+|-----------|---------------|--------|---------|--------|
+| **Patients** | ✅ 4/4 (100%) | - | - | 4 |
+| **Sessions** | ✅ 2/6 (33%) | ⚠️ 3 | 🚧 1 | 6 |
+| **Transcripts** | ✅ 1/4 (25%) | - | 🚧 3 | 4 |
+| **System** | ✅ 2/4 (50%) | - | 🚧 2 | 4 |
 
-Öffentlicher Endpunkt zur Überprüfung des API-Status.
+**Legende**: ✅ Implementiert | ⚠️ Legacy/Dummy | 🚧 Geplant
 
-**Antwort**: 200 OK
+---
+
+## 👥 Patients API ✅
+
+**Vollständig implementiert** mit DTOs, Services, Validation, Encryption
+
+### Authentifizierung
+```
+Authorization: Bearer <jwt_token>
+Rate-Limit: 10 Anfragen/Minute (sensible Daten)
+```
+
+### Endpunkte
+
+#### GET /api/v1/patients
+**Zweck**: Alle Patienten abrufen  
+**Audit**: Vollständig protokolliert [ATV]  
+**Verschlüsselung**: Namen entschlüsselt für autorisierte Benutzer [EIV]
+
+**Beispiel-Response**:
+```json
+[
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "firstName": "Max",
+    "lastName": "Mustermann",
+    "dateOfBirth": "1990-01-15T00:00:00Z",
+    "dateOfBirthFormatted": "15.01.1990",
+    "insuranceNumberMasked": "756.1234.XXXX.XX",
+    "created": "2025-07-25T09:00:00Z",
+    "lastModified": "2025-07-25T09:00:00Z"
+  }
+]
+```
+
+#### GET /api/v1/patients/{id}
+**Zweck**: Spezifischen Patienten abrufen  
+**Parameter**: `id` (Guid) - Patient ID  
+**Sicherheit**: Audit-Log für jeden Zugriff [ATV]
+
+#### POST /api/v1/patients
+**Zweck**: Neuen Patienten erstellen  
+**Validation**: Schweizer Versicherungsnummer (XXX.XXXX.XXXX.XX) [SF]  
+**Encryption**: Namen werden automatisch verschlüsselt [EIV]
+
+**Beispiel-Request**:
+```json
+{
+  "firstName": "Max",
+  "lastName": "Mustermann",
+  "dateOfBirth": "1990-01-15T00:00:00Z",
+  "insuranceNumber": "756.1234.5678.90",
+  "notes": "Optionale Notizen"
+}
+```
+
+#### PUT /api/v1/patients/{id}
+**Zweck**: Patienten aktualisieren  
+**Flexibilität**: Alle Felder optional  
+**Audit**: Änderungen vollständig protokolliert [ATV]
+
+---
+
+## 📅 Sessions API ✅
+
+**Minimal API implementiert** mit Audit-Logging
+
+### GET /api/v1/sessions
+**Zweck**: Alle Sessions abrufen (Basis-Informationen)  
+**Sicherheit**: Nur ID, Datum, Status, Patient-ID [PbD]
+
+**Beispiel-Response**:
+```json
+[
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "sessionDate": "2025-07-25T09:00:00Z",
+    "status": "Completed",
+    "patientId": "123e4567-e89b-12d3-a456-426614174001"
+  }
+]
+```
+
+### GET /api/v1/sessions/{id}
+**Zweck**: Session-Details abrufen  
+**Audit**: Vollständige Protokollierung [ATV]  
+**Verschlüsselung**: Notizen verschlüsselt gespeichert [EIV]
+
+**Beispiel-Response**:
+```json
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "patientId": "123e4567-e89b-12d3-a456-426614174001",
+  "sessionDate": "2025-07-25T09:00:00Z",
+  "startTime": "09:00:00",
+  "endTime": "09:30:00",
+  "status": "Completed",
+  "encryptedNotes": "[ENCRYPTED_BLOB]",
+  "created": "2025-07-25T09:00:00Z",
+  "lastModified": "2025-07-25T09:00:00Z"
+}
+```
+
+---
+
+## 📝 Transcripts API ✅
+
+**Read-Only implementiert** mit Anonymisierung
+
+### GET /api/v1/transcripts/{id}
+**Zweck**: Transkript abrufen  
+**Anonymisierung**: PII automatisch erkannt und maskiert [AIU]  
+**Confidence**: KI-Vertrauen in Anonymisierung (0.0-1.0)
+
+**Beispiel-Response**:
+```json
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "sessionId": "123e4567-e89b-12d3-a456-426614174001",
+  "encryptedContent": "[ENCRYPTED_BLOB]",
+  "anonymizedContent": "Patient berichtet über Kopfschmerzen...",
+  "anonymizationStatus": "Reviewed",
+  "confidence": 0.95,
+  "created": "2025-07-25T09:00:00Z"
+}
+```
+
+---
+
+## 🔍 Anonymization Reviews API ✅
+
+**Review-Queue implementiert**
+
+### GET /api/v1/anonymization-reviews
+**Zweck**: Pendente Review-Items abrufen  
+**Filter**: Nur Status "Pending"  
+**Workflow**: Manuelle Überprüfung bei niedriger Confidence
+
+**Beispiel-Response**:
+```json
+[
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "transcriptId": "123e4567-e89b-12d3-a456-426614174001",
+    "anonymizationConfidence": 0.85,
+    "created": "2025-07-25T09:00:00Z"
+  }
+]
+```
+
+---
+
+## 📊 System API ✅
+
+### GET /health
+**Zweck**: Basis Health Check  
+**Öffentlich**: Keine Authentifizierung erforderlich  
+**Monitoring**: Für einfache Verfügbarkeitsprüfung
+
+**Response**:
+```json
+{
+  "status": "Healthy",
+  "timestamp": "2025-07-25T16:38:13.8950012Z"
+}
+```
+
+### GET /api/system/performance
+**Zweck**: Live System-Performance Metriken  
+**Öffentlich**: Keine Authentifizierung erforderlich (temporär für Health-Monitor Testing)  
+**Monitoring**: Detaillierte System-Überwachung für medizinische Software-Stabilität [PSF]
+
+**Response**:
+```json
+{
+  "timestamp": "2025-07-25T16:45:23.1234567Z",
+  "cpuUsage": 23.5,
+  "cpuName": "Windows CPU (8 cores)",
+  "cpuCores": 8,
+  "ramUsage": 67.2,
+  "totalRamMb": 16384,
+  "usedRamMb": 11008,
+  "gpuUsage": 0.0,
+  "gpuAcceleration": false,
+  "gpuName": "Windows GPU (WMI disabled)",
+  "diskIo": 0.0,
+  "networkLatency": 1
+}
+```
+
+**Felder Erklärung**:
+- `cpuUsage`: CPU-Auslastung in Prozent (0-100)
+- `ramUsage`: RAM-Auslastung in Prozent (0-100)
+- `totalRamMb`: Gesamter verfügbarer RAM in MB
+- `usedRamMb`: Verwendeter RAM in MB
+- `gpuUsage`: GPU-Auslastung in Prozent (nullable)
+- `gpuAcceleration`: Ist GPU-Beschleunigung verfügbar
+- `diskIo`: Kombinierte Disk I/O in MB/s
+- `networkLatency`: Netzwerk-Latenz in ms
+
+### GET /api/system/info
+**Zweck**: System-Informationen für Diagnostik  
+**Öffentlich**: Keine Authentifizierung erforderlich (temporär)  
+**Monitoring**: Erweiterte System-Details
+
+**Response**:
+```json
+{
+  "operatingSystem": "Microsoft Windows 11.0.22631",
+  "architecture": "X64",
+  "processorCount": 8,
+  "machineName": "DESKTOP-ABC123",
+  "userName": "user",
+  "workingSet": 123456789,
+  "version": "8.0.11",
+  "is64BitOperatingSystem": true,
+  "is64BitProcess": true
+}
+```
+
+### GET /api/v1/status
+**Zweck**: Legacy System-Status (deprecated)  
+**Status**: Wird durch /health ersetzt  
+**Monitoring**: Für Rückwärtskompatibilität
+
+**Response**:
 ```json
 {
   "status": "Operational",
-  "timestamp": "2025-07-08T08:54:12Z"
+  "timestamp": "2025-07-25T09:38:15Z"
 }
 ```
 
-### Patienten [PbD][EIV]
+---
 
-#### GET /patients
+## ⚠️ Legacy APIs (Deprecated)
 
-Liefert eine Liste aller Patienten (nur IDs und Versicherungsnummer-Hash).
+### Sessions Controller ⚠️
+**Base URL**: `/api/sessions` (ohne v1)  
+**Status**: Dummy-Implementation, wird durch Minimal API ersetzt  
+**Verwendung**: Nicht für Produktion empfohlen
 
-**Erforderliche Berechtigung**: Authentifizierter Benutzer
-**Rate-Limit**: Sensible Daten (10 Anfragen/Minute)
+---
 
-**Antwort**: 200 OK
+## 🚧 Geplante APIs
+
+### Sessions CRUD
+- `POST /api/v1/sessions` - Session erstellen mit SessionDto
+- `PUT /api/v1/sessions/{id}` - Session aktualisieren
+- `DELETE /api/v1/sessions/{id}` - Session löschen
+
+### Transcripts CRUD
+- `POST /api/v1/transcripts` - Transkript hochladen/erstellen
+- `PUT /api/v1/transcripts/{id}` - Transkript aktualisieren
+- `DELETE /api/v1/transcripts/{id}` - Transkript löschen
+
+### AI Services
+- `POST /api/v1/ai/transcribe` - Audio → Text (Whisper)
+- `POST /api/v1/ai/anonymize` - Text-Anonymisierung
+- `POST /api/v1/ai/analyze` - Medizinische Analyse
+
+### Health Checks
+- `GET /health/live` - Liveness Probe
+- `GET /health/ready` - Readiness Probe
+
+---
+
+## 🚨 Fehlerbehandlung
+
+### Standard HTTP Status Codes
+- `200 OK` - Erfolgreich
+- `201 Created` - Ressource erstellt
+- `400 Bad Request` - Ungültige Eingabe
+- `401 Unauthorized` - Nicht authentifiziert
+- `404 Not Found` - Ressource nicht gefunden
+- `500 Internal Server Error` - Serverfehler
+
+### Error Response Format
 ```json
-[
-  {
-    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "first_name": "Hans",
-    "last_name": "Müller",
-    "date_of_birth": "01.01.1980"
+{
+  "message": "Beschreibung des Fehlers"
+}
+```
+
+### Validation Errors
+```json
+{
+  "errors": {
+    "firstName": ["Vorname ist erforderlich"],
+    "insuranceNumber": ["Format: XXX.XXXX.XXXX.XX"]
   }
-]
+}
 ```
 
-#### GET /patients/{id}
+---
 
-Liefert Details zu einem bestimmten Patienten.
+## 🇨🇭 Schweizer Compliance [SF]
 
-**Erforderliche Berechtigung**: Authentifizierter Benutzer
-**Rate-Limit**: Sensible Daten (10 Anfragen/Minute)
-**Audit**: Vollständige Protokollierung des Zugriffs [ATV]
+### Versicherungsnummer
+- **Format**: `XXX.XXXX.XXXX.XX`
+- **Validation**: Regex `^\d{3}\.\d{4}\.\d{4}\.\d{2}$`
+- **Beispiel**: `756.1234.5678.90`
 
-**Antwort**: 200 OK
+### Datumsformate
+- **API**: ISO-8601 (`2025-07-25T09:38:15Z`)
+- **UI**: Schweizer Format (`25.07.2025`)
+- **Database**: DD.MM.YYYY String
+
+### Datenschutz (nDSG)
+- **Verschlüsselung**: AES-256-GCM für alle PII
+- **Anonymisierung**: Automatisch, nicht deaktivierbar
+- **Audit**: Vollständige Nachverfolgung aller Zugriffe
+- **Lokale Verarbeitung**: Keine Cloud-Übertragung
+
+---
+
+## 🔧 Entwickler-Hinweise
+
+### JSON Format
+**Konfiguration**: `camelCase` für alle JSON-Responses
 ```json
 {
-  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "first_name": "Hans",
-  "last_name": "Müller",
-  "date_of_birth": "01.01.1980",
-  "insurance_number": "756.1234.5678.90",
-  "notes": "Allergisch gegen Penicillin",
-  "created": "08.07.2025 08:00:00",
-  "last_modified": "08.07.2025 08:30:00"
+  "firstName": "Max",           // ✅ camelCase
+  "lastName": "Mustermann",     // ✅ camelCase
+  "dateOfBirth": "1990-01-15T00:00:00Z"
 }
 ```
 
-### Sessions [SK][EIV]
+### Rate Limiting
+- **Sensible Endpunkte**: 10 Anfragen/Minute
+- **Öffentliche Endpunkte**: 100 Anfragen/Minute
+- **Header**: `X-RateLimit-Remaining`, `X-RateLimit-Reset`
 
-#### GET /sessions
-
-Liefert eine Liste aller Sessions (nur IDs und Datum).
-
-**Erforderliche Berechtigung**: Authentifizierter Benutzer
-**Rate-Limit**: Sensible Daten (10 Anfragen/Minute)
-
-**Antwort**: 200 OK
-```json
-[
-  {
-    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "session_date": "08.07.2025",
-    "start_time": "08:30",
-    "end_time": "09:15",
-    "status": "Completed",
-    "patientId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-  }
-]
+### Audit Logging
+Alle API-Zugriffe werden protokolliert:
+```
+API Access: GET /api/v1/patients/123 by user@example.com at 2025-07-25T09:38:15Z
 ```
 
-#### GET /sessions/{id}
+---
 
-Liefert Details zu einer bestimmten Session.
-
-**Erforderliche Berechtigung**: Authentifizierter Benutzer
-**Rate-Limit**: Sensible Daten (10 Anfragen/Minute)
-**Audit**: Vollständige Protokollierung des Zugriffs [ATV]
-
-**Antwort**: 200 OK
-```json
-{
-  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "session_date": "08.07.2025",
-  "start_time": "08:30",
-  "end_time": "09:15",
-  "status": "Completed",
-  "patientId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "notes": "Routinekontrolle, Patient klagt über Kopfschmerzen",
-  "audio_file_path": "/encrypted/sessions/audio_3fa85f64.enc",
-  "created": "08.07.2025 08:30:00",
-  "last_modified": "08.07.2025 09:15:00"
-}
-```
-
-### Transkripte [AIU][EIV]
-
-#### GET /transcripts/{id}
-
-Liefert Details zu einem bestimmten Transkript.
-
-**Erforderliche Berechtigung**: Authentifizierter Benutzer
-**Rate-Limit**: Sensible Daten (10 Anfragen/Minute)
-**Audit**: Vollständige Protokollierung des Zugriffs [ATV]
-
-**Antwort**: 200 OK
-```json
-{
-  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "session_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "anonymized_text": "Patient klagt über [SYMPTOM] seit [ZEITRAUM]",
-  "anonymization_confidence": 0.85,
-  "needs_review": false,
-  "created": "08.07.2025 08:35:00"
-}
-```
-
-### Anonymisierungs-Review-Queue [ARQ]
-
-#### GET /anonymization-reviews
-
-Liefert eine Liste aller Anonymisierungs-Review-Items mit Status "Pending".
-
-**Erforderliche Berechtigung**: Authentifizierter Benutzer
-**Rate-Limit**: Sensible Daten (10 Anfragen/Minute)
-
-**Antwort**: 200 OK
-```json
-[
-  {
-    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "transcript_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "anonymization_confidence": 0.75,
-    "needs_review": true,
-    "created": "08.07.2025 08:36:00"
-  }
-]
-```
-
-## Fehlerbehandlung [ECP][NSF]
-
-Alle Fehler werden im standardisierten Format zurückgegeben:
-
-```json
-{
-  "error": "Beschreibung des Fehlers",
-  "statusCode": 400,
-  "timestamp": "08.07.2025 08:54:12",
-  "path": "/api/v1/patients/invalid-id"
-}
-```
-
-## Health Checks [MPR]
-
-### GET /health/live
-
-Überprüft, ob die API aktiv ist.
-
-**Antwort**: 200 OK
-```json
-{
-  "status": "Healthy",
-  "totalDuration": 12.34,
-  "timestamp": "08.07.2025 08:54:12",
-  "entries": [
-    {
-      "name": "self",
-      "status": "Healthy",
-      "duration": 0.12,
-      "description": "API is running"
-    }
-  ]
-}
-```
-
-### GET /health/ready
-
-Überprüft, ob die API und alle Abhängigkeiten bereit sind.
-
-**Antwort**: 200 OK
-```json
-{
-  "status": "Healthy",
-  "totalDuration": 45.67,
-  "timestamp": "08.07.2025 08:54:12",
-  "entries": [
-    {
-      "name": "database",
-      "status": "Healthy",
-      "duration": 12.34,
-      "description": "Database connection is active"
-    },
-    {
-      "name": "encryption",
-      "status": "Healthy",
-      "duration": 5.67,
-      "description": "Encryption service is available"
-    }
-  ]
-}
-```
-
-## Compliance-Hinweise [RA][DSC]
-
-Diese API entspricht den folgenden Vorschriften:
-- Schweizer nDSG (Datenschutzgesetz)
-- DSGVO/GDPR (für EU-Kompatibilität)
-- Medizinprodukteverordnung (MDR) für medizinische Software
-
-## gRPC AI Service API [MLB][DSC][AIU]
-
-Die MedEasy AI Service API ist über gRPC verfügbar und bietet sichere, hochperformante KI-Funktionen für die MedEasy-Anwendung.
-
-### Basis-URL
-
-```
-grpc://ai-service.medeasy.ch:50051
-```
-
-### Service-Methoden
-
-#### Transcribe
-
-Transkribiert Audio zu Text mit obligatorischer Anonymisierung.
-
-**Anfrage**:
-```protobuf
-message TranscriptionRequest {
-  string request_id = 1;
-  bytes audio_data = 2;
-  string language_code = 3;
-  bool allow_cloud_processing = 4;
-  string session_id = 5;
-  AuditInfo audit_info = 6;
-}
-```
-
-**Antwort**:
-```protobuf
-message TranscriptionResponse {
-  string request_id = 1;
-  string text = 2;
-  string original_text = 3;
-  string language_code = 4;
-  bool is_swiss_german = 5;
-  bool swiss_german_warning = 6;
-  float processing_time_seconds = 7;
-  repeated Entity detected_entities = 8;
-  bool cloud_processed = 9;
-}
-```
-
-**Sicherheitsmerkmale**:
-- [AIU] Obligatorische Anonymisierung
-- [CT] Cloud-Transparenz
-- [SDH] Schweizerdeutsch-Erkennung
-- [ATV] Vollständiges Audit-Logging
-
-#### AnalyzeText
-
-Analysiert medizinischen Text mit KI-Provider-Kette und automatischen Fallbacks.
-
-**Anfrage**:
-```protobuf
-message AnalysisRequest {
-  string request_id = 1;
-  string text = 2;
-  string analysis_type = 3;
-  map<string, string> options = 4;
-  bool allow_cloud_processing = 5;
-  string session_id = 6;
-  AuditInfo audit_info = 7;
-}
-```
-
-**Antwort**:
-```protobuf
-message AnalysisResponse {
-  string request_id = 1;
-  string result = 2;
-  float processing_time_seconds = 3;
-  string provider_used = 4;
-  bool cloud_processed = 5;
-  bool has_disclaimer = 6;
-  string disclaimer_text = 7;
-  MedicalData medical_data = 8;
-}
-```
-
-**Sicherheitsmerkmale**:
-- [PK] Provider-Kette mit Fallbacks
-- [CT] Cloud-Transparenz
-- [NDW] Diagnose-Disclaimer
-- [ATV] Vollständiges Audit-Logging
-
-#### ReviewAnonymization
-
-Überprüft und genehmigt/lehnt Anonymisierungsentscheidungen ab.
-
-**Anfrage**:
-```protobuf
-message ReviewRequest {
-  string request_id = 1;
-  repeated EntityDecision entity_decisions = 2;
-  AuditInfo audit_info = 3;
-}
-```
-
-**Antwort**:
-```protobuf
-message ReviewResponse {
-  string request_id = 1;
-  bool success = 2;
-  repeated Entity updated_entities = 3;
-  int32 remaining_review_count = 4;
-}
-```
-
-**Sicherheitsmerkmale**:
-- [ARQ] Anonymisierungs-Review-Queue
-- [ATV] Vollständiges Audit-Logging
-
-#### HealthCheck
-
-Überprüft den Dienststatus und die Gesundheit der Komponenten.
-
-**Anfrage**:
-```protobuf
-message HealthRequest {
-  string request_id = 1;
-  bool include_details = 2;
-}
-```
-
-**Antwort**:
-```protobuf
-message HealthResponse {
-  string request_id = 1;
-  Status status = 2;
-  repeated ComponentStatus components = 3;
-  string timestamp = 4;
-  string environment = 5;
-  string version = 6;
-}
-```
-
-**Sicherheitsmerkmale**:
-- [ATV] Service-Überwachung und Audit
-- [SF] Schweizer Datumsformat
-- [DSC] Schweizer Datenschutz-Compliance
-
-#### DetectSwissGerman
-
-Erkennt Schweizerdeutsch-Dialekt in Texten.
-
-**Anfrage**:
-```protobuf
-message SwissGermanRequest {
-  string request_id = 1;
-  string text = 2;
-  bool include_details = 3;
-}
-```
-
-**Antwort**:
-```protobuf
-message SwissGermanResponse {
-  string request_id = 1;
-  bool is_swiss_german = 2;
-  float confidence_score = 3;
-  repeated DialectMarker dialect_markers = 4;
-  repeated string swiss_medical_terms = 5;
-  float processing_time_seconds = 6;
-}
-```
-
-**Sicherheitsmerkmale**:
-- [SDH] Schweizerdeutsch-Erkennung
-- [MFD] Schweizer medizinische Terminologie
-- [ATV] Vollständiges Audit-Logging
-
-#### GetServiceMetrics
-
-Liefert Dienstmetriken und Audit-Trail-Statistiken.
-
-**Anfrage**:
-```protobuf
-message MetricsRequest {
-  string request_id = 1;
-  bool include_provider_metrics = 2;
-  bool include_anonymization_metrics = 3;
-  bool include_swiss_german_metrics = 4;
-}
-```
-
-**Antwort**:
-```protobuf
-message MetricsResponse {
-  string request_id = 1;
-  string service_version = 2;
-  float uptime_seconds = 3;
-  int32 total_requests = 4;
-  string timestamp = 5;
-  repeated ProviderMetrics provider_metrics = 6;
-  AnonymizationMetrics anonymization_metrics = 7;
-  SwissGermanMetrics swiss_german_metrics = 8;
-  AuditMetrics audit_metrics = 9;
-}
-```
-
-**Sicherheitsmerkmale**:
-- [ATV] Audit-Trail für alle Operationen
-- [DSC] Schweizer Datenschutz-Compliance
-- [SF] Schweizer Datumsformat
-- [PK] Provider-Ketten-Metriken
+**Compliance**: Diese API entspricht allen MedEasy-Projektregeln [PSF][ZTS][SF][CAM][EIV][SP][AIU][ATV] und Schweizer Datenschutzanforderungen (nDSG).

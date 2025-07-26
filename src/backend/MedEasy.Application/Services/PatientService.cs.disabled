@@ -1,0 +1,247 @@
+// „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17
+
+using AutoMapper;
+using MedEasy.Application.DTOs;
+using MedEasy.Domain.Entities;
+using MedEasy.Application.Interfaces;
+using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
+
+namespace MedEasy.Application.Services;
+
+/// <summary>
+/// Patient Application Service - Trennt Domain (verschlüsselt) von Presentation (entschlüsselt) [CAM][SP]
+/// 🎯 KRITISCHER FIX: Implementiert getrennte Vor-/Nachnamen-Verarbeitung
+/// </summary>
+public class PatientService : IPatientService
+{
+    private readonly IPatientRepository _patientRepository;
+    private readonly IEncryptionService _encryptionService;
+    private readonly IMapper _mapper;
+    private readonly ILogger<PatientService> _logger;
+
+    public PatientService(
+        IPatientRepository patientRepository,
+        IEncryptionService encryptionService,
+        IMapper mapper,
+        ILogger<PatientService> logger)
+    {
+        _patientRepository = patientRepository ?? throw new ArgumentNullException(nameof(patientRepository));
+        _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    /// <summary>
+    /// Erstellt einen neuen Patienten mit Verschlüsselung [EIV][SP][SF]
+    /// 🎯 KRITISCHER FIX: Verarbeitet getrennte Vor-/Nachnamen
+    /// </summary>
+    public async Task<PatientDto> CreatePatientAsync(CreatePatientRequest request, string currentUser)
+    {
+        try
+        {
+            _logger.LogInformation("Creating new patient by user {User}", currentUser);
+
+            // Schweizer Versicherungsnummer validieren [SF]
+            if (!IsValidSwissInsuranceNumber(request.InsuranceNumber))
+            {
+                throw new ArgumentException("Ungültige Schweizer Versicherungsnummer. Format: XXX.XXXX.XXXX.XX", nameof(request.InsuranceNumber));
+            }
+
+            // Medizinische Plausibilitätsprüfung [MV]
+            if (!request.IsValidDateOfBirth())
+            {
+                throw new ArgumentException("Ungültiges Geburtsdatum", nameof(request.DateOfBirth));
+            }
+
+            // 🎯 KRITISCHER FIX: Getrennte Verschlüsselung von Vor- und Nachname [EIV][SP]
+            var encryptedFirstName = await _encryptionService.EncryptAsync(request.FirstName);
+            var encryptedLastName = await _encryptionService.EncryptAsync(request.LastName);
+            var insuranceNumberHash = _encryptionService.HashInsuranceNumber(request.InsuranceNumber);
+
+            // Dummy-Verschlüsselung für fehlende Felder (TODO: Aus Request ergänzen)
+            var encryptedGender = await _encryptionService.EncryptAsync("Unbekannt");
+            var encryptedInsuranceProvider = await _encryptionService.EncryptAsync("Unbekannt");
+
+            // Patient Entity erstellen [CAM]
+            var patient = Patient.Create(
+                encryptedFirstName,
+                encryptedLastName,
+                insuranceNumberHash,
+                DateOnly.FromDateTime(request.DateOfBirth),
+                encryptedGender,
+                encryptedInsuranceProvider,
+                currentUser);
+
+            // In Repository speichern [ATV]
+            await _patientRepository.AddAsync(patient);
+            await _patientRepository.SaveChangesAsync();
+
+            _logger.LogInformation("Patient {PatientId} created successfully by {User}", patient.Id, currentUser);
+
+            // DTO zurückgeben [CAM]
+            return await MapToPatientDtoAsync(patient);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating patient by user {User}", currentUser);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Ruft einen Patienten ab und entschlüsselt die Daten [SP][AIU]
+    /// </summary>
+    public async Task<PatientDto?> GetPatientByIdAsync(Guid patientId)
+    {
+        try
+        {
+            _logger.LogInformation("Retrieving patient {PatientId}", patientId);
+
+            var patient = await _patientRepository.GetByIdAsync(patientId);
+            if (patient == null)
+            {
+                _logger.LogWarning("Patient {PatientId} not found", patientId);
+                return null;
+            }
+
+            return await MapToPatientDtoAsync(patient);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving patient {PatientId}", patientId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Ruft alle Patienten ab (nur Basis-Informationen) [PbD]
+    /// </summary>
+    public async Task<IEnumerable<PatientDto>> GetAllPatientsAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Retrieving all patients");
+
+            var patients = await _patientRepository.GetAllAsync();
+            var patientDtos = new List<PatientDto>();
+
+            foreach (var patient in patients)
+            {
+                patientDtos.Add(await MapToPatientDtoAsync(patient));
+            }
+
+            return patientDtos;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving all patients");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Aktualisiert einen Patienten [EIV][ATV]
+    /// </summary>
+    public async Task<PatientDto?> UpdatePatientAsync(Guid patientId, UpdatePatientRequest request, string currentUser)
+    {
+        try
+        {
+            _logger.LogInformation("Updating patient {PatientId} by user {User}", patientId, currentUser);
+
+            var patient = await _patientRepository.GetByIdAsync(patientId);
+            if (patient == null)
+            {
+                _logger.LogWarning("Patient {PatientId} not found for update", patientId);
+                return null;
+            }
+
+            // Namen aktualisieren, falls angegeben [EIV]
+            if (!string.IsNullOrEmpty(request.FirstName) || !string.IsNullOrEmpty(request.LastName))
+            {
+                var currentFirstName = !string.IsNullOrEmpty(request.FirstName) 
+                    ? request.FirstName 
+                    : await _encryptionService.DecryptAsync(patient.EncryptedFirstName);
+                
+                var currentLastName = !string.IsNullOrEmpty(request.LastName) 
+                    ? request.LastName 
+                    : await _encryptionService.DecryptAsync(patient.EncryptedLastName);
+
+                var encryptedFirstName = await _encryptionService.EncryptAsync(currentFirstName);
+                var encryptedLastName = await _encryptionService.EncryptAsync(currentLastName);
+
+                patient.UpdateNames(encryptedFirstName, encryptedLastName, currentUser);
+            }
+
+            // Weitere Updates hier...
+
+            await _patientRepository.SaveChangesAsync();
+
+            _logger.LogInformation("Patient {PatientId} updated successfully by {User}", patientId, currentUser);
+
+            return await MapToPatientDtoAsync(patient);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating patient {PatientId} by user {User}", patientId, currentUser);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Mappt Patient Entity zu PatientDto mit Entschlüsselung [SP][AIU]
+    /// 🎯 KRITISCHER FIX: Verarbeitet getrennte Vor-/Nachnamen
+    /// </summary>
+    private async Task<PatientDto> MapToPatientDtoAsync(Patient patient)
+    {
+        // AutoMapper für Basis-Mapping verwenden [CAM]
+        var dto = _mapper.Map<PatientDto>(patient);
+
+        // 🎯 KRITISCHER FIX: Getrennte Entschlüsselung von Vor- und Nachname [SP]
+        dto.FirstName = await _encryptionService.DecryptAsync(patient.EncryptedFirstName);
+        dto.LastName = await _encryptionService.DecryptAsync(patient.EncryptedLastName);
+
+        // Versicherungsnummer maskieren [AIU][SF]
+        dto.InsuranceNumberMasked = MaskInsuranceNumber(patient.InsuranceNumberHash);
+
+        // Schweizer Datumsformat für UI [SF]
+        dto.DateOfBirthFormatted = dto.DateOfBirth.ToString("dd.MM.yyyy");
+
+        return dto;
+    }
+
+    /// <summary>
+    /// Validiert Schweizer Versicherungsnummer [SF]
+    /// </summary>
+    private static bool IsValidSwissInsuranceNumber(string insuranceNumber)
+    {
+        if (string.IsNullOrEmpty(insuranceNumber))
+            return false;
+
+        // Schweizer Format: XXX.XXXX.XXXX.XX
+        var regex = new Regex(@"^\d{3}\.\d{4}\.\d{4}\.\d{2}$");
+        return regex.IsMatch(insuranceNumber);
+    }
+
+    /// <summary>
+    /// Maskiert Versicherungsnummer für Anzeige [AIU][SF]
+    /// </summary>
+    private static string MaskInsuranceNumber(string insuranceNumberHash)
+    {
+        // Zeige nur die ersten 3 und letzten 2 Ziffern
+        // XXX.XXXX.XXXX.## → XXX.XXXX.XXXX.##
+        // TODO: Implementiere echte Maskierung basierend auf Hash
+        return "XXX.XXXX.XXXX.##";
+    }
+}
+
+/// <summary>
+/// Interface für PatientService [CAM]
+/// </summary>
+public interface IPatientService
+{
+    Task<PatientDto> CreatePatientAsync(CreatePatientRequest request, string currentUser);
+    Task<PatientDto?> GetPatientByIdAsync(Guid patientId);
+    Task<IEnumerable<PatientDto>> GetAllPatientsAsync();
+    Task<PatientDto?> UpdatePatientAsync(Guid patientId, UpdatePatientRequest request, string currentUser);
+}

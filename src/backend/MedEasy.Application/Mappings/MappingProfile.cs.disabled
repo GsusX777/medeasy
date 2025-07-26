@@ -1,0 +1,100 @@
+// „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17
+
+using AutoMapper;
+using MedEasy.Application.DTOs;
+using MedEasy.Domain.Entities;
+
+namespace MedEasy.Application.Mappings;
+
+/// <summary>
+/// AutoMapper Profil für Entity ↔ DTO Konvertierung [CAM][SP]
+/// Trennt Domain Layer (verschlüsselt) von Application Layer (entschlüsselt)
+/// </summary>
+public class MappingProfile : Profile
+{
+    public MappingProfile()
+    {
+        // 🎯 KRITISCHER FIX: Patient Entity ↔ PatientDto Mapping [EIV][SP]
+        CreateMap<Patient, PatientDto>()
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString())) // Guid → string [ZTS]
+            .ForMember(dest => dest.FirstName, opt => opt.Ignore()) // Wird durch Service entschlüsselt [SP]
+            .ForMember(dest => dest.LastName, opt => opt.Ignore()) // Wird durch Service entschlüsselt [SP]
+            .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth.ToDateTime(TimeOnly.MinValue))) // DateOnly → DateTime [SF]
+            .ForMember(dest => dest.InsuranceNumberMasked, opt => opt.Ignore()) // Wird durch Service maskiert [AIU]
+            .ForMember(dest => dest.Created, opt => opt.Ignore()) // TODO: Add Created field to Patient entity [ATV]
+            .ForMember(dest => dest.LastModified, opt => opt.MapFrom(src => src.LastModified))
+            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore()) // TODO: Add CreatedBy field to Patient entity [ATV]
+            .ForMember(dest => dest.LastModifiedBy, opt => opt.MapFrom(src => src.LastModifiedBy));
+
+        // 🎯 KRITISCHER FIX: CreatePatientRequest → Patient Entity [EIV][SF]
+        CreateMap<CreatePatientRequest, Patient>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore()) // Wird durch Factory-Methode gesetzt
+            .ForMember(dest => dest.EncryptedFirstName, opt => opt.Ignore()) // Wird durch Service verschlüsselt [SP]
+            .ForMember(dest => dest.EncryptedLastName, opt => opt.Ignore()) // Wird durch Service verschlüsselt [SP]
+            .ForMember(dest => dest.InsuranceNumberHash, opt => opt.Ignore()) // Wird durch Service gehashed [SF]
+            .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => DateOnly.FromDateTime(src.DateOfBirth))) // DateTime → DateOnly [SF]
+            .ForMember(dest => dest.EncryptedGender, opt => opt.Ignore()) // Nicht in Request enthalten
+            .ForMember(dest => dest.EncryptedInsuranceProvider, opt => opt.Ignore()) // Nicht in Request enthalten
+            .ForMember(dest => dest.Sessions, opt => opt.Ignore()) // Navigation Property
+            .ForMember(dest => dest.LastModified, opt => opt.Ignore()) // Wird durch Factory-Methode gesetzt
+            .ForMember(dest => dest.LastModifiedBy, opt => opt.Ignore()); // Wird durch Factory-Methode gesetzt
+
+        // 🎯 Session Entity ↔ SessionDto Mapping [SK][AIU]
+        CreateMap<Session, SessionDto>()
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString())) // Guid → string [ZTS]
+            .ForMember(dest => dest.PatientId, opt => opt.MapFrom(src => src.PatientId.ToString())) // Guid → string [ZTS]
+            .ForMember(dest => dest.SessionDate, opt => opt.MapFrom(src => src.SessionDate.ToDateTime(TimeOnly.MinValue))) // DateOnly → DateTime [SF]
+            .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime.ToString())) // TimeSpan → string [SF]
+            .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime.HasValue ? src.EndTime.Value.ToString() : null)) // TimeSpan? → string? [SF]
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status)) // Enum bleibt Enum [ZTS]
+            .ForMember(dest => dest.Reason, opt => opt.MapFrom(src => src.Reason))
+            .ForMember(dest => dest.Notes, opt => opt.Ignore()) // Wird durch Service entschlüsselt [SP]
+            .ForMember(dest => dest.AnonymizedNotes, opt => opt.Ignore()) // Wird durch Service anonymisiert [AIU]
+            .ForMember(dest => dest.AnonymizationStatus, opt => opt.Ignore()) // TODO: Add to Session entity [AIU]
+            .ForMember(dest => dest.Created, opt => opt.Ignore()) // TODO: Add Created field to Session entity [ATV]
+            .ForMember(dest => dest.LastModified, opt => opt.MapFrom(src => src.LastModified))
+            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore()) // TODO: Add CreatedBy field to Session entity [ATV]
+            .ForMember(dest => dest.LastModifiedBy, opt => opt.MapFrom(src => src.LastModifiedBy));
+
+        // 🎯 CreateSessionRequest → Session Entity [SK][PSF]
+        CreateMap<CreateSessionRequest, Session>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore()) // Wird durch Factory-Methode gesetzt
+            .ForMember(dest => dest.PatientId, opt => opt.MapFrom(src => Guid.Parse(src.PatientId))) // string → Guid [ZTS]
+            .ForMember(dest => dest.SessionDate, opt => opt.MapFrom(src => 
+                src.SessionDate.HasValue ? DateOnly.FromDateTime(src.SessionDate.Value) : DateOnly.FromDateTime(DateTime.Today))) // DateTime? → DateOnly [SF]
+            .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => 
+                src.StartTime.HasValue ? src.StartTime.Value : TimeSpan.FromTicks(DateTime.Now.TimeOfDay.Ticks))) // TimeSpan? → TimeSpan [SF]
+            .ForMember(dest => dest.EndTime, opt => opt.Ignore()) // Wird später gesetzt
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => SessionStatus.Scheduled)) // Default Status
+            .ForMember(dest => dest.Reason, opt => opt.MapFrom(src => src.Reason))
+            .ForMember(dest => dest.EncryptedNotes, opt => opt.Ignore()) // Wird durch Service verschlüsselt [SP]
+            .ForMember(dest => dest.Patient, opt => opt.Ignore()) // Navigation Property
+            .ForMember(dest => dest.Transcripts, opt => opt.Ignore()) // Navigation Property
+            .ForMember(dest => dest.LastModified, opt => opt.Ignore()) // Wird durch Factory-Methode gesetzt
+            .ForMember(dest => dest.LastModifiedBy, opt => opt.Ignore()); // Wird durch Factory-Methode gesetzt
+    }
+}
+
+/// <summary>
+/// Extension Methods für AutoMapper Konfiguration [CAM]
+/// </summary>
+public static class MappingExtensions
+{
+    /// <summary>
+    /// Konfiguriert AutoMapper für die Anwendung [CAM]
+    /// </summary>
+    public static IServiceCollection AddAutoMapperProfiles(this IServiceCollection services)
+    {
+        services.AddAutoMapper(typeof(MappingProfile));
+        return services;
+    }
+
+    /// <summary>
+    /// Validiert AutoMapper Konfiguration beim Startup [ZTS]
+    /// </summary>
+    public static void ValidateAutoMapperConfiguration(this IServiceProvider serviceProvider)
+    {
+        var mapper = serviceProvider.GetRequiredService<IMapper>();
+        mapper.ConfigurationProvider.AssertConfigurationIsValid();
+    }
+}

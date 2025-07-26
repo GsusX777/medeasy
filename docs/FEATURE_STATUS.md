@@ -24,8 +24,8 @@ Diese Dokumentation verfolgt den Implementierungsstatus aller MedEasy-Features g
 |---------|--------|---------|-------------|--------------|
 | Patientenverwaltung | ✅ Implementiert | 1.0.0 | CRUD für Patientendaten | [EIV], [SP], [ATV] |
 | Konsultationen | ⚠️ Skeleton | 0.3.0 | SessionsController vorhanden, nur Dummy-Implementierungen | [DSC], [ATV] |
-| Verschlüsselung | ✅ Implementiert | 0.4.0 | SQLCipher + AES-256 Feldverschlüsselung | [SP], [EIV] |
-| Audit-Trail | ✅ Implementiert | 0.4.0 | Vollständige Protokollierung aller Operationen | [ATV] |
+| Verschlüsselung | ✅ Implementiert | 1.0.0 | SQLCipher + AES-256 Feldverschlüsselung | [SP], [EIV] |
+| Audit-Trail | ✅ Implementiert | 1.0.0 | Vollständige Protokollierung aller Operationen | [ATV] |
 | gRPC AI Client | ❌ Fehlend | 0.0.0 | Server existiert (Python), Client fehlt (.NET Backend) | [MLB], [CT] |
 | REST API | ⚠️ Skeleton | 0.3.0 | Controller vorhanden, nur Dummy-Responses | [DSC], [ATV] |
 | **Transcript Export API** | ❌ Fehlend | 1.1.0 | Backend für PDF/Word/JSON Export | [SF], [DSC], [AIU] |
@@ -44,7 +44,10 @@ Diese Dokumentation verfolgt den Implementierungsstatus aller MedEasy-Features g
 | Confidence Review (3 Kategorien) | ✅ Implementiert | 🔗 Mock-Daten | 1.1.0 | Medizin, Personendaten, Sonstige Begriffe | [AIU], [ARQ], [MDL] |
 | Live-Analyse mit Symptomerkennung | ✅ Implementiert | 🔗 Mock-Daten | 1.1.0 | ICD-10 Codes, Diagnosevorschläge | [MDL], [DK] |
 | Export-Panel | ✅ Implementiert | ❌ Fehlend | 1.1.0 | PDF, Word, Text, JSON Export | [SF], [DSC], [AIU] |
-| Performance Monitor Sidebar | ✅ Implementiert | 🔗 Mock-Daten | 1.1.0 | System-Status: Audio, Provider, Netzwerk, Timer | [PSF], [UX] |
+| Performance Monitor Sidebar | ✅ Implementiert | ✅ Vollständig für CPU, GPU, RAM. Rest 🔗 Mock-Daten | 1.1.0 | System-Status: Audio, Provider, Netzwerk, Timer | [PSF], [UX] |
+| Audio-Einstellungen Modal | ✅ Implementiert | ✅ Vollständig | 1.1.0 | Mikrofon-Auswahl, Live-Pegelanzeige, Whisper-Provider, medizinische Optionen | [WMM], [PSF], [TSF] |
+| Audio-Store & Monitoring | ✅ Implementiert | ⚠️ Empfehlung: Store-basiert | 1.1.0 | Web Audio API Integration, Device-Handling, Live-Level-Analyse | [TSF], [PSF] |
+| Sidebar Audio-Status | ✅ Implementiert | ⚠️ Separate Implementierung | 1.1.0 | Live-Pegelanzeige, Device-Change-Detection, Hardware-Disconnect-Handling | [PSF], [UX] |
 | Content-Tabs Navigation | ✅ Implementiert | ✅ Vollständig | 1.1.0 | 3-Tab-System mit Keyboard-Shortcuts | [UX], [TSF] |
 | Konsultationsübersicht | ✅ Implementiert | 🔗 Mock-Daten | 1.1.0 | Session-Tabelle mit Status/Datums-Filter | [SK], [SF], [ATV] |
 | SubHeader Session-Controls | ✅ Implementiert | 🔗 Mock-Daten | 1.1.0 | Patientenanzeige, Aufnahme-Controls, Session-Timer | [MDL], [PSF], [UX] |

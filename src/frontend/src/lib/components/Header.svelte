@@ -12,6 +12,7 @@
   import { onMount } from 'svelte';
   import { appState } from '$lib/stores/session';
   import SecurityBadge from './SecurityBadge.svelte';
+  import SettingsModal from './SettingsModal.svelte';
   // TODO: Import andere Komponenten wenn verfügbar
   // import AnonymizationNotice from './AnonymizationNotice.svelte';
   // import SwissGermanAlert from './SwissGermanAlert.svelte';
@@ -22,6 +23,7 @@
   // State
   let currentDate = new Date();
   let currentTime = new Date();
+  let showSettingsModal = false;
   // [SF] Schweizer Formate - Datum: DD.MM.YYYY, Zeit: HH:mm:ss
   function formatSwissDate(date: Date): string {
     return date.toLocaleDateString('de-CH'); // DD.MM.YYYY Format
@@ -46,9 +48,13 @@
   
   // [UX] Einstellungen öffnen
   function handleSettings() {
-    // TODO: Implementiere Einstellungen-Dialog oder Navigation
     console.log('⚙️ Einstellungen öffnen');
-    // Placeholder für Einstellungen-Modal oder -Route
+    showSettingsModal = true;
+  }
+  
+  // [UX] Einstellungen schließen
+  function handleSettingsClose() {
+    showSettingsModal = false;
   }
   
   onMount(() => {
@@ -101,6 +107,9 @@
     </div>
   </div>
 </header>
+
+<!-- Settings Modal [UX][PSF] -->
+<SettingsModal bind:show={showSettingsModal} on:close={handleSettingsClose} />
 
 <style>
   .app-header {

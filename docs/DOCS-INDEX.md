@@ -19,6 +19,7 @@ Dieser Index bietet einen Überblick über alle Dokumentationsdateien im MedEasy
 |----------|-------------|--------------|
 | [docs/architecture/README.md](./architecture/README.md) | Detaillierte Beschreibung der Clean Architecture, Schichten und Abhängigkeiten | [CAM], [CAS], [CQA], [DD] |
 | [docs/architecture/AI_SERVICE.md](./architecture/AI_SERVICE.md) | Dokumentation des AI-Service mit Provider-Kette und Whisper-Integration | [PK], [WMM], [CT], [MLB] |
+| [docs/architecture/NAMING_CONVENTIONS.md](./architecture/NAMING_CONVENTIONS.md) | Umfassende Naming-Konventionen für alle Schichten mit kritischen Mapping-Punkten und Inkonsistenz-Analyse | [CAM], [ZTS], [SF], [EIV], [AIU], [ATV] |
 | [docs/architecture/Dependency_Graph.svg](./architecture/Dependency_Graph.svg) | Visualisierung der Clean Architecture und Komponentenabhängigkeiten | [CAM], [DD], [CAS] |
 
 ## Datenbank
@@ -34,6 +35,15 @@ Dieser Index bietet einen Überblick über alle Dokumentationsdateien im MedEasy
 | Dokument | Beschreibung | Projektregeln |
 |----------|-------------|--------------|
 | [docs/api/API_REFERENCE.md](./api/API_REFERENCE.md) | Vollständige API-Referenz mit Endpunkten, Parametern, Antworten und Sicherheitsmerkmalen | [ZTS], [PbD], [ATV], [SP], [AIU] |
+| [docs/api/API_CONTRACTS.md](./api/API_CONTRACTS.md) | Detaillierte API-Kontrakte basierend auf tatsächlichen Controller-Implementierungen mit Request/Response DTOs und JSON-Beispielen | [ZTS], [ATV], [SF], [ECP], [NSF] |
+| [docs/api/INTEGRATION_POINTS.md](./api/INTEGRATION_POINTS.md) | Frontend-Backend Kommunikationspfade, Mock-API Mapping und fehlende Integrationen mit Implementierungs-Roadmap | [D=C], [DSU], [TSF], [ZTS], [CAM] |
+
+## Testing
+
+| Dokument | Beschreibung | Projektregeln |
+|----------|-------------|--------------|
+| [docs/testing/SECURITY_TESTING.md](./testing/SECURITY_TESTING.md) | Umfassende Sicherheitstests für das .NET Backend mit 52 kritischen Tests | [ZTS], [KP100], [SP], [AIU], [ATV] |
+| [docs/testing/REPOSITORY_TESTING.md](./testing/REPOSITORY_TESTING.md) | Repository Pattern Tests: Unit, Integration, Security und Performance Tests für Clean Architecture | [CAM], [ZTS], [SP], [ATV], [EIV], [PSF] |
 
 ## Frontend
 
@@ -64,7 +74,6 @@ Dieser Index bietet einen Überblick über alle Dokumentationsdateien im MedEasy
 | Dokument | Beschreibung | Projektregeln |
 |----------|-------------|--------------|
 | [docs/compliance/SECURITY.md](./compliance/SECURITY.md) | Umfassendes Sicherheitskonzept mit Verschlüsselung, Authentifizierung, Audit und Notfallwiederherstellung | [ZTS], [PbD], [SP], [ES], [NUS], [EIV] |
-| [docs/testing/SECURITY_TESTING.md](./testing/SECURITY_TESTING.md) | Dokumentation der KP100-Sicherheitstests und Testrichtlinien, inkl. Verschlüsselung, Datenbank, Repository, Audit und Schlüsselrotation | [KP100], [SP], [AIU], [ATV], [EIV], [TD], [ZTS] |
 
 ## AI-Service
 

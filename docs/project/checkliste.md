@@ -319,7 +319,7 @@
   - [x] Datenbanktests (database_tests.rs) - 🔄 **Rust → .NET portieren**
   - [x] Repository-Tests (repository_tests.rs) - 🔄 **Rust → .NET portieren**
   - [x] Audit-Tests (audit_tests.rs) - 🔄 **Rust → .NET portieren**
-  - [ ] **50 Security-Tests für .NET Backend neu implementieren** [⚠️ KRITISCH] 
+  - [x] **50 Security-Tests für .NET Backend neu implementieren** [⚠️ KRITISCH] 
 
 #### 2.3 Datenbank-Sicherheit & Backup [SP][ZTS][DSC]
 - [x] **Verschlüsselung** [SP][EIV]:
@@ -544,7 +544,7 @@
   - [ ] ContentTabs.svelte - Tab-System für Hauptbereich
   - [ ] AnalysisPanel.svelte - AI-Analyse & Diagnose [PK]
   - [ ] SplitView.svelte - Dokument-Bearbeitung
-  - [ ] PerformanceMonitor.svelte - System-Performance - Nur als UI, muss noch Backend implementiert werden
+  - [ ] PerformanceMonitor.svelte - System-Performance Live, Audio, KI, Netzwerk muss noch Backend implementiert werden
   - [ ] ConsentDialog.svelte - Einwilligungsmanagement [PbD]
   - [ ] DocumentEditor.svelte - Medizinische Dokumente
 
@@ -923,8 +923,8 @@ windsurf: "Update component registry and dependencies"
   - [x] Obsolete Backend-Test-Projekte bereinigt
   - [x] Alle Sicherheitstests erfolgreich nach .NET portiert [KP100]
 - [ ] **Rust Backend vollständig entfernen** [🗑️ CLEANUP]:
-  - [ ] `src/frontend/src-tauri/src/` Rust-Code löschen
-  - [ ] Cargo.toml auf minimale Tauri-Konfiguration reduzieren
+  - [x] `src/frontend/src-tauri/src/` Rust-Code löschen
+  - [x] Cargo.toml auf minimale Tauri-Konfiguration reduzieren - muss neu erstellt werden
 #### 9.3 Mock-Daten Cleanup [NACH .NET-INTEGRATION]
 - [ ] **Mock-Daten entfernen**:
   - [ ] `database-mock.ts` löschen

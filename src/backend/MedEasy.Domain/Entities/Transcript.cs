@@ -62,22 +62,22 @@ namespace MedEasy.Domain.Entities
         /// <summary>
         /// Zeitstempel der Erstellung für Audit-Trail [ATV]
         /// </summary>
-        public DateTime Created { get; private set; }
+        public DateTime Created { get; set; }
 
         /// <summary>
         /// ID des Benutzers, der das Transkript erstellt hat [ATV]
         /// </summary>
-        public string CreatedBy { get; private set; }
+        public string CreatedBy { get; set; } = string.Empty;
 
         /// <summary>
         /// Zeitstempel der letzten Änderung für Audit-Trail [ATV]
         /// </summary>
-        public DateTime LastModified { get; private set; }
+        public DateTime LastModified { get; set; }
 
         /// <summary>
         /// ID des Benutzers, der die letzte Änderung vorgenommen hat [ATV]
         /// </summary>
-        public string LastModifiedBy { get; private set; }
+        public string LastModifiedBy { get; set; } = string.Empty;
 
         /// <summary>
         /// Erstellt ein neues Transkript
