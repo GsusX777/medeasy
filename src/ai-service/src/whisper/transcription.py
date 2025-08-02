@@ -17,8 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import structlog
-import torch
-import whisper
+from faster_whisper import WhisperModel as FasterWhisperModel
 
 from src.config import config
 
@@ -51,26 +50,32 @@ class WhisperTranscriber:
             device=self.device,
         )
         
-        # Load the model
+        # Load the faster-whisper model [WMM]
         try:
-            self.model = whisper.load_model(
+            # faster-whisper uses different initialization
+            device = "cuda" if self.device == "cuda" and config.whisper.enable_cuda else "cpu"
+            compute_type = "float16" if device == "cuda" else "int8"
+            
+            self.model = FasterWhisperModel(
                 self.model_name.value,
-                device=self.device,
-                download_root=config.whisper.local_models_path,
+                device=device,
+                compute_type=compute_type,
+                download_root=str(config.whisper.local_models_path),
             )
             logger.info(
-                "Whisper model loaded successfully",
+                "faster-whisper model loaded successfully",
                 model=self.model_name,
-                device=self.device,
+                device=device,
+                compute_type=compute_type,
             )
         except Exception as e:
             logger.error(
-                "Failed to load Whisper model",
+                "Failed to load faster-whisper model",
                 model=self.model_name,
                 error=str(e),
                 exc_info=True,
             )
-            raise RuntimeError(f"Failed to load Whisper model: {str(e)}")
+            raise RuntimeError(f"Failed to load faster-whisper model: {str(e)}")
         
         # Swiss German detection patterns
         self.swiss_german_patterns = [

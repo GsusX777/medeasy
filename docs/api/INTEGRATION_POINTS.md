@@ -27,6 +27,7 @@ Backend (.NET API)
 |-----------|---------------------|--------------|--------|------------|
 | **Patients** | PatientListView, PatientCreateModal | ✅ `/api/v1/patients/*` | 🔄 **Mock → Real** | ✅ Zu ersetzen |
 | **Sessions** | ConsultationListView, ConsultationCreateModal | ⚠️ `/api/v1/sessions/*` (Dummy) | 🔄 **Mock → Real** | ✅ Zu ersetzen |
+| **AI/Whisper** | AudioSettings, SessionRecorder | ✅ **NEU:** `/api/v1/ai/*` [WMM] | 🔄 **Integration pending** | ⚠️ **Teilweise Mock** |
 | **Transcripts** | TranscriptViewer, TranscriptSplitView | 🚧 Geplant | ❌ **Fehlend** | ✅ Nur Mock |
 | **Anonymization** | AnonymizationReview, ConfidenceReviewPanel | 🚧 Geplant | ❌ **Fehlend** | ✅ Nur Mock |
 | **System Health** | PerformanceMonitor | ✅ `/health`, `/api/system/*` | 🔄 **Mock → Real** | ✅ Zu ersetzen |
@@ -250,6 +251,78 @@ async function updateSecuritySettings() {
 - ❌ **Key Management** - Keine Backend-Schlüsselverwaltung
 - ❌ **Security Audit** - Keine Backend-Sicherheitsüberwachung
 - ❌ **Centralized Settings** - Nur lokale Tauri-basierte Einstellungen
+
+---
+
+## 🤖 AI Integration [WMM]
+
+### **Frontend Komponenten:**
+- **AudioSettings.svelte** - Whisper-Model-Auswahl und Konfiguration
+- **SessionRecorder.svelte** - Audio-Aufnahme mit Whisper-Integration
+- **TranscriptViewer.svelte** - Transkript-Anzeige mit Model-Info
+- **PerformanceMonitor.svelte** - Hardware-Monitoring für AI-Modelle
+
+### **Backend APIs:**
+```typescript
+✅ POST /api/v1/ai/transcribe          // Audio → Text (Whisper) [WMM]
+✅ POST /api/v1/ai/benchmark-models    // Whisper-Model-Benchmarking [WMM][PB]
+✅ GET /api/v1/ai/available-models     // Verfügbare Whisper-Modelle [WMM]
+✅ GET /api/v1/ai/hardware-info        // Hardware-Analyse für Whisper [WMM][PSF]
+🚧 POST /api/v1/ai/anonymize           // Text-Anonymisierung [AIU] - GEPLANT
+🚧 POST /api/v1/ai/analyze             // Medizinische Analyse - GEPLANT
+```
+
+### **Aktuelle Integration:**
+```typescript
+// AudioSettings.svelte - TEILWEISE IMPLEMENTIERT
+// Model-Auswahl UI vorhanden, aber noch Mock-Daten
+let selectedWhisperModel = 'base'; // tiny, base, small, medium
+let whisperProviders = ['OpenAI', 'Local']; // UI vorhanden
+
+// SessionRecorder.svelte - MOCK INTEGRATION
+// Audio-Aufnahme funktioniert, aber keine echte Whisper-Integration
+async function transcribeAudio(audioBlob: Blob) {
+  // TODO: Integrate with /api/v1/ai/transcribe
+  // Aktuell nur Mock-Transkription
+  return "Mock-Transkript für Demo-Zwecke";
+}
+
+// NEUE ENDPOINTS - NOCH NICHT INTEGRIERT
+// Benchmarking, Hardware-Info, Model-Management
+```
+
+### **Integration Status:**
+| Feature | Frontend | Backend | Status | Priorität |
+|---------|----------|---------|--------|----------|
+| **Audio Transcription** | ✅ UI vorhanden | ✅ **NEU implementiert** | 🔄 **Integration pending** | 🔥 **KRITISCH** |
+| **Model Selection** | ✅ UI vorhanden | ✅ **NEU implementiert** | 🔄 **Integration pending** | 🔥 **KRITISCH** |
+| **Performance Benchmarking** | ❌ UI fehlt | ✅ **NEU implementiert** | ❌ **Nicht integriert** | ⚠️ **WICHTIG** |
+| **Hardware Analysis** | ❌ UI fehlt | ✅ **NEU implementiert** | ❌ **Nicht integriert** | ⚠️ **WICHTIG** |
+| **Model Download** | ❌ UI fehlt | ✅ **NEU implementiert** | ❌ **Nicht integriert** | 📋 **GEPLANT** |
+
+### **Fehlende Integration:**
+- ❌ **Frontend → Backend Connection** - Keine echte API-Calls zu neuen Whisper-Endpoints
+- ❌ **Benchmarking UI** - Keine Frontend-Komponenten für Model-Performance-Tests
+- ❌ **Hardware Monitoring** - Keine UI für CUDA/VRAM-Analyse
+- ❌ **Error Handling** - Keine Fehlerbehandlung für AI-Service-Ausfälle
+- ❌ **Progress Indicators** - Keine UI für lange Transkriptions-/Benchmark-Prozesse
+
+### **gRPC Integration:**
+```typescript
+// Backend → Python AI Service (✅ IMPLEMENTIERT)
+MedEasy.API ↔ gRPC ↔ Python AI Service
+  ↓                    ↓
+WhisperService.cs   whisper_service.py
+  ↓                    ↓
+AIController.cs     Whisper Models (tiny/base/small/medium)
+```
+
+### **Nächste Schritte für AI-Integration:**
+1. **🔥 SOFORT:** Frontend AudioSettings → `/api/v1/ai/available-models` integrieren
+2. **🔥 SOFORT:** SessionRecorder → `/api/v1/ai/transcribe` integrieren
+3. **⚠️ DIESE WOCHE:** Benchmarking-UI für `/api/v1/ai/benchmark-models` erstellen
+4. **⚠️ DIESE WOCHE:** Hardware-Monitor für `/api/v1/ai/hardware-info` integrieren
+5. **📋 NÄCHSTE WOCHE:** Model-Download-UI implementieren
 
 ---
 

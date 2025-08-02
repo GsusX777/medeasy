@@ -1,8 +1,9 @@
-<!-- �Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein � ja, lass gelingen, was wir tun!" Psalm 90,17 -->
+<!-- „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17 -->
 
 <!-- 
-  MedEasy Spinner-Komponente
-  Zeigt einen Ladeindikator an
+  MedEasy Spinner-Komponente [PSF]
+  Einfacher rotierender Kreis ohne Pfeile oder komplexe Animationen
+  [SF] Schweizer Benutzerfreundlichkeit - Klare, ruhige Animationen
 -->
 <script lang="ts">
   // Größe des Spinners: sm, md, lg
@@ -25,19 +26,53 @@
 </script>
 
 <div class="flex items-center">
-  <div class="spinner {getSize()} {color}" aria-label="Wird geladen...">
+  <div class="spinner {getSize()} {color}" aria-label="Wird geladen..." role="status">
+    <!-- Einfacher rotierender Kreis ohne Pfeile [PSF] -->
     <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      <!-- Hintergrund-Kreis (statisch) -->
+      <circle 
+        class="opacity-25" 
+        cx="12" 
+        cy="12" 
+        r="10" 
+        stroke="currentColor" 
+        stroke-width="3"
+      ></circle>
+      <!-- Vordergrund-Kreis (rotierend) mit Lücke -->
+      <circle 
+        class="opacity-75" 
+        cx="12" 
+        cy="12" 
+        r="10" 
+        stroke="currentColor" 
+        stroke-width="3" 
+        stroke-linecap="round"
+        stroke-dasharray="50 12"
+        transform-origin="12 12"
+      ></circle>
     </svg>
   </div>
   {#if text}
-    <span class="ml-2">{text}</span>
+    <span class="ml-2 text-sm text-gray-600">{text}</span>
   {/if}
 </div>
 
 <style>
   .spinner {
     display: inline-block;
+  }
+  
+  /* Sanfte, gleichmäßige Rotation ohne "Eiern" [PSF] */
+  .animate-spin {
+    animation: spin 1.5s linear infinite;
+  }
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 </style>

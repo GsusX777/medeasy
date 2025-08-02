@@ -50,6 +50,15 @@ namespace MedEasy.Infrastructure.Database
         }
 
         /// <summary>
+        /// Wendet Services für SQLCipher auf den Service-Container an [SP]
+        /// </summary>
+        public void ApplyServices(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+        {
+            // SQLCipher-spezifische Services können hier registriert werden
+            // Aktuell keine zusätzlichen Services erforderlich
+        }
+
+        /// <summary>
         /// Wendet die Konfiguration auf die Connection an
         /// </summary>
         public void ApplyConfiguration(SqliteConnection connection, string encryptionKey)

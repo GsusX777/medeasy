@@ -10,6 +10,7 @@
   import { onMount } from 'svelte';
   import AppLayout from '$lib/components/AppLayout.svelte';
   import ContentTabs from '$lib/components/ContentTabs.svelte';
+  import Spinner from '$lib/components/common/Spinner.svelte';
   import { initDb } from '$lib/stores/database';
   
   // State Management [ZTS]
@@ -53,7 +54,15 @@
   <div class="main-container">
     {#if loading}
       <div class="loading-state">
-        <div class="spinner">⟳</div>
+        <!-- Einfacher inline Spinner zum Debuggen [PSF] -->
+        <div class="inline-spinner">
+          <svg class="animate-spin" width="48" height="48" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <!-- Hintergrund-Kreis (schwach) -->
+            <circle cx="12" cy="12" r="10" stroke="#e5e7eb" stroke-width="3" fill="none"></circle>
+            <!-- Rotierender Kreis (nur 3/4 sichtbar) -->
+            <circle cx="12" cy="12" r="10" stroke="#3b82f6" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="47" stroke-dashoffset="12" transform-origin="12 12"></circle>
+          </svg>
+        </div>
         <p>MedEasy wird gestartet...</p>
         <div class="loading-details">
           <span class="loading-step">🔒 Datenbank wird initialisiert...</span>
@@ -99,13 +108,18 @@
     gap: 24px;
   }
 
-  .spinner {
-    font-size: 48px;
-    animation: spin 1s linear infinite;
-    color: #3b82f6;
+  /* Inline Spinner für Debugging [PSF] */
+  .inline-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     margin-bottom: 16px;
   }
-
+  
+  .animate-spin {
+    animation: spin 1.5s linear infinite;
+  }
+  
   @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }

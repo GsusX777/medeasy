@@ -218,6 +218,58 @@ Protokolliert alle Schlüsselrotationen für Compliance und Sicherheit.
 4. **Automatische Anonymisierung**: PII wird automatisch erkannt und anonymisiert [AIU]
 5. **Review-Prozess**: Unsichere Anonymisierungen werden manuell überprüft [ARQ]
 
+### BenchmarkResult [WMM][ATV]
+
+Speichert Ergebnisse von Whisper-Model-Benchmarks für Performance-Analyse.
+
+| Feld | Typ | Beschreibung | Verschlüsselt |
+|------|-----|--------------|---------------|
+| Id | TEXT | Eindeutige ID (GUID) | Nein |
+| Timestamp | TEXT | Zeitstempel der Benchmark-Ausführung (ISO 8601) | Nein |
+| ModelName | TEXT | Name des getesteten Whisper-Modells (base, small, medium, large-v3) | Nein |
+| ProcessingTimeMs | REAL | Verarbeitungszeit in **Millisekunden** | Nein |
+| CpuUsagePercent | REAL | CPU-Auslastung während Benchmark (0.0-100.0%) | Nein |
+| MemoryUsageMb | REAL | RAM-Verbrauch in MB | Nein |
+| PerformanceScore | REAL | Performance-Score (berechnet, 0.0-100.0) | Nein |
+| AudioDurationSeconds | REAL | Länge der Audio-Datei in Sekunden | Nein |
+| AudioFileSizeMb | REAL | Größe der Audio-Datei in MB | Nein |
+| EncryptedTranscriptionText | TEXT | **Transkribierter Text (anonymisiert und verschlüsselt)** | **Ja** |
+| DetectedLanguage | TEXT | Erkannte Sprache (Standard: "de") | Nein |
+| ConfidenceScore | REAL | Konfidenz-Score der Transkription (0.0-1.0) | Nein |
+| HardwareInfo | TEXT | Hardware-Informationen (JSON) | Nein |
+| Iterations | INTEGER | Anzahl der Iterationen für diesen Benchmark | Nein |
+| AverageTimePerIteration | REAL | Durchschnittliche Zeit pro Iteration | Nein |
+| ErrorMessage | TEXT | Fehler-Informationen (falls aufgetreten) | Nein |
+| Status | TEXT | Status des Benchmarks ("Completed", "Failed", etc.) | Nein |
+| UserId | TEXT | Benutzer-ID für Audit-Trail | Nein |
+| SessionId | TEXT | Session-ID für Audit-Trail | Nein |
+| IsDeleted | INTEGER | Soft-Delete-Flag (0/1) | Nein |
+| DeletedAt | TEXT | Zeitstempel der Löschung (ISO 8601) | Nein |
+| AnonymizationStatus | TEXT | Anonymisierungsstatus ("Anonymized") | Nein |
+
+#### Konfidenz-Score-Berechnung [WMM]
+
+Der `ConfidenceScore` wird **direkt von der faster-whisper Library** übernommen:
+
+```python
+# Python WhisperService (whisper_service.py)
+segments, info = whisper_model.transcribe(temp_path, beam_size=5)
+confidence = info.language_probability  # ← Quelle des Konfidenz-Scores
+```
+
+**Wichtige Details:**
+- **Quelle**: `info.language_probability` aus faster-whisper
+- **Bedeutung**: Wahrscheinlichkeit der korrekten Spracherkennung (nicht Transkriptionsgenauigkeit)
+- **Wertebereich**: 0.0 (unsicher) bis 1.0 (sehr sicher)
+- **Datenfluss**: faster-whisper → Python Service → gRPC → .NET Backend → Datenbank
+- **Verwendung**: Qualitätsbewertung und Model-Vergleich bei Benchmarks
+
+**Hinweis**: Dies ist ein **Spracherkennungs-Konfidenz-Score**, nicht die Genauigkeit der Transkription selbst.
+
+#### BenchmarkResult - Indizes
+- Primärindex: `Id`
+- Sekundärindex: `ModelName` (für Model-spezifische Analysen)
+
 ## Migrationen
 
 Alle Datenbankmigrationen werden mit EF Core verwaltet und sind versioniert. Die Migrationen enthalten keine sensiblen Daten oder Schlüssel [NEA].

@@ -2,6 +2,7 @@
 
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Options;
 using MedEasy.Domain.Entities;
@@ -37,6 +38,11 @@ namespace MedEasy.Infrastructure.Database
         /// Audit-Log für alle Datenbankoperationen [ATV]
         /// </summary>
         public DbSet<AuditLog> AuditLogs { get; set; }
+
+        /// <summary>
+        /// Benchmark-Ergebnisse für Whisper-Modelle [WMM][PSF]
+        /// </summary>
+        public DbSet<BenchmarkResult> BenchmarkResults { get; set; }
 
         /// <summary>
         /// Anonymisierungs-Review-Queue [ARQ]
@@ -93,7 +99,8 @@ namespace MedEasy.Infrastructure.Database
                 entity.Property(e => e.Id).ValueGeneratedNever();
                 
                 // Verschlüsselte Felder als erforderlich markieren [SP]
-                entity.Property(e => e.EncryptedName).IsRequired();
+                entity.Property(e => e.EncryptedFirstName).IsRequired();
+                entity.Property(e => e.EncryptedLastName).IsRequired();
                 entity.Property(e => e.EncryptedGender).IsRequired();
                 entity.Property(e => e.EncryptedInsuranceProvider).IsRequired();
                 
@@ -251,29 +258,13 @@ namespace MedEasy.Infrastructure.Database
         }
 
         /// <summary>
-        /// Überschreibt SaveChanges, um Audit-Trail zu implementieren [ATV]
-        /// </summary>
-        public override int SaveChanges()
-        {
-            AddAuditTrail();
-            return base.SaveChanges();
-        }
-
-        /// <summary>
-        /// Überschreibt SaveChangesAsync, um Audit-Trail zu implementieren [ATV]
-        /// </summary>
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            AddAuditTrail();
-            return base.SaveChangesAsync(cancellationToken);
-        }
-
-        /// <summary>
         /// Fügt Audit-Trail für alle Änderungen hinzu [ATV]
         /// </summary>
         private void AddAuditTrail()
         {
-            var entries = ChangeTracker.Entries();
+            // ✅ FIX: Materialisiere die Entries BEVOR die Enumeration beginnt
+            // um "Collection was modified" Exception zu vermeiden [ZTS]
+            var entries = ChangeTracker.Entries().ToList();
             var timestamp = DateTime.UtcNow;
             
             foreach (var entry in entries)

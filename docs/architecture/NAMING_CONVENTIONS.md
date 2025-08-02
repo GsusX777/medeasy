@@ -189,7 +189,37 @@ Anonymized{FieldName}    - PII entfernt/ersetzt
 {FieldName}Masked        - Für UI-Anzeige maskiert
 ```
 
-## 7. Audit-Trail [ATV]
+## 7. API-Endpoint-Patterns [WMM][CAM]
+
+### REST-Endpoints
+```
+/api/v{version}/{resource}           - Standard CRUD
+/api/v{version}/{resource}/{id}      - Spezifische Ressource
+/api/v{version}/{service}/{action}   - Service-Aktionen
+```
+
+### Whisper-spezifische Endpoints [WMM]
+```
+POST /api/v1/ai/transcribe          - Audio-Transkription
+POST /api/v1/ai/benchmark-models    - Model-Performance-Test
+GET  /api/v1/ai/available-models    - Verfügbare Modelle
+GET  /api/v1/ai/hardware-info       - Hardware-Analyse
+```
+
+### JSON-Serialisierung [SF]
+```csharp
+// .NET Properties: PascalCase
+public string ModelName { get; set; }
+public int ProcessingTimeMs { get; set; }
+
+// JSON Output: camelCase (via JsonNamingPolicy)
+{
+  "modelName": "base",
+  "processingTimeMs": 1250
+}
+```
+
+## 8. Audit-Trail [ATV]
 
 Alle Entities haben:
 ```csharp

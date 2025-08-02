@@ -306,8 +306,11 @@ Rate-Limit: 10 Anfragen/Minute (sensible Daten)
 - `DELETE /api/v1/transcripts/{id}` - Transkript löschen
 
 ### AI Services
-- `POST /api/v1/ai/transcribe` - Audio → Text (Whisper)
-- `POST /api/v1/ai/anonymize` - Text-Anonymisierung
+- `POST /api/v1/ai/transcribe` - Audio → Text (Whisper) [WMM]
+- `POST /api/v1/ai/benchmark-models` - Whisper-Model-Benchmarking [WMM][PB]
+- `GET /api/v1/ai/available-models` - Verfügbare Whisper-Modelle [WMM]
+- `GET /api/v1/ai/hardware-info` - Hardware-Analyse für Whisper [WMM][PSF]
+- `POST /api/v1/ai/anonymize` - Text-Anonymisierung [AIU]
 - `POST /api/v1/ai/analyze` - Medizinische Analyse
 
 ### Health Checks

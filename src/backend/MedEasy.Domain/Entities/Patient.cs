@@ -18,37 +18,47 @@ namespace MedEasy.Domain.Entities
         /// <summary>
         /// Verschlüsselter Vorname des Patienten [EIV][SP]
         /// </summary>
-        public byte[] EncryptedFirstName { get; private set; }
+        public required byte[] EncryptedFirstName { get; set; }
 
         /// <summary>
         /// Verschlüsselter Nachname des Patienten [EIV][SP]
         /// </summary>
-        public byte[] EncryptedLastName { get; private set; }
+        public required byte[] EncryptedLastName { get; set; }
 
         /// <summary>
         /// Hash der Versicherungsnummer (Format: XXX.XXXX.XXXX.XX) [SF]
         /// </summary>
-        public string InsuranceNumberHash { get; private set; }
+        public required string InsuranceNumberHash { get; set; }
 
         /// <summary>
         /// Geburtsdatum des Patienten (Format: DD.MM.YYYY) [SF]
         /// </summary>
-        public DateOnly DateOfBirth { get; private set; }
+        public DateOnly DateOfBirth { get; set; }
 
         /// <summary>
         /// Verschlüsseltes Geschlecht des Patienten [EIV]
         /// </summary>
-        public byte[] EncryptedGender { get; private set; }
+        public required byte[] EncryptedGender { get; set; }
 
         /// <summary>
         /// Verschlüsselter Name der Krankenkasse [EIV]
         /// </summary>
-        public byte[] EncryptedInsuranceProvider { get; private set; }
+        public required byte[] EncryptedInsuranceProvider { get; set; }
+
+        /// <summary>
+        /// Markiert ob der Patient gelöscht wurde (Soft Delete) [ATV][PSF]
+        /// </summary>
+        public bool IsDeleted { get; set; } = false;
+
+        /// <summary>
+        /// Zeitpunkt der Löschung (nur bei Soft Delete) [ATV]
+        /// </summary>
+        public DateTime? DeletedAt { get; set; }
 
         /// <summary>
         /// Liste der Konsultationen/Sessions des Patienten [SK]
         /// </summary>
-        public ICollection<Session> Sessions { get; private set; } = new List<Session>();
+        public virtual ICollection<Session> Sessions { get; private set; } = new List<Session>();
 
         /// <summary>
         /// Zeitstempel der Erstellung [ATV]

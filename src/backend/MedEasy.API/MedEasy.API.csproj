@@ -6,15 +6,20 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <!-- NuGet packages temporarily removed to avoid dependency issues
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.17" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.0" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.72.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
   </ItemGroup>
-  -->
+
+
   <ItemGroup>
     <ProjectReference Include="..\MedEasy.Application\MedEasy.Application.csproj" />
     <ProjectReference Include="..\MedEasy.Domain\MedEasy.Domain.csproj" />
+    <ProjectReference Include="..\MedEasy.Infrastructure\MedEasy.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

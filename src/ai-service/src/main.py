@@ -14,9 +14,12 @@ The main service functionality is exposed via gRPC.
 [WMM] Whisper Multi-Model support
 """
 
+import asyncio
 import logging
 import os
+import time
 from concurrent import futures
+from datetime import datetime
 from typing import Dict
 
 import grpc
@@ -27,7 +30,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.config import config
-from src.grpc_service import serve_grpc
+# serve_grpc is defined locally in this file
 
 # Configure structured logging [ATV]
 structlog.configure(
@@ -109,6 +112,86 @@ async def audit_logging_middleware(request: Request, call_next):
     return response
 
 
+@app.get("/performance", tags=["admin"])
+async def get_live_performance():
+    """
+    Live performance monitoring for Python AI Service process.
+    [PSF] Critical for system reliability monitoring
+    [WMM] Shows real-time Whisper processing impact
+    """
+    import psutil
+    import os
+    
+    try:
+        # Get all MedEasy Python processes [PSF][WMM]
+        current_process = psutil.Process(os.getpid())
+        all_medeasy_processes = []
+        
+        # Find all Python processes related to MedEasy
+        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+            try:
+                if (proc.info['name'] and 'python' in proc.info['name'].lower() and 
+                    proc.info['cmdline'] and any('medeasy' in str(cmd).lower() for cmd in proc.info['cmdline'])):
+                    all_medeasy_processes.append(psutil.Process(proc.info['pid']))
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
+        
+        # If no MedEasy processes found, use current process
+        if not all_medeasy_processes:
+            all_medeasy_processes = [current_process]
+        
+        # Calculate combined metrics for all MedEasy Python processes
+        total_cpu_percent = sum(proc.cpu_percent(interval=0.02) for proc in all_medeasy_processes)
+        cpu_cores = psutil.cpu_count(logical=False)
+        normalized_cpu = total_cpu_percent / cpu_cores if cpu_cores > 0 else total_cpu_percent
+        
+        # Combined memory usage in MB
+        total_memory_bytes = sum(proc.memory_info().rss for proc in all_medeasy_processes)
+        memory_mb = total_memory_bytes / (1024 * 1024)  # Convert bytes to MB
+        
+        # Process count for debugging
+        process_count = len(all_medeasy_processes)
+        
+        # System memory info
+        system_memory = psutil.virtual_memory()
+        total_memory_mb = system_memory.total / (1024 * 1024)
+        
+        # GPU info (if available)
+        gpu_usage = 0
+        gpu_memory_mb = 0
+        try:
+            import GPUtil
+            gpus = GPUtil.getGPUs()
+            if gpus:
+                gpu = gpus[0]
+                gpu_usage = gpu.load * 100
+                gpu_memory_mb = gpu.memoryUsed
+        except ImportError:
+            pass
+        
+        return {
+            "timestamp": time.time(),
+            "process_id": os.getpid(),
+            "cpu_usage_percent": round(normalized_cpu, 2),
+            "memory_usage_mb": round(memory_mb, 2),
+            "total_memory_mb": round(total_memory_mb, 2),
+            "memory_percent": round((memory_mb / total_memory_mb) * 100, 2),
+            "gpu_usage_percent": round(gpu_usage, 2),
+            "gpu_memory_mb": round(gpu_memory_mb, 2),
+            "cpu_cores": cpu_cores,
+            "status": "active",
+            "service": "python_ai_service",
+            "medeasy_process_count": process_count,
+            "measured_processes": [proc.pid for proc in all_medeasy_processes]
+        }
+    except Exception as e:
+        logger.error("Failed to get performance metrics", error=str(e))
+        return {
+            "error": "Failed to retrieve performance metrics",
+            "timestamp": time.time(),
+            "status": "error"
+        }
+
 @app.get("/health", tags=["health"])
 async def health_check() -> Dict[str, str]:
     """Health check endpoint."""
@@ -119,11 +202,14 @@ async def health_check() -> Dict[str, str]:
         "whisper": "unknown",  # Will be checked on first request
     }
     
+    # Convert services dict to string for FastAPI validation
+    services_str = f"api:{services_status['api']}, grpc:{services_status['grpc']}, whisper:{services_status['whisper']}"
+    
     return {
         "status": "healthy",
-        "services": services_status,
+        "services": services_str,
         "environment": os.getenv("ENV", "development"),
-        "timestamp": structlog.processors.time.time(),
+        "timestamp": datetime.utcnow().isoformat() + "Z",
     }
 
 
@@ -156,6 +242,51 @@ async def service_info() -> Dict[str, str]:
     }
 
 
+async def serve_grpc():
+    """Start the async gRPC server [MLB]."""
+    try:
+        # Import gRPC modules (minimal schema)
+        import medeasy_minimal_pb2_grpc as medeasy_pb2_grpc
+        import medeasy_minimal_pb2 as medeasy_pb2
+        from src.services.grpc_service_minimal import MedEasyServiceImpl
+        
+        # Create async gRPC server for WhisperService
+        server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=config.grpc.max_workers))
+        
+        # Add MedEasy service
+        medeasy_pb2_grpc.add_MedEasyServiceServicer_to_server(
+            MedEasyServiceImpl(), server
+        )
+        
+        # Listen on configured port
+        listen_addr = f'[::]:{config.grpc.port}'
+        server.add_insecure_port(listen_addr)
+        
+        # Start async server
+        await server.start()
+        logger.info(
+            "gRPC server started",
+            port=config.grpc.port,
+            max_workers=config.grpc.max_workers
+        )
+        
+        # Keep server running
+        await server.wait_for_termination()
+        
+    except ImportError as e:
+        logger.error(
+            f"🚨 IMPORT ERROR in gRPC server: {str(e)}",
+            error_type=type(e).__name__,
+            error_details=str(e)
+        )
+        logger.warning(
+            "gRPC service registration skipped - protobuf modules not generated yet",
+            message="Run 'python -m grpc_tools.protoc -I./protos --python_out=. --grpc_python_out=. ./protos/medeasy.proto'"
+        )
+    except Exception as e:
+        logger.error(f"🚨 FAILED to start gRPC server: {str(e)}", error=str(e), error_type=type(e).__name__)
+
+
 @app.on_event("startup")
 async def startup_event():
     """Start the gRPC server on application startup."""
@@ -171,9 +302,8 @@ async def startup_event():
         logger.error("Encryption key must be set in production")
         raise ValueError("[SP] Encryption key must be set in production")
     
-    # Start gRPC server in a separate thread [MLB]
-    grpc_thread = futures.ThreadPoolExecutor(max_workers=1)
-    grpc_thread.submit(serve_grpc)
+    # Start async gRPC server as a background task [MLB]
+    asyncio.create_task(serve_grpc())
     
     # [PK] Log provider chain configuration
     providers = ", ".join(config.provider.provider_chain)

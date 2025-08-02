@@ -54,7 +54,7 @@ namespace MedEasy.Infrastructure.Services
 
             try
             {
-                using var aes = new AesGcm(_encryptionKey);
+                using var aes = new AesGcm(_encryptionKey, tagSizeInBytes: 16);
                 
                 var plainBytes = Encoding.UTF8.GetBytes(plainText);
                 var nonce = new byte[12]; // 96-bit nonce für GCM
@@ -98,7 +98,7 @@ namespace MedEasy.Infrastructure.Services
 
             try
             {
-                using var aes = new AesGcm(_encryptionKey);
+                using var aes = new AesGcm(_encryptionKey, tagSizeInBytes: 16);
                 
                 // Format parsen: [nonce(12)] + [tag(16)] + [ciphertext(variable)]
                 var nonce = new byte[12];
@@ -229,6 +229,79 @@ namespace MedEasy.Infrastructure.Services
             {
                 throw new ArgumentException("Verschlüsselungsschlüssel muss gültiges Base64 sein [ZTS]", ex);
             }
+        }
+
+        /// <summary>
+        /// Verschlüsselt einen String asynchron mit AES-256-GCM [SP]
+        /// </summary>
+        /// <param name="plaintext">Zu verschlüsselnder Text</param>
+        /// <returns>Verschlüsselte Daten als byte[]</returns>
+        public async Task<byte[]> EncryptAsync(string plaintext)
+        {
+            return await Task.Run(() => Encrypt(plaintext));
+        }
+
+        /// <summary>
+        /// Entschlüsselt verschlüsselte Daten asynchron [SP]
+        /// </summary>
+        /// <param name="encryptedData">Verschlüsselte Daten</param>
+        /// <returns>Entschlüsselter Text</returns>
+        public async Task<string> DecryptAsync(byte[] encryptedData)
+        {
+            return await Task.Run(() => Decrypt(encryptedData));
+        }
+
+        /// <summary>
+        /// Generiert einen neuen AES-256 Verschlüsselungsschlüssel [SP][ZTS]
+        /// </summary>
+        /// <returns>32-Byte Verschlüsselungsschlüssel</returns>
+        public byte[] GenerateEncryptionKey()
+        {
+            using var rng = RandomNumberGenerator.Create();
+            var key = new byte[32]; // 256 Bit für AES-256
+            rng.GetBytes(key);
+            
+            _logger.LogInformation("Neuer Verschlüsselungsschlüssel generiert [SP][ATV]");
+            return key;
+        }
+
+        /// <summary>
+        /// Validiert einen Verschlüsselungsschlüssel [SP][ZTS]
+        /// </summary>
+        /// <param name="key">Zu validierender Schlüssel</param>
+        /// <returns>True wenn Schlüssel gültig ist</returns>
+        public bool IsValidEncryptionKey(byte[] key)
+        {
+            if (key == null)
+            {
+                _logger.LogWarning("Verschlüsselungsschlüssel ist null [ZTS]");
+                return false;
+            }
+            
+            if (key.Length != 32)
+            {
+                _logger.LogWarning($"Verschlüsselungsschlüssel hat falsche Länge: {key.Length} Bytes (erwartet: 32) [ZTS]");
+                return false;
+            }
+            
+            // Prüfe ob Schlüssel nicht nur Nullen enthält
+            bool hasNonZero = false;
+            for (int i = 0; i < key.Length; i++)
+            {
+                if (key[i] != 0)
+                {
+                    hasNonZero = true;
+                    break;
+                }
+            }
+            
+            if (!hasNonZero)
+            {
+                _logger.LogWarning("Verschlüsselungsschlüssel enthält nur Nullen [ZTS]");
+                return false;
+            }
+            
+            return true;
         }
 
         /// <summary>

@@ -1,7 +1,7 @@
 // „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17
 
 using Microsoft.Data.Sqlite;
-using Microsoft.Data.Sqlite.Internal;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Options;
 using System;
@@ -59,6 +59,32 @@ namespace MedEasy.Infrastructure.Database
         }
 
         /// <summary>
+        /// Implementiert ISqliteConnectionFactory.CreateConnection [SP]
+        /// </summary>
+        public DbConnection CreateConnection(string connectionString)
+        {
+            return new SqliteConnection(connectionString);
+        }
+
+        /// <summary>
+        /// Implementiert ISqliteConnectionFactory.CreateEncryptedConnection [SP]
+        /// </summary>
+        public SqliteConnection CreateEncryptedConnection(string connectionString, string encryptionKey)
+        {
+            var connection = new SqliteConnection(connectionString);
+            connection.Open();
+            
+            // Wende SQLCipher-Verschlüsselung an
+            var config = new SQLCipherConfiguration();
+            config.ApplyConfiguration(connection, encryptionKey);
+            
+            // Verifiziere die Verschlüsselung
+            VerifyEncryption(connection);
+            
+            return connection;
+        }
+
+        /// <summary>
         /// Verifiziert, dass die Datenbank korrekt entschlüsselt werden kann
         /// </summary>
         private void VerifyEncryption(SqliteConnection connection)
@@ -85,7 +111,7 @@ namespace MedEasy.Infrastructure.Database
         /// <summary>
         /// Verschlüsselungsschlüssel für SQLCipher (AES-256) [SP]
         /// </summary>
-        public string EncryptionKey { get; set; }
+        public string EncryptionKey { get; set; } = string.Empty;
 
         /// <summary>
         /// Gibt einen sicheren Schlüssel aus einem Passwort zurück

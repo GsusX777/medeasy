@@ -36,8 +36,7 @@ namespace MedEasy.Infrastructure.Repositories
         /// Fügt einen neuen Patienten hinzu [EIV]
         /// </summary>
         /// <param name="patient">Patient-Entity mit verschlüsselten Daten</param>
-        /// <returns>Hinzugefügter Patient</returns>
-        public async Task<Patient> AddAsync(Patient patient)
+        public async Task AddAsync(Patient patient)
         {
             if (patient == null)
                 throw new ArgumentNullException(nameof(patient));
@@ -63,7 +62,6 @@ namespace MedEasy.Infrastructure.Repositories
                 });
 
                 _logger.LogInformation("Patient erfolgreich hinzugefügt: {PatientId} [ATV]", patient.Id);
-                return entry.Entity;
             }
             catch (Exception ex)
             {
@@ -311,6 +309,85 @@ namespace MedEasy.Infrastructure.Repositories
             {
                 _logger.LogError(ex, "Fehler beim Speichern der Änderungen [ECP]");
                 throw new InvalidOperationException("Änderungen konnten nicht gespeichert werden", ex);
+            }
+        }
+
+        /// <summary>
+        /// Aktualisiert einen Patienten [ATV]
+        /// </summary>
+        /// <param name="patient">Patient-Entity mit aktualisierten Daten</param>
+        public void Update(Patient patient)
+        {
+            if (patient == null)
+                throw new ArgumentNullException(nameof(patient));
+
+            try
+            {
+                _logger.LogInformation("Aktualisiere Patient: {PatientId} [ATV]", patient.Id);
+                
+                // Patient als modifiziert markieren
+                _context.Patients.Update(patient);
+                
+                // Audit-Log erstellen [ATV]
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    Id = Guid.NewGuid(),
+                    EntityName = nameof(Patient),
+                    EntityId = patient.Id.ToString(),
+                    Action = "UPDATE",
+                    Changes = "Patient aktualisiert",
+                    ContainsSensitiveData = true,
+                    Timestamp = DateTime.UtcNow,
+                    UserId = "Repository" // TODO: Aktueller Benutzer aus Context
+                });
+
+                _logger.LogInformation("Patient erfolgreich für Update markiert: {PatientId} [ATV]", patient.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fehler beim Aktualisieren des Patienten: {PatientId} [ECP]", patient.Id);
+                throw new InvalidOperationException($"Patient {patient.Id} konnte nicht aktualisiert werden", ex);
+            }
+        }
+
+        /// <summary>
+        /// Löscht einen Patienten (soft delete) [ATV]
+        /// </summary>
+        /// <param name="patient">Zu löschender Patient</param>
+        public void Delete(Patient patient)
+        {
+            if (patient == null)
+                throw new ArgumentNullException(nameof(patient));
+
+            try
+            {
+                _logger.LogInformation("Lösche Patient: {PatientId} [ATV]", patient.Id);
+                
+                // Soft Delete: Patient als gelöscht markieren
+                patient.IsDeleted = true;
+                patient.DeletedAt = DateTime.UtcNow;
+                
+                _context.Patients.Update(patient);
+                
+                // Audit-Log erstellen [ATV]
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    Id = Guid.NewGuid(),
+                    EntityName = nameof(Patient),
+                    EntityId = patient.Id.ToString(),
+                    Action = "DELETE",
+                    Changes = "Patient gelöscht (soft delete)",
+                    ContainsSensitiveData = true,
+                    Timestamp = DateTime.UtcNow,
+                    UserId = "Repository" // TODO: Aktueller Benutzer aus Context
+                });
+
+                _logger.LogInformation("Patient erfolgreich für Löschung markiert: {PatientId} [ATV]", patient.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fehler beim Löschen des Patienten: {PatientId} [ECP]", patient.Id);
+                throw new InvalidOperationException($"Patient {patient.Id} konnte nicht gelöscht werden", ex);
             }
         }
     }

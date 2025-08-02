@@ -1,4 +1,4 @@
-﻿# MedEasy Development - Basic .gitignore
+# MedEasy Development - Basic .gitignore
 # Weitere Eintraege werden in spaeteren Phasen ergaenzt
 
 # IDE
@@ -25,9 +25,22 @@ dist/
 target/
 
 # Logs
-*.log
-logs/
+# *.log
+# logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Temporaere Dateien
 *.tmp
 temp/
+
+# Python Virtual Environments
+venv/
+venv-py311/
+__pycache__/
+*.pyc
+*.pyo
+
+# Node.js Dependencies (Frontend)
+package-lock.json

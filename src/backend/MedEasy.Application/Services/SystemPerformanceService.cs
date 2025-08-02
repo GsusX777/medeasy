@@ -20,6 +20,15 @@ namespace MedEasy.Application.Services
         /// </summary>
         public async Task<SystemPerformanceDto> GetCurrentPerformanceAsync()
         {
+            return await GetCurrentMetricsAsync();
+        }
+        
+        /// <summary>
+        /// Holt aktuelle System-Performance-Metriken [PSF][ZTS]
+        /// AdminController-kompatible Methode
+        /// </summary>
+        public async Task<SystemPerformanceDto> GetCurrentMetricsAsync()
+        {
             try
             {
                 var stopwatch = Stopwatch.StartNew();
@@ -364,6 +373,108 @@ namespace MedEasy.Application.Services
             catch
             {
                 return new { Error = "Unable to retrieve system information" }; // Fallback [FSD]
+            }
+        }
+        
+        /// <summary>
+        /// System-Health-Status für AdminController [PSF][ATV]
+        /// </summary>
+        public async Task<SystemHealthDto> GetSystemHealthAsync()
+        {
+            try
+            {
+                var metrics = await GetCurrentMetricsAsync();
+                var uptime = Environment.TickCount64;
+                
+                // Determine health status based on metrics [PSF]
+                var status = SystemHealthStatus.Healthy;
+                var issues = new List<string>();
+                
+                if (metrics.CpuUsage > 90)
+                {
+                    status = SystemHealthStatus.Warning;
+                    issues.Add("High CPU usage detected");
+                }
+                
+                if (metrics.RamUsageGb / metrics.RamTotalGb > 0.9)
+                {
+                    status = SystemHealthStatus.Warning;
+                    issues.Add("High memory usage detected");
+                }
+                
+                if (metrics.DiskUsageGb / metrics.DiskTotalGb > 0.95)
+                {
+                    status = SystemHealthStatus.Critical;
+                    issues.Add("Disk space critically low");
+                }
+                
+                return new SystemHealthDto
+                {
+                    Status = status,
+                    Issues = issues,
+                    UptimeMs = uptime,
+                    LastRestart = DateTime.UtcNow.AddMilliseconds(-uptime),
+                    CpuTemperature = 0, // Not available on Windows without additional tools
+                    MemoryPressure = metrics.RamUsageGb / metrics.RamTotalGb
+                };
+            }
+            catch (Exception ex)
+            {
+                return new SystemHealthDto
+                {
+                    Status = SystemHealthStatus.Critical,
+                    Issues = new List<string> { $"Health check failed: {ex.Message}" },
+                    UptimeMs = 0,
+                    LastRestart = DateTime.UtcNow,
+                    CpuTemperature = 0,
+                    MemoryPressure = 0
+                };
+            }
+        }
+        
+        /// <summary>
+        /// System-Statistiken für AdminController Dashboard [PSF][ATV]
+        /// </summary>
+        public async Task<SystemStatsDto> GetSystemStatsAsync()
+        {
+            try
+            {
+                var metrics = await GetCurrentMetricsAsync();
+                var health = await GetSystemHealthAsync();
+                
+                return new SystemStatsDto
+                {
+                    SystemHealth = health.Status.ToString().ToLower(),
+                    Uptime = health.UptimeMs,
+                    UptimeMs = health.UptimeMs,
+                    LastBenchmark = DateTime.UtcNow.AddHours(-1), // Mock data
+                    TotalBenchmarks = 42, // Mock data
+                    AveragePerformance = 85.5, // Mock data
+                    AverageBenchmarkTimeMs = 8500.0, // Mock data - average benchmark time
+                    CpuCores = Environment.ProcessorCount,
+                    TotalRamGb = metrics.RamTotalGb,
+                    OperatingSystem = RuntimeInformation.OSDescription,
+                    TotalLogs = 1247, // Mock data - total log entries
+                    ActiveSessions = 3 // Mock data - active sessions
+                };
+            }
+            catch (Exception ex)
+            {
+                return new SystemStatsDto
+                {
+                    SystemHealth = "critical",
+                    Uptime = 0,
+                    UptimeMs = 0,
+                    LastBenchmark = DateTime.UtcNow,
+                    TotalBenchmarks = 0,
+                    AveragePerformance = 0,
+                    AverageBenchmarkTimeMs = 0,
+                    CpuCores = Environment.ProcessorCount,
+                    TotalRamGb = 0,
+                    OperatingSystem = "Unknown",
+                    TotalLogs = 0,
+                    ActiveSessions = 0
+                };
             }
         }
     }

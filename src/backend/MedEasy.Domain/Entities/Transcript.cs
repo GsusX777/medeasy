@@ -22,27 +22,27 @@ namespace MedEasy.Domain.Entities
         /// <summary>
         /// Navigationseigenschaft zur Session
         /// </summary>
-        public Session Session { get; private set; }
+        public Session? Session { get; init; }
 
         /// <summary>
         /// Verschlüsselter Originaltext des Transkripts [EIV]
         /// </summary>
-        public byte[] EncryptedOriginalText { get; private set; }
+        public required byte[] EncryptedOriginalText { get; set; }
 
         /// <summary>
         /// Verschlüsselter anonymisierter Text des Transkripts [EIV][AIU]
         /// </summary>
-        public byte[] EncryptedAnonymizedText { get; private set; }
+        public required byte[] EncryptedAnonymizedText { get; set; }
 
         /// <summary>
         /// Verwendetes Whisper-Modell für die Transkription [WMM]
         /// </summary>
-        public string WhisperModel { get; private set; }
+        public required string WhisperModel { get; set; }
 
         /// <summary>
         /// Erkannte Sprache (Hochdeutsch, Schweizerdeutsch) [SDH]
         /// </summary>
-        public string DetectedLanguage { get; private set; }
+        public required string DetectedLanguage { get; set; }
 
         /// <summary>
         /// Flag für erkanntes Schweizerdeutsch [SDH]
@@ -58,6 +58,11 @@ namespace MedEasy.Domain.Entities
         /// Flag für Einträge in der Anonymisierungs-Review-Queue [ARQ]
         /// </summary>
         public bool RequiresAnonymizationReview { get; private set; }
+
+        /// <summary>
+        /// Status der Anonymisierung (Pending, Completed, Failed) [AIU][ATV]
+        /// </summary>
+        public string AnonymizationStatus { get; set; } = "Pending";
 
         /// <summary>
         /// Zeitstempel der Erstellung für Audit-Trail [ATV]

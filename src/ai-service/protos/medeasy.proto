@@ -45,6 +45,26 @@ service MedEasyService {
   // Get service metrics and statistics
   // [ATV] Audit trail for monitoring
   rpc GetServiceMetrics(MetricsRequest) returns (MetricsResponse) {}
+  
+  // NEW: Whisper-specific benchmarking and model management [WMM][PB]
+  
+  // Benchmark all available Whisper models with test audio
+  // [WMM] Whisper Multi-Model performance comparison
+  // [PB] Performance baseline for all models
+  rpc BenchmarkModels(BenchmarkModelsRequest) returns (BenchmarkModelsResponse) {}
+  
+  // Get all available Whisper models with hardware recommendations
+  // [WMM] Whisper Multi-Model information
+  rpc GetAvailableModels(GetAvailableModelsRequest) returns (GetAvailableModelsResponse) {}
+  
+  // Get hardware information for Whisper optimization
+  // [WMM] Hardware analysis for model selection
+  // [PSF] Performance and system requirements
+  rpc GetHardwareInfo(GetHardwareInfoRequest) returns (GetHardwareInfoResponse) {}
+  
+  // Download a specific Whisper model if not available
+  // [WMM] Model management and download
+  rpc DownloadModel(DownloadModelRequest) returns (DownloadModelResponse) {}
 }
 
 // Transcription request message
@@ -605,4 +625,423 @@ message MetricsResponse {
   
   // Generated timestamp
   string generated_at = 8;
+}
+
+// NEW: Whisper-specific benchmarking and model management messages [WMM][PB]
+
+// Benchmark models request
+// [WMM] Whisper Multi-Model performance comparison
+// [PB] Performance baseline for all models
+message BenchmarkModelsRequest {
+  // Unique request identifier
+  string request_id = 1;
+  
+  // Test audio data for benchmarking
+  bytes test_audio_data = 2;
+  
+  // Audio format (e.g., "wav", "mp3")
+  string audio_format = 3;
+  
+  // Language code for transcription
+  string language = 4;
+  
+  // Number of iterations per model
+  int32 iterations = 5;
+  
+  // Models to test (empty = all available)
+  repeated string models_to_test = 6;
+  
+  // Enable CUDA benchmark
+  bool enable_cuda_benchmark = 7;
+  
+  // Enable CPU benchmark
+  bool enable_cpu_benchmark = 8;
+  
+  // Enable Swiss German detection
+  bool enable_swiss_german_detection = 9;
+  
+  // Additional metadata
+  string additional_metadata = 10;
+}
+
+// Benchmark models response
+// [WMM] Whisper Multi-Model performance results
+// [PB] Performance baseline results
+message BenchmarkModelsResponse {
+  // Unique request identifier (same as request)
+  string request_id = 1;
+  
+  // Benchmark ID for tracking
+  string benchmark_id = 2;
+  
+  // Total benchmark time in milliseconds
+  int64 total_benchmark_time_ms = 3;
+  
+  // Individual model results
+  repeated ModelBenchmarkResult results = 4;
+  
+  // Hardware information at benchmark time
+  HardwareInfo hardware_info = 5;
+  
+  // Model recommendation based on results
+  ModelRecommendation recommendation = 6;
+  
+  // Test audio information
+  TestAudioInfo test_audio_info = 7;
+}
+
+// Individual model benchmark result
+// [WMM] Single model performance metrics
+// [PB] Performance baseline for one model
+message ModelBenchmarkResult {
+  // Model name
+  string model_name = 1;
+  
+  // Average processing time in milliseconds
+  int64 average_processing_time_ms = 2;
+  
+  // Minimum processing time in milliseconds
+  int64 min_processing_time_ms = 3;
+  
+  // Maximum processing time in milliseconds
+  int64 max_processing_time_ms = 4;
+  
+  // Average transcription accuracy (0.0-1.0)
+  double average_accuracy = 5;
+  
+  // Average confidence (0.0-1.0)
+  double average_confidence = 6;
+  
+  // Whether CUDA was used
+  bool cuda_used = 7;
+  
+  // Average CPU usage (0-100%)
+  double average_cpu_usage = 8;
+  
+  // Average GPU usage (0-100%)
+  double average_gpu_usage = 9;
+  
+  // Average RAM usage in MB
+  int64 average_ram_usage_mb = 10;
+  
+  // Average VRAM usage in MB
+  int64 average_vram_usage_mb = 11;
+  
+  // Performance score (1-10)
+  int32 performance_score = 12;
+  
+  // Accuracy score (1-10)
+  int32 accuracy_score = 13;
+  
+  // Individual iterations
+  repeated BenchmarkIteration iterations = 14;
+  
+  // Success status
+  bool success = 15;
+  
+  // Error message if failed
+  string error_message = 16;
+}
+
+// Single benchmark iteration
+// [PB] Individual test run metrics
+message BenchmarkIteration {
+  // Iteration number
+  int32 iteration_number = 1;
+  
+  // Processing time in milliseconds
+  int64 processing_time_ms = 2;
+  
+  // Transcription confidence (0.0-1.0)
+  double confidence = 3;
+  
+  // CPU usage during iteration (0-100%)
+  double cpu_usage = 4;
+  
+  // GPU usage during iteration (0-100%)
+  double gpu_usage = 5;
+  
+  // RAM usage in MB
+  int64 ram_usage_mb = 6;
+  
+  // VRAM usage in MB
+  int64 vram_usage_mb = 7;
+}
+
+// Hardware information
+// [PSF] System hardware details
+message HardwareInfo {
+  // CUDA availability
+  bool cuda_available = 1;
+  
+  // Available VRAM in GB
+  double vram_gb = 2;
+  
+  // Available RAM in GB
+  double ram_gb = 3;
+  
+  // CPU information
+  string cpu_info = 4;
+  
+  // GPU information
+  string gpu_info = 5;
+  
+  // Number of CPU cores
+  int32 cpu_cores = 6;
+}
+
+// Model recommendation
+// [WMM] Hardware-based model suggestions
+message ModelRecommendation {
+  // Recommended for performance
+  string recommended_for_performance = 1;
+  
+  // Recommended for accuracy
+  string recommended_for_accuracy = 2;
+  
+  // Recommended for balance
+  string recommended_for_balance = 3;
+  
+  // Reasoning for recommendation
+  string reasoning = 4;
+  
+  // Hardware limitations
+  repeated string hardware_limitations = 5;
+}
+
+// Test audio information
+// [PB] Audio file details for benchmarking
+message TestAudioInfo {
+  // Audio duration in seconds
+  double duration_seconds = 1;
+  
+  // Sample rate in Hz
+  int32 sample_rate = 2;
+  
+  // Number of channels
+  int32 channels = 3;
+}
+
+// Get available models request
+// [WMM] Request for model information
+message GetAvailableModelsRequest {
+  // Unique request identifier
+  string request_id = 1;
+}
+
+// Get available models response
+// [WMM] Available Whisper models with details
+message GetAvailableModelsResponse {
+  // Unique request identifier (same as request)
+  string request_id = 1;
+  
+  // Available models
+  repeated WhisperModelInfo models = 2;
+  
+  // Recommended model for current hardware
+  string recommended_model = 3;
+  
+  // Hardware information
+  HardwareInfo hardware_info = 4;
+}
+
+// Whisper model information
+// [WMM] Individual model details
+message WhisperModelInfo {
+  // Model name
+  string name = 1;
+  
+  // Model size in MB
+  int32 size_mb = 2;
+  
+  // Supported languages
+  repeated string supported_languages = 3;
+  
+  // Recommended VRAM in GB
+  double recommended_vram_gb = 4;
+  
+  // Recommended RAM in GB
+  double recommended_ram_gb = 5;
+  
+  // Performance score (1-10)
+  int32 performance_score = 6;
+  
+  // Accuracy score (1-10)
+  int32 accuracy_score = 7;
+  
+  // Is model available on system
+  bool is_available = 8;
+  
+  // Is model downloaded
+  bool is_downloaded = 9;
+  
+  // Local path to model
+  string local_path = 10;
+  
+  // Estimated speed factor
+  double estimated_speed_factor = 11;
+  
+  // Model description
+  string description = 12;
+}
+
+// Get hardware info request
+// [WMM][PSF] Hardware analysis request
+message GetHardwareInfoRequest {
+  // Unique request identifier
+  string request_id = 1;
+}
+
+// Get hardware info response
+// [WMM][PSF] Detailed hardware information
+message GetHardwareInfoResponse {
+  // Unique request identifier (same as request)
+  string request_id = 1;
+  
+  // CUDA availability
+  bool cuda_available = 2;
+  
+  // CUDA version
+  string cuda_version = 3;
+  
+  // Available VRAM in GB
+  double vram_gb = 4;
+  
+  // Available RAM in GB
+  double ram_gb = 5;
+  
+  // CPU information
+  CpuInfo cpu_info = 6;
+  
+  // GPU information
+  GpuInfo gpu_info = 7;
+  
+  // Model recommendations for hardware
+  repeated ModelRecommendationForHardware model_recommendations = 8;
+  
+  // Performance estimates for all models
+  repeated ModelPerformanceEstimate performance_estimates = 9;
+  
+  // Hardware limitations
+  repeated string hardware_limitations = 10;
+}
+
+// CPU information
+// [PSF] Detailed CPU specs
+message CpuInfo {
+  // CPU model
+  string model = 1;
+  
+  // Physical cores
+  int32 physical_cores = 2;
+  
+  // Logical cores
+  int32 logical_cores = 3;
+  
+  // Base frequency in GHz
+  double base_frequency_ghz = 4;
+  
+  // Max frequency in GHz
+  double max_frequency_ghz = 5;
+  
+  // Architecture
+  string architecture = 6;
+}
+
+// GPU information
+// [PSF] Detailed GPU specs
+message GpuInfo {
+  // GPU model
+  string model = 1;
+  
+  // GPU vendor
+  string vendor = 2;
+  
+  // Total VRAM in GB
+  double total_vram_gb = 3;
+  
+  // Available VRAM in GB
+  double available_vram_gb = 4;
+  
+  // Compute capability
+  string compute_capability = 5;
+  
+  // CUDA cores
+  int32 cuda_cores = 6;
+  
+  // Driver version
+  string driver_version = 7;
+}
+
+// Model recommendation for specific hardware
+// [WMM] Hardware-specific model advice
+message ModelRecommendationForHardware {
+  // Recommended model name
+  string model_name = 1;
+  
+  // Reason for recommendation
+  string reason = 2;
+  
+  // Recommendation score (1-10)
+  int32 recommendation_score = 3;
+  
+  // Performance category
+  string performance_category = 4;
+  
+  // Potential issues
+  repeated string potential_issues = 5;
+}
+
+// Model performance estimate
+// [PB] Estimated performance for hardware
+message ModelPerformanceEstimate {
+  // Model name
+  string model_name = 1;
+  
+  // Estimated speed factor
+  double estimated_speed_factor = 2;
+  
+  // Estimated RAM usage in MB
+  int64 estimated_ram_usage_mb = 3;
+  
+  // Estimated VRAM usage in MB
+  int64 estimated_vram_usage_mb = 4;
+  
+  // Can run on this hardware
+  bool can_run = 5;
+  
+  // Recommended execution mode
+  string recommended_mode = 6;
+  
+  // Warnings for this model
+  repeated string warnings = 7;
+}
+
+// Download model request
+// [WMM] Model download management
+message DownloadModelRequest {
+  // Unique request identifier
+  string request_id = 1;
+  
+  // Model name to download
+  string model_name = 2;
+}
+
+// Download model response
+// [WMM] Model download result
+message DownloadModelResponse {
+  // Unique request identifier (same as request)
+  string request_id = 1;
+  
+  // Download success
+  bool success = 2;
+  
+  // Error message if failed
+  string error_message = 3;
+  
+  // Download progress (0-100%)
+  int32 progress_percent = 4;
+  
+  // Downloaded file path
+  string downloaded_path = 5;
 }

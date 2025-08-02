@@ -40,21 +40,13 @@ class ModelSelector:
     Automatically selects the best model for the available hardware.
     """
 
-    # Model information
+    # Model information for faster-whisper [WMM]
+    # Portfolio: base, small, medium, large-v3 (tiny removed for medical accuracy)
     MODEL_INFO: Dict[str, ModelInfo] = {
-        "tiny": ModelInfo(
-            name="tiny",
-            size_mb=75,
-            languages=["en", "de", "fr", "it"],
-            recommended_vram_gb=0.5,
-            recommended_ram_gb=2.0,
-            performance_score=9,
-            accuracy_score=3,
-        ),
         "base": ModelInfo(
             name="base",
             size_mb=142,
-            languages=["en", "de", "fr", "it"],
+            languages=["en", "de", "fr", "it", "gsw"],  # Swiss German support
             recommended_vram_gb=1.0,
             recommended_ram_gb=4.0,
             performance_score=8,
@@ -63,7 +55,7 @@ class ModelSelector:
         "small": ModelInfo(
             name="small",
             size_mb=466,
-            languages=["en", "de", "fr", "it", "multilingual"],
+            languages=["en", "de", "fr", "it", "gsw", "multilingual"],
             recommended_vram_gb=2.0,
             recommended_ram_gb=8.0,
             performance_score=6,
@@ -72,11 +64,20 @@ class ModelSelector:
         "medium": ModelInfo(
             name="medium",
             size_mb=1500,
-            languages=["en", "de", "fr", "it", "multilingual"],
+            languages=["en", "de", "fr", "it", "gsw", "multilingual"],
             recommended_vram_gb=5.0,
             recommended_ram_gb=16.0,
             performance_score=4,
             accuracy_score=9,
+        ),
+        "large-v3": ModelInfo(
+            name="large-v3",
+            size_mb=2900,
+            languages=["en", "de", "fr", "it", "gsw", "multilingual", "medical"],
+            recommended_vram_gb=10.0,
+            recommended_ram_gb=32.0,
+            performance_score=2,
+            accuracy_score=10,  # Best for medical terminology [MFD]
         ),
     }
 

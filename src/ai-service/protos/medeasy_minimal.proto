@@ -1,0 +1,151 @@
+// „Der Herr, unser Gott, lasse uns freundlich ansehen. Lass unsere Arbeit nicht vergeblich sein – ja, lass gelingen, was wir tun!" Psalm 90,17
+
+syntax = "proto3";
+
+package medeasy;
+
+// Minimal MedEasy Service for testing
+service MedEasyService {
+  // Get available Whisper models
+  rpc GetAvailableModels(GetAvailableModelsRequest) returns (GetAvailableModelsResponse) {}
+  
+  // Get hardware information
+  rpc GetHardwareInfo(GetHardwareInfoRequest) returns (GetHardwareInfoResponse) {}
+  
+  // Transcribe audio to text
+  rpc Transcribe(TranscriptionRequest) returns (TranscriptionResponse) {}
+  
+  // Benchmark Whisper models
+  rpc BenchmarkModels(BenchmarkModelsRequest) returns (BenchmarkModelsResponse) {}
+}
+
+// Get available models request
+message GetAvailableModelsRequest {
+  string request_id = 1;
+}
+
+// Get available models response
+message GetAvailableModelsResponse {
+  string request_id = 1;
+  repeated WhisperModelInfo models = 2;
+  string recommended_model = 3;
+}
+
+// Whisper model information
+message WhisperModelInfo {
+  string name = 1;
+  bool is_available = 2;
+  bool is_downloaded = 3;
+  int32 size_mb = 4;
+  repeated string supported_languages = 5;
+  string description = 6;
+  double estimated_speed_factor = 7;
+  double recommended_ram_gb = 8;
+}
+
+// Get hardware info request
+message GetHardwareInfoRequest {
+  string request_id = 1;
+}
+
+// Get hardware info response
+message GetHardwareInfoResponse {
+  string request_id = 1;
+  bool cuda_available = 2;
+  double ram_gb = 3;
+  CpuInfo cpu_info = 4;
+  double vram_gb = 5;
+  int32 cpu_cores = 6;
+}
+
+// CPU information
+message CpuInfo {
+  int32 physical_cores = 1;
+  int32 logical_cores = 2;
+}
+
+// Transcription request
+message TranscriptionRequest {
+  string request_id = 1;
+  bytes audio_data = 2;
+  string audio_format = 3;
+  string whisper_model = 4;
+  string language = 5;
+  double audio_length_seconds = 6;
+  string language_code = 7;
+  string session_id = 8;
+  bool detect_swiss_german = 9;
+  bool allow_cloud_processing = 10;
+  string consultation_context = 11;
+}
+
+// Transcription response
+message TranscriptionResponse {
+  string request_id = 1;
+  string text = 2;
+  string original_text = 3;
+  string language_code = 4;
+  double processing_time_seconds = 5;
+  bool cloud_processed = 6;
+  bool is_swiss_german = 7;
+  bool swiss_german_warning = 8;
+  repeated string detected_entities = 9;
+}
+
+// Benchmark models request
+message BenchmarkModelsRequest {
+  string request_id = 1;
+  bytes test_audio_data = 2;
+  string audio_format = 3;
+  repeated string models_to_test = 4;
+  int32 iterations = 5;
+  string language = 6;
+  bool enable_cuda_benchmark = 7;
+  bool enable_cpu_benchmark = 8;
+  bool enable_swiss_german_detection = 9;
+  string audio_filename = 10;  // Original filename for tracking
+}
+
+// Benchmark models response
+message BenchmarkModelsResponse {
+  string request_id = 1;
+  string benchmark_id = 2;
+  int64 total_benchmark_time_ms = 3;
+  repeated ModelBenchmarkResult results = 4;
+  GetHardwareInfoResponse hardware_info = 5;
+  ModelRecommendation recommendation = 6;
+}
+
+// Model recommendation
+message ModelRecommendation {
+  string recommended_model = 1;
+  string reason = 2;
+  double confidence = 3;
+  string recommended_for_performance = 4;
+  string recommended_for_accuracy = 5;
+  string recommended_for_balance = 6;
+  string reasoning = 7;
+  repeated string hardware_limitations = 8;
+}
+
+// Model benchmark result
+message ModelBenchmarkResult {
+  string model_name = 1;
+  double processing_time_seconds = 2;
+  double confidence_score = 3;
+  string transcribed_text = 4;
+  bool success = 5;
+  string error_message = 6;
+  int64 average_processing_time_ms = 7;
+  int64 min_processing_time_ms = 8;
+  int64 max_processing_time_ms = 9;
+  double average_accuracy = 10;
+  double average_confidence = 11;
+  bool cuda_used = 12;
+  double average_cpu_usage = 13;
+  double average_gpu_usage = 14;
+  int64 average_ram_usage_mb = 15;
+  int64 average_vram_usage_mb = 16;
+  int32 performance_score = 17;
+  int32 accuracy_score = 18;
+}

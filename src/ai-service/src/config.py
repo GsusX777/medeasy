@@ -12,7 +12,7 @@ Loads environment variables and provides configuration for all components.
 import os
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Literal
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field, validator
@@ -22,11 +22,11 @@ load_dotenv()
 
 
 class WhisperModel(str, Enum):
-    """Available Whisper model sizes."""
-    TINY = "tiny"
+    """Available Whisper model sizes for medical transcription [WMM]."""
     BASE = "base"
     SMALL = "small"
     MEDIUM = "medium"
+    LARGE_V3 = "large-v3"  # Best accuracy for medical terminology
 
 
 class ProviderType(str, Enum):
@@ -88,9 +88,8 @@ class AnonymizationConfig(BaseModel):
     )
     
     # [AIU] Anonymization is MANDATORY and cannot be disabled
-    enabled: bool = Field(
+    enabled: Literal[True] = Field(
         default=True,
-        const=True,
         description="Whether anonymization is enabled (always true, cannot be disabled)"
     )
     
@@ -133,6 +132,14 @@ class ProviderConfig(BaseModel):
         default_factory=lambda: True,
         description="Whether processing is done in the cloud"
     )
+    
+    # [PK] Provider chain for fallback
+    @property
+    def provider_chain(self) -> List[str]:
+        """Get the complete provider chain including default and fallbacks."""
+        chain = [self.default_provider.value]
+        chain.extend([p.value for p in self.fallback_providers])
+        return chain
     
     @validator("is_cloud_processing")
     def validate_cloud_processing(cls, v: bool, values: dict) -> bool:

@@ -133,6 +133,31 @@ The AI service is deployed as a standalone gRPC server that can be run:
 2. As a systemd service
 3. Directly from Python (development only)
 
+## Whisper Model Integration [WMM]
+
+The AI service provides comprehensive Whisper model support with benchmarking capabilities:
+
+### Supported Models (faster-whisper)
+| Model | Size | VRAM | Performance | Accuracy | Use Case |
+|-------|------|------|-------------|----------|----------|
+| **base** | 142MB | 1GB | ⚡⚡ | ⭐⭐⭐⭐⭐ | Standard medical use |
+| **small** | 466MB | 2GB | ⚡ | ⭐⭐⭐⭐⭐⭐⭐ | High accuracy |
+| **medium** | 1500MB | 5GB | ⚡ | ⭐⭐⭐⭐⭐⭐⭐⭐⭐ | Professional use |
+| **large-v3** | 2900MB | 10GB | ⚡ | ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ | **Medical terminology** [MFD] |
+
+### Benchmarking Features [PB]
+- **Performance Testing:** Real-time transcription speed measurement
+- **Hardware Analysis:** CUDA/CPU utilization monitoring
+- **Quality Metrics:** Word Error Rate (WER) calculation
+- **Swiss German Detection:** Dialect recognition and warnings [SDH]
+- **Medical Terminology:** Specialized vocabulary support [MFD]
+
+### New API Endpoints [WMM]
+- `POST /api/v1/ai/benchmark-models` - Multi-model performance testing
+- `GET /api/v1/ai/available-models` - Model availability and recommendations
+- `GET /api/v1/ai/hardware-info` - System capability analysis
+- `POST /api/v1/ai/transcribe` - Enhanced with model selection
+
 ## Integration
 
 The AI service integrates with the MedEasy backend via gRPC, providing a secure, high-performance interface for AI capabilities.

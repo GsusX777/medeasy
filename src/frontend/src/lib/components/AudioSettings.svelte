@@ -485,10 +485,10 @@
         <div class="detail-item">
           <span class="detail-label">Modell:</span>
           <select bind:value={whisperModel} on:change={markChanged} class="provider-dropdown">
-            <option value="tiny">Tiny (Schnell, weniger genau)</option>
-            <option value="base">Base (Ausgewogen)</option>
-            <option value="small">Small (Langsamer, genauer)</option>
-            <option value="medium">Medium (Langsam, sehr genau)</option>
+            <option value="base">Base (Standard für Medizin)</option>
+            <option value="small">Small (Hohe Genauigkeit)</option>
+            <option value="medium">Medium (Professionelle Nutzung)</option>
+            <option value="large-v3">Large-v3 (Beste medizinische Terminologie)</option>
           </select>
         </div>
         <div class="detail-item">

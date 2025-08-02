@@ -23,12 +23,12 @@ namespace MedEasy.Domain.Entities
         /// <summary>
         /// Navigationseigenschaft zum Patienten
         /// </summary>
-        public Patient Patient { get; private set; }
+        public Patient? Patient { get; init; }
 
         /// <summary>
         /// Datum der Konsultation (Format: DD.MM.YYYY) [SF]
         /// </summary>
-        public DateTime SessionDate { get; private set; }
+        public DateTime SessionDate { get; init; }
 
         /// <summary>
         /// Startzeit der Konsultation (Format: HH:MM) [SF]
@@ -43,17 +43,17 @@ namespace MedEasy.Domain.Entities
         /// <summary>
         /// Verschlüsselter Grund der Konsultation [EIV]
         /// </summary>
-        public byte[] EncryptedReason { get; private set; }
+        public byte[]? EncryptedReason { get; init; }
 
         /// <summary>
         /// Verschlüsselte Notizen zur Konsultation [EIV]
         /// </summary>
-        public byte[] EncryptedNotes { get; private set; }
+        public byte[]? EncryptedNotes { get; init; }
 
         /// <summary>
         /// Pfad zur Audiodatei der Konsultation
         /// </summary>
-        public string AudioFilePath { get; private set; }
+        public string? AudioFilePath { get; init; }
 
         /// <summary>
         /// Status der Session (Aktiv, Abgeschlossen, etc.)
@@ -68,7 +68,7 @@ namespace MedEasy.Domain.Entities
         /// <summary>
         /// Verwendeter KI-Provider für die Verarbeitung [PK]
         /// </summary>
-        public string AIProvider { get; private set; }
+        public string AIProvider { get; private set; } = "Local";
 
         /// <summary>
         /// Transkriptionen der Session
@@ -111,8 +111,8 @@ namespace MedEasy.Domain.Entities
             DateTime sessionDate, 
             TimeSpan? startTime = null,
             TimeSpan? endTime = null,
-            byte[] encryptedReason = null, 
-            string audioFilePath = null, 
+            byte[]? encryptedReason = null, 
+            string? audioFilePath = null, 
             string createdBy = "System")
         {
             var session = new Session

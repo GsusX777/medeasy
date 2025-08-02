@@ -310,8 +310,8 @@
   let apiError = false;
   let errorMessage = '';
   
-  // Version info
-  const version = "1.0.0-beta";
+  // Version info [SF] - Schweizer Beta-Version
+  const version = "0.1.2 beta";
   
   // Sidebar collapse state [UX]
   let isCollapsed = false;
@@ -334,49 +334,49 @@
   
 
   
-  // API Base URL [TSF] - Desktop App mit lokalem Backend
-  const API_BASE_URL = 'http://localhost:5155';
+  // Centralized API Configuration [TSF][ZTS]
+  import { apiRequest } from '$lib/config/api';
   
-  // TypeScript Interface für API Response [ZTS]
-  interface SystemPerformanceDto {
-    cpuUsage: number;
-    ramUsage: number;
-    gpuUsage: number;
-    gpuAcceleration: boolean;
-    diskIo: number;
-    networkLatency: number;
-    timestamp: string;
-    totalRamMb: number;
-    usedRamMb: number;
-    gpuName: string;
-    cpuName: string;
-    cpuCores: number;
+  // TypeScript Interface für Python AI Service Response [ZTS][WMM]
+  interface PythonPerformanceData {
+    timestamp: number;
+    process_id: number;
+    cpu_usage_percent: number;
+    memory_usage_mb: number;
+    total_memory_mb: number;
+    memory_percent: number;
+    gpu_usage_percent: number;
+    gpu_memory_mb: number;
+    cpu_cores: number;
+    status: string;
+    service: string;
   }
   
-  // Get performance data from Backend API [PSF][ZTS]
+  // Get live performance data from Python AI Service [PSF][ZTS][WMM]
   async function updatePerformanceMetrics() {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/system/performance`);
+      // Direct call to Python AI Service (Port 8000)
+      const response = await fetch('http://localhost:8000/performance');
       
       if (!response.ok) {
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
       
-      const metrics: SystemPerformanceDto = await response.json();
+      const data: PythonPerformanceData = await response.json();
       
-      // Update reactive variables with real data [PSF]
-      cpuUsage = Math.round(metrics.cpuUsage * 10) / 10; // 1 Dezimalstelle
-      ramUsage = Math.round(metrics.ramUsage * 10) / 10;
-      gpuUsage = Math.round(metrics.gpuUsage * 10) / 10;
-      gpuAcceleration = metrics.gpuAcceleration;
-      diskIo = Math.round(metrics.diskIo * 10) / 10;
-      networkLatencyMetric = metrics.networkLatency;
-      totalRamMb = metrics.totalRamMb;
-      usedRamMb = metrics.usedRamMb;
-      cpuName = metrics.cpuName;
-      gpuName = metrics.gpuName;
-      cpuCores = metrics.cpuCores;
-      lastUpdate = new Date().toLocaleTimeString('de-CH');
+      // Update reactive variables with Python AI Service data [PSF][WMM]
+      cpuUsage = Math.round(data.cpu_usage_percent);
+      ramUsage = Math.round(data.memory_percent); // Keep % for progress bars
+      gpuUsage = Math.round(data.gpu_usage_percent);
+      
+      // RAM in MB - direct from Python process [WMM]
+      totalRamMb = Math.round(data.total_memory_mb);
+      usedRamMb = Math.round(data.memory_usage_mb); // Python process RAM usage
+      gpuAcceleration = data.gpu_memory_mb > 0; // GPU available if memory > 0
+      
+      // Update timestamp and CPU cores from Python data
+      lastUpdate = new Date(data.timestamp * 1000).toLocaleTimeString('de-CH');
+      cpuCores = data.cpu_cores;
       
       // Clear error state [FSD]
       apiError = false;
@@ -400,7 +400,7 @@
   // Check system health status [PSF]
   async function checkSystemHealth() {
     try {
-      const response = await fetch(`${API_BASE_URL}/health`);
+      const response = await fetch('http://localhost:8000/health');
       
       if (!response.ok) {
         throw new Error(`Health check failed: ${response.status}`);
@@ -438,19 +438,19 @@
     }
   }
   
-  onMount(async () => {
-    // Initial system health check and performance update [PSF]
-    await checkSystemHealth();
-    await updatePerformanceMetrics();
+  onMount(() => {
+    // DEAKTIVIERT für Performance-Tests - Performance Monitor komplett ausgeschaltet
+    // checkSystemHealth();
+    // updatePerformanceMetrics();
     
     // Set up interval for regular updates (every 1 second) [PSF]
-    const systemInterval = setInterval(updateSystemMetrics, 1000);
+    // const systemInterval = setInterval(updateSystemMetrics, 1000);
     
-    console.log('🚀 Sidebar PerformanceMonitor initialized with real API integration');
+    console.log('🚀 Sidebar PerformanceMonitor DEAKTIVIERT für Performance-Tests');
     
-    return () => {
-      clearInterval(systemInterval);
-    };
+    // return () => {
+    //   clearInterval(systemInterval);
+    // };
   });
 </script>
 
@@ -501,7 +501,7 @@
             <div class="metric-bar">
               <div class="metric-fill ram" style="width: {ramUsage}%"></div>
             </div>
-            <div class="metric-value">{ramUsage}%</div>
+            <div class="metric-value">{usedRamMb.toFixed(0)} MB</div>
           </div>
           
           <!-- GPU Usage -->
