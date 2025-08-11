@@ -18,14 +18,13 @@
 		};
 	}>();
 	
-	let selectedModels: string[] = ['base', 'small'];
+	let selectedModels: string[] = ['small'];
 	let audioFile: File | null = null;
 	let iterations = 1;
 	let dragOver = false;
 	let fileInput: HTMLInputElement;
 	
-	const modelInfo = {
-		'base': { size: '142MB', ram: '1GB', description: 'Schnell, weniger genau' },
+	const modelInfo: Record<string, { size: string; ram: string; description: string }> = {
 		'small': { size: '461MB', ram: '2GB', description: 'Ausgewogen, empfohlen' },
 		'medium': { size: '1542MB', ram: '4GB', description: 'Langsamer, genauer' },
 		'large-v3': { size: '3094MB', ram: '8GB', description: 'Langsamst, sehr genau' }
@@ -108,53 +107,6 @@
 </script>
 
 <div class="benchmark-runner">
-	<!-- Model Selection -->
-	<div class="section">
-		<div class="section-header">
-			<h3>🤖 Whisper-Modelle auswählen</h3>
-			<div class="model-actions">
-				<button class="select-btn" on:click={selectAllModels}>
-					Alle auswählen
-				</button>
-				<button class="select-btn" on:click={clearSelection}>
-					Auswahl löschen
-				</button>
-			</div>
-		</div>
-		
-		<div class="models-grid">
-			{#each availableModels as model}
-				<label class="model-card" class:selected={selectedModels.includes(model)}>
-					<input
-						type="checkbox"
-						bind:group={selectedModels}
-						value={model}
-						disabled={isRunning}
-					/>
-					<div class="model-info">
-						<div class="model-header">
-							<span class="model-name">{model}</span>
-							<span class="model-size">{modelInfo[model]?.size || 'N/A'}</span>
-						</div>
-						<div class="model-details">
-							<span class="model-ram">RAM: {modelInfo[model]?.ram || 'N/A'}</span>
-							<span class="model-description">{modelInfo[model]?.description || ''}</span>
-						</div>
-					</div>
-				</label>
-			{/each}
-		</div>
-		
-		{#if selectedModels.length > 0}
-			<div class="selection-summary">
-				<span class="summary-text">
-					{selectedModels.length} Modell{selectedModels.length !== 1 ? 'e' : ''} ausgewählt: 
-					{selectedModels.join(', ')}
-				</span>
-			</div>
-		{/if}
-	</div>
-	
 	<!-- Audio File Upload -->
 	<div class="section">
 		<h3>🎵 Audio-Datei hochladen</h3>
@@ -247,6 +199,53 @@
 				<span class="estimate-label">⏱️ Geschätzte Dauer:</span>
 				<span class="estimate-value">
 					{Math.floor(estimatedTime / 60)}:{(estimatedTime % 60).toString().padStart(2, '0')} Min
+				</span>
+			</div>
+		{/if}
+	</div>
+	
+	<!-- Model Selection -->
+	<div class="section">
+		<div class="section-header">
+			<h3>🤖 Whisper-Modelle auswählen</h3>
+			<div class="model-actions">
+				<button class="select-btn" on:click={selectAllModels}>
+					Alle auswählen
+				</button>
+				<button class="select-btn" on:click={clearSelection}>
+					Auswahl löschen
+				</button>
+			</div>
+		</div>
+		
+		<div class="models-grid">
+			{#each availableModels as model}
+				<label class="model-card" class:selected={selectedModels.includes(model)}>
+					<input
+						type="checkbox"
+						bind:group={selectedModels}
+						value={model}
+						disabled={isRunning}
+					/>
+					<div class="model-info">
+						<div class="model-header">
+							<span class="model-name">{model}</span>
+							<span class="model-size">{modelInfo[model]?.size || 'N/A'}</span>
+						</div>
+						<div class="model-details">
+							<span class="model-ram">RAM: {modelInfo[model]?.ram || 'N/A'}</span>
+							<span class="model-description">{modelInfo[model]?.description || ''}</span>
+						</div>
+					</div>
+				</label>
+			{/each}
+		</div>
+		
+		{#if selectedModels.length > 0}
+			<div class="selection-summary">
+				<span class="summary-text">
+					{selectedModels.length} Modell{selectedModels.length !== 1 ? 'e' : ''} ausgewählt: 
+					{selectedModels.join(', ')}
 				</span>
 			</div>
 		{/if}

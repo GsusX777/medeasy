@@ -14,9 +14,19 @@ public interface IEncryptionService
     Task<byte[]> EncryptAsync(string plaintext);
 
     /// <summary>
+    /// Verschlüsselt binäre Daten (z.B. Audio) mit AES-256-GCM [SP][EIV]
+    /// </summary>
+    Task<byte[]> EncryptAsync(byte[] data);
+
+    /// <summary>
     /// Entschlüsselt verschlüsselte Daten [SP]
     /// </summary>
     Task<string> DecryptAsync(byte[] encryptedData);
+
+    /// <summary>
+    /// Entschlüsselt verschlüsselte binäre Daten [SP][EIV]
+    /// </summary>
+    Task<byte[]> DecryptBinaryAsync(byte[] encryptedData);
 
     /// <summary>
     /// Erstellt Hash der Schweizer Versicherungsnummer [SF][AIU]
@@ -32,4 +42,16 @@ public interface IEncryptionService
     /// Validiert einen Verschlüsselungsschlüssel [SP][ZTS]
     /// </summary>
     bool IsValidEncryptionKey(byte[] key);
+    
+    // Synchrone Wrapper-Methoden für Controller-Kompatibilität [SP][EIV]
+    
+    /// <summary>
+    /// Verschlüsselt einen String synchron [SP]
+    /// </summary>
+    byte[] EncryptText(string plaintext);
+    
+    /// <summary>
+    /// Entschlüsselt verschlüsselte binäre Daten synchron [SP][EIV]
+    /// </summary>
+    byte[] DecryptBinary(byte[] encryptedData);
 }

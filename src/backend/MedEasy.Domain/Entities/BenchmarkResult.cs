@@ -23,6 +23,13 @@ public class BenchmarkResult
     public required DateTime Timestamp { get; init; } = DateTime.UtcNow;
 
     /// <summary>
+    /// Fremdschlüssel zur AudioRecords-Tabelle [SP][EIV]
+    /// Verknüpft das Benchmark-Ergebnis mit dem verschlüsselten Audio-Record
+    /// </summary>
+    [MaxLength(50)]
+    public string? AudioRecordId { get; init; }
+
+    /// <summary>
     /// Name des getesteten Whisper-Modells [WMM]
     /// </summary>
     [Required]
@@ -141,4 +148,27 @@ public class BenchmarkResult
     [Required]
     [MaxLength(20)]
     public required string AnonymizationStatus { get; init; } = "Anonymized";
+    
+    // Chunk-Test spezifische Felder [WMM][PSF]
+    
+    /// <summary>
+    /// Test-Typ: 'file', 'record', 'chunk', 'live' [WMM]
+    /// </summary>
+    [MaxLength(20)]
+    public string? TestType { get; init; }
+    
+    /// <summary>
+    /// Anzahl der verarbeiteten Chunks (nur für Chunk-Tests) [WMM]
+    /// </summary>
+    public int? ChunkCount { get; init; }
+    
+    /// <summary>
+    /// Chunk-Größe in Sekunden (nur für Chunk-Tests) [WMM]
+    /// </summary>
+    public double? ChunkSizeSeconds { get; init; }
+    
+    /// <summary>
+    /// Chunk-Überlappung in Millisekunden (nur für Chunk-Tests) [WMM]
+    /// </summary>
+    public int? ChunkOverlapMs { get; init; }
 }

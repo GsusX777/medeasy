@@ -107,7 +107,55 @@ Enthält Transkriptionen von Arzt-Patienten-Gesprächen.
 | LastModified | TEXT | Zeitpunkt der letzten Änderung | Nein |
 | LastModifiedBy | TEXT | Benutzer, der die letzte Änderung vorgenommen hat | Nein |
 
-### AnonymizationReviewItem [ARQ]
+### AudioRecord [SP][EIV][ATV]
+
+**Zweck:** Speichert verschlüsselte Audio-Aufnahmen für Test- und Benchmark-Zwecke (Admin-Bereich)
+
+**Status:** ✅ **IMPLEMENTIERT** - Entity, Repository, Controller-Integration abgeschlossen
+
+| Spalte | Typ | Beschreibung | Verschlüsselung | Regel |
+|--------|-----|--------------|-----------------|-------|
+| Id | TEXT PRIMARY KEY | Eindeutige ID des Audio-Records | Nein | [ATV] |
+| FileName | TEXT NOT NULL | Original-Dateiname | Nein | [WMM] |
+| EncryptedAudioData | BLOB NOT NULL | Verschlüsselte Audio-Daten (AES-256-GCM) | Ja | [EIV][SP] |
+| FileSizeBytes | INTEGER NOT NULL | Dateigröße in Bytes | Nein | [WMM] |
+| DurationSeconds | REAL NOT NULL | Aufnahmedauer in Sekunden | Nein | [WMM] |
+| RecordingType | TEXT NOT NULL | Art der Aufnahme ('upload', 'recording', 'live_chunk') | Nein | [WMM] |
+| AudioFormat | TEXT NOT NULL | Audio-Format ('webm', 'wav', 'mp3') | Nein | [WMM] |
+| SampleRate | INTEGER NOT NULL | Abtastrate in Hz (z.B. 16000 für 16kHz) | Nein | [WMM] |
+| BitRate | INTEGER NOT NULL | Bitrate in bps (z.B. 256000 für 256kbps) | Nein | [SF] |
+| Channels | INTEGER NOT NULL | Anzahl Kanäle (1=Mono, 2=Stereo) | Nein | [WMM] |
+| IsAnonymized | INTEGER NOT NULL | Flag, ob anonymisiert (immer 1) | Nein | [AIU] |
+| AnonymizationConfidence | REAL NOT NULL | Konfidenz der Anonymisierung (0-1) | Nein | [AIU] |
+| NeedsReview | INTEGER NOT NULL | Flag für manuelle Überprüfung (0/1) | Nein | [ARQ] |
+| BenchmarkId | TEXT | Verknüpfung zu Benchmark-Ergebnis | Nein | [WMM] |
+| ProcessingTimeMs | INTEGER | Verarbeitungszeit in Millisekunden | Nein | [PSF] |
+| ModelUsed | TEXT | Verwendetes Whisper-Modell | Nein | [WMM] |
+| Created | TEXT NOT NULL | Erstellungszeitpunkt | Nein | [ATV] |
+| CreatedBy | TEXT | Ersteller | Nein | [ATV] |
+| LastModified | TEXT NOT NULL | Letzte Änderung | Nein | [ATV] |
+| LastModifiedBy | TEXT | Letzter Bearbeiter | Nein | [ATV] |
+
+**Implementierungsdetails:**
+- Entity: `MedEasy.Domain.Entities.AudioRecord`
+- Repository: `MedEasy.Infrastructure.Repositories.AudioRecordRepository`
+- Interface: `MedEasy.Domain.Interfaces.IAudioRecordRepository`
+- Controller-Integration: `AIController.BenchmarkModelsFile()` erstellt AudioRecord vor Benchmark-Verarbeitung
+- Verschlüsselung: Automatische AES-256-GCM Verschlüsselung über `IEncryptionService`
+- Audit-Trail: Vollständig implementiert mit Created/CreatedBy/LastModified/LastModifiedBy
+- Anonymisierung: Unveränderlich auf `true` gesetzt ([AIU])
+
+#### RecordingType Enum [WMM]
+
+Das `RecordingType`-Enum definiert die verschiedenen Arten von Audio-Aufnahmen:
+
+| Wert | Beschreibung |
+|------|-------------|
+| upload | Hochgeladene Audio-Datei |
+| recording | Direkte Audio-Aufnahme im Browser |
+| live_chunk | Chunk aus Live-Transkription |
+
+### AnonymizationReviewQueue [ARQ]
 
 Enthält Einträge für die manuelle Überprüfung von Anonymisierungen.
 
@@ -225,8 +273,10 @@ Speichert Ergebnisse von Whisper-Model-Benchmarks für Performance-Analyse.
 | Feld | Typ | Beschreibung | Verschlüsselt |
 |------|-----|--------------|---------------|
 | Id | TEXT | Eindeutige ID (GUID) | Nein |
+| AudioRecordId | TEXT | Fremdschlüssel zur AudioRecords-Tabelle | Nein | [SP][EIV] |
 | Timestamp | TEXT | Zeitstempel der Benchmark-Ausführung (ISO 8601) | Nein |
 | ModelName | TEXT | Name des getesteten Whisper-Modells (base, small, medium, large-v3) | Nein |
+| AudioFileName | TEXT | Name der Audio-Datei (z.B. "recording_2025-08-02_08-05.wav") | Nein |
 | ProcessingTimeMs | REAL | Verarbeitungszeit in **Millisekunden** | Nein |
 | CpuUsagePercent | REAL | CPU-Auslastung während Benchmark (0.0-100.0%) | Nein |
 | MemoryUsageMb | REAL | RAM-Verbrauch in MB | Nein |

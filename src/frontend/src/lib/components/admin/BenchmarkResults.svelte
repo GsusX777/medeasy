@@ -75,7 +75,7 @@
 		if (!modelName) return '#6b7280';
 		
 		const colors: Record<string, string> = {
-			'base': '#059669',
+
 			'small': '#2563eb', 
 			'medium': '#d97706',
 			'large-v3': '#dc2626'

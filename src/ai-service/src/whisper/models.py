@@ -41,17 +41,8 @@ class ModelSelector:
     """
 
     # Model information for faster-whisper [WMM]
-    # Portfolio: base, small, medium, large-v3 (tiny removed for medical accuracy)
+    # Portfolio: small, medium, large-v3 (tiny and base removed for medical accuracy)
     MODEL_INFO: Dict[str, ModelInfo] = {
-        "base": ModelInfo(
-            name="base",
-            size_mb=142,
-            languages=["en", "de", "fr", "it", "gsw"],  # Swiss German support
-            recommended_vram_gb=1.0,
-            recommended_ram_gb=4.0,
-            performance_score=8,
-            accuracy_score=5,
-        ),
         "small": ModelInfo(
             name="small",
             size_mb=466,
@@ -135,7 +126,7 @@ class ModelSelector:
             elif vram_gb >= 2.0:
                 return "small"
             elif vram_gb >= 1.0:
-                return "base"
+                return "small"
             else:
                 return "tiny"
         
@@ -147,7 +138,7 @@ class ModelSelector:
         elif ram_gb >= 8.0:
             return "small"
         elif ram_gb >= 4.0:
-            return "base"
+            return "small"
         else:
             return "tiny"
     

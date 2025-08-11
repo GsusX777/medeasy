@@ -126,6 +126,87 @@ namespace MedEasy.Infrastructure.Services
         }
 
         /// <summary>
+        /// Verschlüsselt binäre Daten mit AES-256-GCM [SP][EIV]
+        /// </summary>
+        /// <param name="data">Zu verschlüsselnde binäre Daten</param>
+        /// <returns>Verschlüsselte Daten als byte[]</returns>
+        public byte[] EncryptBinary(byte[] data)
+        {
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
+
+            try
+            {
+                using var aes = new AesGcm(_encryptionKey, tagSizeInBytes: 16);
+                
+                // Generiere zufällige Nonce (12 Bytes für GCM)
+                var nonce = new byte[12];
+                using (var rng = RandomNumberGenerator.Create())
+                {
+                    rng.GetBytes(nonce);
+                }
+                
+                var ciphertext = new byte[data.Length];
+                var tag = new byte[16];
+                
+                // AES-256-GCM Verschlüsselung mit Authentifizierung [SP]
+                aes.Encrypt(nonce, data, ciphertext, tag);
+                
+                // Format: [nonce(12)] + [tag(16)] + [ciphertext(variable)]
+                var result = new byte[nonce.Length + tag.Length + ciphertext.Length];
+                Buffer.BlockCopy(nonce, 0, result, 0, nonce.Length);
+                Buffer.BlockCopy(tag, 0, result, nonce.Length, tag.Length);
+                Buffer.BlockCopy(ciphertext, 0, result, nonce.Length + tag.Length, ciphertext.Length);
+                
+                _logger.LogDebug("Binäre Daten erfolgreich verschlüsselt: {DataSize} bytes [ATV]", data.Length);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fehler bei binärer Verschlüsselung [ECP]");
+                throw new InvalidOperationException("Binäre Verschlüsselung fehlgeschlagen", ex);
+            }
+        }
+
+        /// <summary>
+        /// Entschlüsselt verschlüsselte binäre Daten mit AES-256-GCM [SP][EIV]
+        /// </summary>
+        /// <param name="encryptedData">Verschlüsselte binäre Daten</param>
+        /// <returns>Entschlüsselte binäre Daten</returns>
+        public byte[] DecryptBinary(byte[] encryptedData)
+        {
+            if (encryptedData == null || encryptedData.Length < 28) // 12 + 16 = 28 minimum
+                throw new ArgumentException("Verschlüsselte Daten ungültig", nameof(encryptedData));
+
+            try
+            {
+                using var aes = new AesGcm(_encryptionKey, tagSizeInBytes: 16);
+                
+                // Format parsen: [nonce(12)] + [tag(16)] + [ciphertext(variable)]
+                var nonce = new byte[12];
+                var tag = new byte[16];
+                var ciphertext = new byte[encryptedData.Length - 28];
+                
+                Buffer.BlockCopy(encryptedData, 0, nonce, 0, 12);
+                Buffer.BlockCopy(encryptedData, 12, tag, 0, 16);
+                Buffer.BlockCopy(encryptedData, 28, ciphertext, 0, ciphertext.Length);
+                
+                var plainBytes = new byte[ciphertext.Length];
+                
+                // AES-256-GCM Entschlüsselung mit Authentifizierung [SP]
+                aes.Decrypt(nonce, ciphertext, tag, plainBytes);
+                
+                _logger.LogDebug("Binäre Daten erfolgreich entschlüsselt: {DataSize} bytes [ATV]", plainBytes.Length);
+                return plainBytes;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fehler bei binärer Entschlüsselung [ECP]");
+                throw new InvalidOperationException("Binäre Entschlüsselung fehlgeschlagen", ex);
+            }
+        }
+
+        /// <summary>
         /// Erstellt SHA-256 Hash einer Schweizer Versicherungsnummer [SF]
         /// </summary>
         /// <param name="insuranceNumber">Versicherungsnummer im Format XXX.XXXX.XXXX.XX</param>
@@ -242,6 +323,16 @@ namespace MedEasy.Infrastructure.Services
         }
 
         /// <summary>
+        /// Verschlüsselt binäre Daten asynchron mit AES-256-GCM [SP][EIV]
+        /// </summary>
+        /// <param name="data">Zu verschlüsselnde binäre Daten (z.B. Audio)</param>
+        /// <returns>Verschlüsselte Daten als byte[]</returns>
+        public async Task<byte[]> EncryptAsync(byte[] data)
+        {
+            return await Task.Run(() => EncryptBinary(data));
+        }
+
+        /// <summary>
         /// Entschlüsselt verschlüsselte Daten asynchron [SP]
         /// </summary>
         /// <param name="encryptedData">Verschlüsselte Daten</param>
@@ -249,6 +340,16 @@ namespace MedEasy.Infrastructure.Services
         public async Task<string> DecryptAsync(byte[] encryptedData)
         {
             return await Task.Run(() => Decrypt(encryptedData));
+        }
+
+        /// <summary>
+        /// Entschlüsselt verschlüsselte binäre Daten asynchron [SP][EIV]
+        /// </summary>
+        /// <param name="encryptedData">Verschlüsselte binäre Daten</param>
+        /// <returns>Entschlüsselte binäre Daten</returns>
+        public async Task<byte[]> DecryptBinaryAsync(byte[] encryptedData)
+        {
+            return await Task.Run(() => DecryptBinary(encryptedData));
         }
 
         /// <summary>
@@ -342,6 +443,19 @@ namespace MedEasy.Infrastructure.Services
         ~EncryptionService()
         {
             Dispose(false);
+        }
+        
+        // Synchrone Wrapper-Methoden für Controller-Kompatibilität [SP][EIV]
+        
+        /// <summary>
+        /// Verschlüsselt einen String synchron [SP]
+        /// </summary>
+        public byte[] EncryptText(string plaintext)
+        {
+            if (string.IsNullOrEmpty(plaintext))
+                return Array.Empty<byte>();
+                
+            return EncryptAsync(plaintext).GetAwaiter().GetResult();
         }
     }
 }

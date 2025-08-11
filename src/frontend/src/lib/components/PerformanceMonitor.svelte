@@ -13,7 +13,7 @@
   // TypeScript Interface für Whisper Performance [WMM][PSF]
   interface WhisperPerformanceDto {
     // Model Information [WMM]
-    activeModel: 'tiny' | 'base' | 'small' | 'medium' | 'large';
+    activeModel: 'tiny' | 'small' | 'medium' | 'large';
     modelSize: number; // MB
     modelLoadTime: number; // Sekunden
     
@@ -131,7 +131,7 @@
       errorMessage = error instanceof Error ? error.message : 'Whisper API nicht verfügbar';
       
       // Fallback zu Mock-Daten für Demo [FSD]
-      activeModel = 'base (Mock)';
+      activeModel = 'small (Mock)';
       modelSize = 74;
       transcriptionSpeed = 0.8 + Math.random() * 0.4; // 0.8-1.2x
       averageLatency = 150 + Math.floor(Math.random() * 100);

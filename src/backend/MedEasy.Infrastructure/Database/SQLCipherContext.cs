@@ -45,6 +45,12 @@ namespace MedEasy.Infrastructure.Database
         public DbSet<BenchmarkResult> BenchmarkResults { get; set; }
 
         /// <summary>
+        /// Audio-Aufnahmen für Test- und Benchmark-Zwecke [SP][EIV][ATV]
+        /// Speichert verschlüsselte Audio-Daten
+        /// </summary>
+        public DbSet<AudioRecord> AudioRecords { get; set; }
+
+        /// <summary>
         /// Anonymisierungs-Review-Queue [ARQ]
         /// </summary>
         public DbSet<AnonymizationReviewItem> AnonymizationReviewQueue { get; set; }

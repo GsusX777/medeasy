@@ -76,14 +76,14 @@ class WhisperService:
     """
     Whisper Service for audio transcription and model benchmarking.
     
-    [WMM] Supports multiple Whisper models: base, small, medium, large-v3
+    [WMM] Supports multiple Whisper models: small, medium, large-v3
     [SP] Secure local processing only
     """
     
     def __init__(self):
         """Initialize the Whisper service."""
         self.models = {}
-        self.available_models = ["base", "small", "medium", "large-v3"]
+        self.available_models = ["small", "medium", "large-v3"]
         logger.info("WhisperService initialized")
     
     def _get_model(self, model_name: str) -> WhisperModel:
@@ -100,7 +100,7 @@ class WhisperService:
     async def transcribe(
         self,
         audio_data: bytes,
-        model: str = "base"
+        model: str = "small"
     ) -> TranscriptionResult:
         """
         Transcribe audio using specified Whisper model.
@@ -383,15 +383,9 @@ class WhisperService:
         """Get detailed information about available Whisper models."""
         # Real model information based on faster-whisper models
         model_data = {
-            "base": {
-                "size_mb": 142,
-                "description": "Base model - good balance of speed and accuracy",
-                "estimated_speed_factor": 1.0,
-                "recommended_ram_gb": 1.0
-            },
             "small": {
                 "size_mb": 461,
-                "description": "Small model - better accuracy than base",
+                "description": "Small model - good balance of speed and accuracy",
                 "estimated_speed_factor": 0.8,
                 "recommended_ram_gb": 2.0
             },
@@ -467,7 +461,7 @@ class WhisperService:
             elif memory_gb >= 4:
                 recommended_model = "small"
             else:
-                recommended_model = "base"
+                recommended_model = "small"
             
             return HardwareInfo(
                 cpu_cores=cpu_cores,

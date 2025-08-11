@@ -37,7 +37,7 @@
   
   // Whisper Provider Settings [WMM] - Nur lokale Modelle
   let whisperProvider: 'local' = 'local'; // Nur lokal
-  let whisperModel = 'base';
+  let whisperModel = 'small';
   let whisperLanguage = 'de'; // Deutsch als Standard
   
   // Audio Level Monitoring [PSF]
@@ -485,7 +485,7 @@
         <div class="detail-item">
           <span class="detail-label">Modell:</span>
           <select bind:value={whisperModel} on:change={markChanged} class="provider-dropdown">
-            <option value="base">Base (Standard für Medizin)</option>
+
             <option value="small">Small (Hohe Genauigkeit)</option>
             <option value="medium">Medium (Professionelle Nutzung)</option>
             <option value="large-v3">Large-v3 (Beste medizinische Terminologie)</option>

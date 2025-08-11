@@ -3,9 +3,9 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using MedEasy.Domain.Interfaces;
-using MedEasy.Application.Services;
 using MedEasy.Application.Interfaces;
+using MedEasy.Application.Services;
+using MedEasy.Domain.Interfaces;
 
 namespace MedEasy.API.Controllers;
 

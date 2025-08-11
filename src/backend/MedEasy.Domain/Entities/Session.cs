@@ -70,6 +70,13 @@ namespace MedEasy.Domain.Entities
         /// </summary>
         public string AIProvider { get; private set; } = "Local";
 
+        // TODO: Live-Transcription-Metadaten werden bei Neuimplementierung hinzugefügt [WMM][Live]
+
+        /// <summary>
+        /// Verschlüsselte Referenz zur AudioRecord [EIV]
+        /// </summary>
+        public byte[]? EncryptedAudioReference { get; set; }
+
         /// <summary>
         /// Transkriptionen der Session
         /// </summary>

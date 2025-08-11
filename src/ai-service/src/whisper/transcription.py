@@ -86,13 +86,13 @@ class WhisperTranscriber:
         ]
         self.swiss_german_regex = re.compile('|'.join(self.swiss_german_patterns), re.IGNORECASE)
 
-    def transcribe(self, audio_data: bytes, language: Optional[str] = "de") -> TranscriptionResult:
+    def transcribe(self, audio_data: bytes) -> TranscriptionResult:
         """
         Transcribe audio data to text.
+        Language detection is handled automatically by the Whisper model.
         
         Args:
             audio_data: Raw audio data bytes
-            language: Optional language code (default: German)
             
         Returns:
             TranscriptionResult with transcribed text and metadata
@@ -110,9 +110,9 @@ class WhisperTranscriber:
             with open(temp_file, "wb") as f:
                 f.write(audio_data)
             
-            # Transcribe with Whisper
+            # Transcribe with Whisper - automatic language detection
+            # Language detection is handled automatically by the Whisper model [PSF][Bugfix]
             transcribe_options = {
-                "language": language,
                 "task": "transcribe",
                 "verbose": False,
             }
@@ -178,4 +178,4 @@ class WhisperTranscriber:
 
     def get_available_models(self) -> List[str]:
         """Get list of available Whisper models."""
-        return ["tiny", "base", "small", "medium"]
+        return ["tiny", "small", "medium"]

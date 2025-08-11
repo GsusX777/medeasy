@@ -72,8 +72,20 @@ builder.Services.AddDbContext<SQLCipherContext>(options =>
 // Register BenchmarkResultRepository for persistent benchmark storage [ATV][PSF]
 builder.Services.AddScoped<IBenchmarkResultRepository, BenchmarkResultRepository>();
 
+// Register AudioRecordRepository for encrypted audio storage [SP][EIV][ATV]
+builder.Services.AddScoped<IAudioRecordRepository, AudioRecordRepository>();
+
+// Register SessionRepository for consultation session management [SK][ATV]
+builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+
+// Register TranscriptRepository for encrypted transcript storage [EIV][AIU][ATV]
+builder.Services.AddScoped<ITranscriptRepository, TranscriptRepository>();
+
 // Register EncryptionService for secure data handling [SP][AIU]
 builder.Services.AddScoped<IEncryptionService, EncryptionService>();
+
+// TODO: LiveTranscriptionService will be implemented from scratch
+// builder.Services.AddScoped<ILiveTranscriptionService, LiveTranscriptionService>();
 
 // Authentication services temporarily removed for Health-Monitor testing [ZTS]
 // Will be re-enabled when SystemController Authorization is restored

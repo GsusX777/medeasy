@@ -142,15 +142,15 @@ class MedEasyServiceImpl(medeasy_pb2_grpc.MedEasyServiceServicer):
                 "Starting audio transcription",
                 request_id=request.request_id,
                 audio_size=len(request.audio_data),
-                model=request.whisper_model or "small",
-                language=request.language or "auto"
+                model=request.whisper_model or "small"
+                # Language detection is handled automatically by Whisper model
             )
             
             # Transcribe using WhisperService
+            # Language detection is handled automatically by the Whisper model
             result = await self.whisper_service.transcribe(
                 audio_data=request.audio_data,
-                model=request.whisper_model or "small",
-                language=request.language or "auto"
+                model=request.whisper_model or "small"
             )
             
             # Create response (minimal anonymization for now)

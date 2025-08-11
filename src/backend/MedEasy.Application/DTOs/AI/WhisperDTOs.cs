@@ -59,6 +59,7 @@ public class BenchmarkModelsRequest
     public bool EnableCudaBenchmark { get; init; } = false;
     public bool EnableCpuBenchmark { get; init; } = true;
     public bool EnableSwissGermanDetection { get; init; } = true;
+    public ChunkSettings? ChunkSettings { get; init; } = null; // For chunk-based testing [WMM]
 }
 
 /// <summary>
@@ -76,6 +77,7 @@ public class BenchmarkModelsResponse
     public required HardwareInfo HardwareInfo { get; init; }
     public required ModelRecommendation Recommendation { get; init; }
     public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    public int? TotalChunks { get; init; } = null; // [WMM] Total number of chunks processed (for chunk-based tests)
 }
 
 /// <summary>
@@ -101,6 +103,7 @@ public class ModelBenchmarkResult
     public bool Success { get; init; }
     public string? ErrorMessage { get; init; }
     public string? TranscribedText { get; init; }  // [NEW] Transcribed text for comparison and display
+    public List<ChunkResult>? ChunkResults { get; init; } = null; // [WMM] Individual chunk results for chunk-based tests
 }
 
 /// <summary>
@@ -266,4 +269,33 @@ public class ModelPerformanceEstimate
     public bool CanRun { get; init; }
     public string? RecommendedMode { get; init; }
     public List<string> Warnings { get; init; } = [];
+}
+
+/// <summary>
+/// Settings for chunk-based audio processing [WMM][PSF]
+/// </summary>
+public class ChunkSettings
+{
+    public double ChunkSizeSeconds { get; init; } = 2.0;
+    public int OverlapMs { get; init; } = 100;
+    public string TestMode { get; init; } = "sequential";
+}
+
+/// <summary>
+/// Individual chunk processing result [WMM]
+/// </summary>
+public class ChunkResult
+{
+    public int ChunkIndex { get; init; }
+    public double ChunkStartTime { get; init; }
+    public double ChunkDuration { get; init; }
+    public string ModelName { get; init; } = string.Empty;
+    public long ProcessingTimeMs { get; init; }
+    public long RamUsageMb { get; init; }
+    public double CpuUsagePercent { get; init; }
+    public string TranscriptionText { get; init; } = string.Empty;
+    public double Confidence { get; init; }
+    public long CumulativeLatency { get; init; }
+    public bool Success { get; init; }
+    public string? ErrorMessage { get; init; }
 }

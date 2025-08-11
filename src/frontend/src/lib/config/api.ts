@@ -32,6 +32,7 @@ export const AI_ENDPOINTS = {
 	// Whisper endpoints
 	WHISPER_TRANSCRIBE: `${API_CONFIG.AI_BASE_URL}/whisper/transcribe-file`,
 	WHISPER_BENCHMARK: `${API_CONFIG.AI_BASE_URL}/whisper/benchmark-models-file`,
+	WHISPER_BENCHMARK_CHUNK: `${API_CONFIG.AI_BASE_URL}/benchmark-chunk-test`,
 	WHISPER_AVAILABLE_MODELS: `${API_CONFIG.AI_BASE_URL}/whisper/available-models`,
 	WHISPER_HARDWARE_INFO: `${API_CONFIG.AI_BASE_URL}/whisper/hardware-info`,
 	

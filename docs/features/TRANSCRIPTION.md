@@ -43,7 +43,7 @@ Content-Type: multipart/form-data
 
 Parameters:
 - audioFile: IFormFile (M4A, WAV, MP3)
-- model: string = "small" (base, small, medium, large-v3)
+- model: string = "small" (small, medium, large-v3)
 - language: string = "auto" (de, en, fr, auto)
 ```
 
@@ -127,7 +127,7 @@ import psutil
 class WhisperService:
     def __init__(self):
         self.models = {}
-        self.available_models = ["base", "small", "medium", "large-v3"]
+        self.available_models = ["small", "medium", "large-v3"]
     
     async def transcribe(self, audio_data: bytes, model: str = "small", language: str = "auto"):
         # Temporäre Datei erstellen
@@ -190,7 +190,7 @@ PII_PATTERNS = {
 ### Aktuelle Whisper-Modelle
 | Model | Größe | RAM-Bedarf | Geschwindigkeit | Genauigkeit |
 |-------|-------|------------|-----------------|-------------|
-| base | 142MB | 1GB | 15.5s (19s Audio) | Gut |
+
 | small | 461MB | 2GB | 8.7s (19s Audio) | Besser |
 | medium | 1542MB | 4GB | ~25s (geschätzt) | Sehr gut |
 | large-v3 | 3094MB | 8GB | ~45s (geschätzt) | Exzellent |
@@ -207,7 +207,7 @@ PII_PATTERNS = {
       "success": true
     },
     {
-      "modelName": "base", 
+      "modelName": "small", 
       "averageProcessingTimeMs": 15495,
       "averageRamUsageMb": 114,
       "success": true
@@ -225,9 +225,9 @@ PII_PATTERNS = {
    - Text: "Das ist nur eine Phase oder eine Geschichte über Sucht, Hoffnung, Glauben und der Weg in eine echte Freiheit."
 
 2. **Multi-Model Benchmark Test**
-   - Modelle: base, small
+   - Modelle: small, medium
    - Ergebnis: Beide Modelle erfolgreich getestet
-   - Performance: small 2x schneller als base
+   - Performance: small ist das empfohlene Standardmodell
 
 3. **gRPC Communication Test**
    - .NET ↔ Python gRPC: ✅ Funktioniert

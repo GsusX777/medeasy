@@ -86,9 +86,9 @@ message TranscriptionRequest {
   // Audio length in seconds (if known)
   float audio_length_seconds = 4;
   
-  // Language code (e.g., "de" for German, "de-CH" for Swiss German)
-  // [SDH] Swiss German dialect handling
-  string language_code = 5;
+  // Language code removed - Python gRPC service doesn't accept this parameter
+  // Language detection is handled automatically by the Python service
+  // [SDH] Swiss German dialect handling via detect_swiss_german flag
   
   // Optional settings
   map<string, string> options = 6;

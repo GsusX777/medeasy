@@ -55,4 +55,15 @@ public interface IWhisperService
     /// <param name="request">Benchmark request with test audio</param>
     /// <returns>Benchmark results for all tested models</returns>
     Task<BenchmarkModelsResponse> BenchmarkModelsAsync(BenchmarkModelsRequest request);
+    
+    /// <summary>
+    /// Benchmark Whisper models using chunk-based testing.
+    /// 
+    /// [WMM] Sequential chunk processing for live transcription simulation
+    /// [PSF] Performance analysis under continuous load
+    /// [ATV] Logs all chunk operations
+    /// </summary>
+    /// <param name="request">Benchmark request with chunk settings</param>
+    /// <returns>Chunk-based benchmark results</returns>
+    Task<BenchmarkModelsResponse> BenchmarkModelsChunkAsync(BenchmarkModelsRequest request);
 }

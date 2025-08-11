@@ -3,7 +3,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import AdminLayout from "$lib/components/admin/AdminLayout.svelte";
-	import BenchmarkRunner from "$lib/components/admin/BenchmarkRunner.svelte";
+	import BenchmarkRunnerTabs from '$lib/components/admin/BenchmarkRunnerTabs.svelte';
 	import BenchmarkResults from "$lib/components/admin/BenchmarkResults.svelte";
 	import BenchmarkHistory from "$lib/components/admin/BenchmarkHistory.svelte";
 	import TranscriptionComparison from "$lib/components/admin/TranscriptionComparison.svelte";
@@ -62,7 +62,7 @@
 	let currentBenchmark: BenchmarkResult | null = null;
 	let benchmarkHistory: BenchmarkResult[] = [];
 	let isRunning = false;
-	let availableModels: string[] = ['base', 'small', 'medium', 'large-v3'];
+	let availableModels: string[] = ['small', 'medium', 'large-v3'];
 	let hardwareInfo: HardwareInfo | null = null;
 	
 	// [NEW] State for TranscriptionComparison component
@@ -143,13 +143,19 @@
 		}
 	}
 	
-	async function runBenchmark(models: string[], audioFile: File, iterations: number) {
-		// Direct parameter call from BenchmarkRunner event handler
+	async function handleRunBenchmark(event: CustomEvent<{
+		models: string[];
+		audioFile?: File;
+		audioRecordId?: string;
+		iterations: number;
+		testType: 'upload' | 'record' | 'chunk' | 'live';
+	}>) {
+		const { models, audioFile, audioRecordId, iterations, testType } = event.detail;
 		
 		// [PSF] Validate input before processing
-		if (!audioFile) {
-			console.error('❌ Benchmark failed: No audio file selected');
-			alert('Bitte wählen Sie eine Audio-Datei aus, bevor Sie den Benchmark starten.');
+		if (!audioFile && !audioRecordId) {
+			console.error('❌ Benchmark failed: No audio source selected');
+			alert('Bitte wählen Sie eine Audio-Datei oder -Aufnahme aus, bevor Sie den Benchmark starten.');
 			return;
 		}
 		
@@ -160,8 +166,10 @@
 		}
 		
 		console.log('🚀 Starting benchmark with:', {
-			fileName: audioFile.name,
-			fileSize: `${(audioFile.size / 1024 / 1024).toFixed(2)} MB`,
+			testType: testType,
+			fileName: audioFile?.name || `AudioRecord-${audioRecordId}`,
+			fileSize: audioFile ? `${(audioFile.size / 1024 / 1024).toFixed(2)} MB` : 'N/A',
+			audioRecordId: audioRecordId,
 			models: models,
 			iterations: iterations
 		});
@@ -170,14 +178,74 @@
 		currentBenchmark = null;
 		
 		try {
-			const response = await uploadFile(
-				AI_ENDPOINTS.WHISPER_BENCHMARK,
-				audioFile,
-				{ 
-					modelsToTest: models.join(','),
-					iterations: iterations.toString()
+			let response: Response;
+			
+			if (testType === 'upload' && audioFile) {
+				// File upload benchmark
+				response = await uploadFile(
+					AI_ENDPOINTS.WHISPER_BENCHMARK,
+					audioFile,
+					{ 
+						modelsToTest: models.join(','),
+						iterations: iterations.toString()
+					}
+				);
+			} else if (testType === 'record' && audioRecordId) {
+				// Audio record benchmark
+				response = await fetch(`${AI_ENDPOINTS.WHISPER_BENCHMARK}/record`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						audioRecordId: audioRecordId,
+						modelsToTest: models.join(','),
+						iterations: iterations.toString()
+					})
+				});
+			} else if (testType === 'chunk') {
+				// Chunk-based benchmark [WMM][PSF][UX]
+				// Support both AudioRecord and File Upload modes
+				
+				if (audioRecordId) {
+					// AudioRecord Mode: Use JSON [Existing]
+					response = await fetch(AI_ENDPOINTS.WHISPER_BENCHMARK_CHUNK, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({
+							audioRecordId: audioRecordId,
+							modelsToTest: models.join(','),
+							iterations: iterations,
+							chunkSettings: {
+								chunkSizeSeconds: 2,
+								overlapMs: 500,
+								testMode: 'sequential',
+								audioSource: 'record'
+							}
+						})
+					});
+				} else if (audioFile) {
+					// File Upload Mode: Use multipart/form-data [UX][Bugfix]
+					const formData = new FormData();
+					formData.append('audioFile', audioFile);
+					formData.append('modelsToTest', models.join(','));
+					formData.append('iterations', iterations.toString());
+					formData.append('chunkSizeSeconds', '2');
+					formData.append('overlapMs', '500');
+					
+					response = await fetch(AI_ENDPOINTS.WHISPER_BENCHMARK_CHUNK, {
+						method: 'POST',
+						// No Content-Type header - let browser set it for multipart/form-data
+						body: formData
+					});
+				} else {
+					throw new Error('Chunk test requires either AudioRecord ID or uploaded file');
 				}
-			);
+			} else {
+				throw new Error(`Unsupported test type: ${testType}`);
+			}
 			
 			if (!response.ok) {
 				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -293,23 +361,30 @@
 			<!-- Benchmark Runner -->
 			<div class="benchmark-section">
 				<h2>🚀 Neuen Benchmark starten</h2>
-				<BenchmarkRunner
+				<BenchmarkRunnerTabs
 					{availableModels}
-					{isRunning}
-					on:runBenchmark={(e) => runBenchmark(e.detail.models, e.detail.audioFile, e.detail.iterations)}
-				/>
+					bind:isRunning
+					on:runBenchmark={handleRunBenchmark}
+				>
+					<div slot="benchmark-history">
+						<!-- Benchmark History - Always show section, even if empty -->
+						<div class="section history-section">
+							{#if benchmarkHistory.length > 0}
+								<BenchmarkHistory 
+									history={benchmarkHistory}
+									on:compareTranscriptions={(e) => openTranscriptionComparison(e.detail.selectedBenchmarks)}
+								/>
+							{:else}
+								<div class="empty-history">
+									<div class="empty-icon">📈</div>
+									<p>Noch keine Benchmark-Tests durchgeführt.</p>
+									<p class="empty-hint">Starten Sie Ihren ersten Benchmark-Test, um die Ergebnisse hier zu sehen.</p>
+								</div>
+							{/if}
+						</div>
+					</div>
+				</BenchmarkRunnerTabs>
 			</div>
-			
-			<!-- Benchmark History -->
-			{#if benchmarkHistory.length > 0}
-				<div class="history-section">
-					<h2>📈 Benchmark-Verlauf</h2>
-					<BenchmarkHistory 
-						history={benchmarkHistory}
-						on:compareTranscriptions={(e) => openTranscriptionComparison(e.detail.selectedBenchmarks)}
-					/>
-				</div>
-			{/if}
 		</div>
 		
 		<!-- Transcription Comparison Modal -->
@@ -545,6 +620,30 @@
 	@keyframes fadeIn {
 		from { opacity: 0; }
 		to { opacity: 1; }
+	}
+	
+	/* Empty History Styles */
+	.empty-history {
+		text-align: center;
+		padding: 3rem 2rem;
+		color: var(--text-secondary, #6b7280);
+	}
+	
+	.empty-icon {
+		font-size: 3rem;
+		margin-bottom: 1rem;
+		opacity: 0.6;
+	}
+	
+	.empty-history p {
+		margin: 0.5rem 0;
+		font-size: 1rem;
+	}
+	
+	.empty-hint {
+		font-size: 0.9rem !important;
+		opacity: 0.8;
+		font-style: italic;
 	}
 	
 	@media (max-width: 768px) {
